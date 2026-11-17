@@ -1,0 +1,16 @@
+{
+  "name": "@iaframe/store",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "ingest": "node src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@iaframe/core": "*"
+  }
+}
