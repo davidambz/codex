@@ -160,8 +160,9 @@ export const relicList: RelicListEntry[] = [
     vaulted: false,
     rewards: [
       { item: "Forma Blueprint", rarity: "common" },
-      { item: "Alternox Prime Stock", rarity: "rare" },
+      { item: "Alternox Prime Stock", rarity: "rare", imageName: "GenericGunPrimeStock.png" },
     ],
+    imageName: "RelicAxiD.png",
   },
   { name: "Meso A9 Relic", tier: "Meso", code: "A9", vaulted: true, rewards: [{ item: "Alternox Prime Stock", rarity: "rare" }] },
   { name: "Lith N3 Relic", tier: "Lith", code: "N3", vaulted: false, rewards: [{ item: "Nezha Prime Chassis Blueprint", rarity: "uncommon" }] },

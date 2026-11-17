@@ -31,10 +31,10 @@ export const WIKI_PAGES: Record<string, string> = {
 
 /** A slice of the category files and the Portuguese i18n file. */
 export const CATALOG: Record<string, unknown[]> = {
-  Mods: [{ name: "Serration", uniqueName: "/Mods/Serration" }],
+  Mods: [{ name: "Serration", uniqueName: "/Mods/Serration", imageName: "Serration.png" }],
   Relics: [
-    { name: "Axi G13 Intact", uniqueName: "/Relics/AxiG13Bronze" },
-    { name: "Axi G13 Radiant", uniqueName: "/Relics/AxiG13Platinum" },
+    { name: "Axi G13 Intact", uniqueName: "/Relics/AxiG13Bronze", imageName: "RelicAxiD.png" },
+    { name: "Axi G13 Radiant", uniqueName: "/Relics/AxiG13Platinum", imageName: "RelicAxiC.png" },
   ],
   Resources: [{ name: "Oxium", uniqueName: "/Resources/Oxium" }],
   Primary: [

@@ -5,10 +5,14 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ingest, WFCD_DATA_URL, WFCD_INFO_URL, type FetchJson } from "./ingest.ts";
-import { openStore, readCatalog, readItemNames, readMeta } from "./sqlite.ts";
+import { openStore, readCatalog, readItemImages, readItemNames, readMeta } from "./sqlite.ts";
 import { SCHEMA_VERSION } from "./schema.ts";
 
-const readWarframes = (path: string) => readCatalog(path).filter((e) => e.category === "warframe");
+// A Warframe's parts are always its four blueprints; these tests are about the rest.
+const readWarframes = (path: string) =>
+  readCatalog(path)
+    .filter((e) => e.category === "warframe")
+    .map(({ parts: _parts, ...entry }) => entry);
 import { fakeCatalog } from "./test/catalog.ts";
 import sample from "../../core/src/wfcd/fixtures/sample.json" with { type: "json" };
 
@@ -132,6 +136,16 @@ describe("ingest", () => {
     ]);
   });
 
+  it("stores item pictures, a relic's from its Intact entry", async () => {
+    await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
+    expect(readItemImages(dbPath)).toEqual(
+      new Map([
+        ["Axi G13 Relic", "RelicAxiD.png"],
+        ["Serration", "Serration.png"],
+      ]),
+    );
+  });
+
   it("stores weapons and companions, with parts from the drop tables and wiki text when they don't come from relics", async () => {
     await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
     expect(readCatalog(dbPath).filter((e) => e.category !== "warframe")).toEqual([
@@ -197,7 +211,7 @@ describe("ingest", () => {
     const urls: string[] = [];
     const fetchJson: FetchJson = (url) => (urls.push(url), source.fetchJson(url));
     await ingest({ dbPath, fetchJson, now });
-    expect(urls.some((url) => url.includes("/i18n/") || url.endsWith("/Mods.json"))).toBe(false);
+    expect(urls.some((url) => url.includes("/i18n/"))).toBe(false);
     expect(readMeta(dbPath)?.languages).toBe("");
   });
 

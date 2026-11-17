@@ -5,6 +5,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { RELIC_TIERS, tokenize, type RelicListEntry } from "@iaframe/core";
 import { Chips } from "../components/Chips";
 import { FilterBar, FilterSelect, FilterText } from "../components/FilterControls";
+import { ItemImage } from "../components/ItemImage";
 import { oneOf, usePreference } from "../hooks/usePreference";
 import { useQuery } from "../hooks/useQuery";
 import { useI18n } from "../i18n/I18nContext";
@@ -107,6 +108,7 @@ function RelicCard({
   return (
     <li className={styles.card} data-selected={selected || undefined} data-vaulted={relic.vaulted || undefined}>
       <div className={styles.cardHead}>
+        <ItemImage imageName={relic.imageName} className={styles.relicImage} />
         <button type="button" className={styles.relicName} onClick={() => openItem(relic.name)} aria-pressed={selected}>
           {itemName(relic.name)}
         </button>
@@ -122,7 +124,10 @@ function RelicCard({
               title={t.relics.rarity[reward.rarity]}
               onClick={() => openItem(reward.item)}
             >
-              {itemName(reward.item)}
+              <span className={styles.rewardIcon} data-blueprint={reward.blueprint || undefined}>
+                <ItemImage imageName={reward.imageName} className={styles.rewardImage} />
+              </span>
+              <span className={styles.rewardName}>{itemName(reward.item)}</span>
             </button>
           </li>
         ))}

@@ -50,6 +50,7 @@ export {
   ITEM_LANGUAGES,
   LANGUAGE_NAMES,
   englishIds,
+  englishImages,
   isItemLanguage,
   itemLanguageForLocale,
   translateNames,

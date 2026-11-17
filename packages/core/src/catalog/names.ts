@@ -8,6 +8,7 @@
 // ("Alternox Prime Stock") have no entry and stay in English.
 
 import { RELIC_TIERS } from "../types.ts";
+import { SAFE_IMAGE } from "./equipment.ts";
 
 /** Languages WFCD translates, plus English. "tc" is Traditional Chinese, "zh" Simplified. */
 export const ITEM_LANGUAGES = [
@@ -100,6 +101,25 @@ export function englishIds(files: readonly unknown[]): Map<string, string> {
     }
   }
   return ids;
+}
+
+/**
+ * English name, as the drop tables spell it, to its picture in
+ * warframe-items' data/img. A relic takes its Intact picture.
+ */
+export function englishImages(files: readonly unknown[]): Map<string, string> {
+  const images = new Map<string, string>();
+  for (const file of files) {
+    if (!Array.isArray(file)) continue;
+    for (const item of file as { name?: unknown; imageName?: unknown }[]) {
+      if (typeof item?.name !== "string" || typeof item.imageName !== "string" || !SAFE_IMAGE.test(item.imageName)) continue;
+      const relic = RELIC_ENTRY.exec(item.name);
+      if (relic && !item.name.endsWith(" Intact")) continue;
+      const name = relic ? `${relic[1]} ${relic[2]} Relic` : item.name.trim();
+      if (!images.has(name)) images.set(name, item.imageName);
+    }
+  }
+  return images;
 }
 
 /**

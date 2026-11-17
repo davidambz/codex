@@ -1,7 +1,7 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { englishIds, itemLanguageForLocale, translateNames } from "./names.ts";
+import { englishIds, englishImages, itemLanguageForLocale, translateNames } from "./names.ts";
 import { sanitizeSettings, settingsLanguages } from "../platform.ts";
 
 describe("englishIds", () => {
@@ -63,5 +63,26 @@ describe("settings", () => {
 
   it("needs names for the item language and the search languages, never English", () => {
     expect(settingsLanguages({ itemLanguage: "pt", searchLanguages: ["en", "es", "pt"] })).toEqual(["pt", "es"]);
+  });
+});
+
+describe("englishImages", () => {
+  it("maps names to pictures, a relic to its Intact one, skipping unsafe names", () => {
+    const images = englishImages([
+      [
+        { name: "Axi A1 Exceptional", imageName: "RelicAxiA.png" },
+        { name: "Axi A1 Intact", imageName: "RelicAxiD.png" },
+        { name: "Serration", imageName: "Serration.png" },
+        { name: "Bad", imageName: "../evil.png" },
+        { name: "None" },
+      ],
+      { not: "a list" },
+    ]);
+    expect(images).toEqual(
+      new Map([
+        ["Axi A1 Relic", "RelicAxiD.png"],
+        ["Serration", "Serration.png"],
+      ]),
+    );
   });
 });

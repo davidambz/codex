@@ -3,7 +3,7 @@
 
 import { rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
-import type { CatalogEntry, DropData } from "@iaframe/core";
+import { warframeParts, type CatalogEntry, type DropData } from "@iaframe/core";
 import type { ItemNames } from "./names.ts";
 import { SCHEMA, SCHEMA_VERSION } from "./schema.ts";
 
@@ -14,6 +14,7 @@ export function buildDatabase(
   meta: Record<string, string>,
   catalog: CatalogEntry[] = [],
   names: ItemNames = new Map(),
+  images: ReadonlyMap<string, string> = new Map(),
 ): void {
   rmSync(path, { force: true });
   const db = new DatabaseSync(path);
@@ -85,13 +86,24 @@ export function buildDatabase(
         entry.wikiUrl ?? null,
         entry.acquisition?.length ? JSON.stringify(entry.acquisition) : null,
       );
-      entry.parts?.forEach((part, position) => {
+      // Warframes' parts are always their four blueprints; listed too, so a part can find its owner.
+      (entry.category === "warframe" ? warframeParts(entry.name) : entry.parts)?.forEach((part, position) => {
         insertPart.run(id, part, position);
         // "War Blade" was a plain "other" until now; Prime parts keep their own kind.
         const partId = itemIds.get(part);
         const kind = partId === undefined ? undefined : (kindOf.get(partId) as { kind: string } | undefined)?.kind;
         if (partId !== undefined && kind !== "prime_part") setKind.run("part", partId);
       });
+    }
+
+    const setImage = db.prepare("UPDATE items SET image_name = ? WHERE id = ?");
+    for (const entry of catalog) {
+      const id = itemIds.get(entry.name);
+      if (id !== undefined && entry.imageName) setImage.run(entry.imageName, id);
+    }
+    for (const [item, image] of images) {
+      const id = itemIds.get(item);
+      if (id !== undefined) setImage.run(image, id);
     }
 
     const insertName = db.prepare("INSERT INTO names (item_id, lang, name) VALUES (?, ?, ?)");
