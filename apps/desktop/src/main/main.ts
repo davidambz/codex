@@ -4,7 +4,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, screen, session, shell } from "electron";
-import { ITEM_KINDS, type DataStatus, type ItemKind, type Theme } from "@iaframe/core";
+import {
+  ITEM_KINDS,
+  isItemLanguage,
+  itemLanguageForLocale,
+  type DataStatus,
+  type ItemKind,
+  type Settings,
+  type Theme,
+} from "@iaframe/core";
 import { createDataService, type DataService } from "@iaframe/store";
 import { IPC } from "../shared/api";
 
@@ -40,6 +48,9 @@ function broadcast(channel: string, value: unknown) {
 function startData(): DataService {
   const service = createDataService({
     dbPath: path.join(app.getPath("userData"), "iaframe.db"),
+    settingsPath: path.join(app.getPath("userData"), "settings.json"),
+    // Names in the system's language until the user picks one.
+    defaultSettings: { itemLanguage: itemLanguageForLocale(app.getPreferredSystemLanguages()[0] ?? app.getLocale()) },
     onStatus: (status: DataStatus) => broadcast(IPC.dataStatus, status),
   });
   const check = () => void service.update();
@@ -73,6 +84,15 @@ function registerIpc(service: DataService) {
   ipcMain.handle(IPC.getDropsDeep, (_event, name: unknown) => service.getDropsDeep(text(name)));
   ipcMain.handle(IPC.getSource, (_event, key: unknown) => service.getSource(text(key)));
   ipcMain.handle(IPC.getDataStatus, () => service.status());
+  ipcMain.handle(IPC.getSettings, () => service.settings());
+  ipcMain.handle(IPC.updateSettings, (_event, patch: unknown) => {
+    if (!patch || typeof patch !== "object") throw new Error("expected settings");
+    return service.updateSettings(patch as Partial<Settings>);
+  });
+  ipcMain.handle(IPC.getItemNames, (_event, language: unknown) => {
+    if (!isItemLanguage(language)) throw new Error("expected a language");
+    return service.getItemNames(language);
+  });
   ipcMain.handle(IPC.updateData, () => service.update(true));
   ipcMain.handle(IPC.getTheme, () => currentTheme());
   ipcMain.handle(IPC.getLocale, () => app.getPreferredSystemLanguages()[0] ?? app.getLocale());

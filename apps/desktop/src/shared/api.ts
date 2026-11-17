@@ -1,7 +1,17 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { DataStatus, DeepDrops, ItemDetails, ItemKind, SearchHit, SourceDetails, Theme } from "@iaframe/core";
+import type {
+  DataStatus,
+  DeepDrops,
+  ItemDetails,
+  ItemKind,
+  ItemLanguage,
+  SearchHit,
+  Settings,
+  SourceDetails,
+  Theme,
+} from "@iaframe/core";
 
 export const IPC = {
   search: "data:search",
@@ -14,6 +24,9 @@ export const IPC = {
   getTheme: "system:theme",
   themeChanged: "system:theme-changed",
   getLocale: "system:locale",
+  getSettings: "settings:get",
+  updateSettings: "settings:update",
+  getItemNames: "data:item-names",
 } as const;
 
 /** What the preload exposes as window.iaframe. */
@@ -29,4 +42,7 @@ export interface IaframeDesktopApi {
   getTheme(): Promise<Theme>;
   onThemeChange(listener: (theme: Theme) => void): () => void;
   getLocale(): Promise<string>;
+  getSettings(): Promise<Settings>;
+  updateSettings(patch: Partial<Settings>): Promise<Settings>;
+  getItemNames(language: ItemLanguage): Promise<Record<string, string>>;
 }

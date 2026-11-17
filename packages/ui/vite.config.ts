@@ -11,11 +11,13 @@ function dataApi(): Plugin {
     apply: "serve",
     async configureServer(server) {
       const { createDataService } = await import("@iaframe/store");
-      const { ITEM_KINDS } = await import("@iaframe/core");
+      const { ITEM_KINDS, isItemLanguage, itemLanguageForLocale } = await import("@iaframe/core");
       const kinds = (value: string) =>
         value ? ITEM_KINDS.filter((kind) => value.split(",").includes(kind)) : undefined;
       const data = createDataService({
         dbPath: fileURLToPath(new URL("../../data/iaframe.db", import.meta.url)),
+        settingsPath: fileURLToPath(new URL("../../data/settings.json", import.meta.url)),
+        defaultSettings: { itemLanguage: itemLanguageForLocale(Intl.DateTimeFormat().resolvedOptions().locale) },
       });
       void data.update();
       server.httpServer?.on("close", () => data.close());
@@ -28,6 +30,12 @@ function dataApi(): Plugin {
           "/deep": () => data.getDropsDeep(p("name")),
           "/source": () => data.getSource(p("key")),
           "/status": () => data.status(),
+          "/settings": () =>
+            req.method === "POST" ? data.updateSettings(JSON.parse(p("patch") || "{}")) : data.settings(),
+          "/names": () => {
+            const lang = p("lang");
+            return isItemLanguage(lang) ? data.getItemNames(lang) : {};
+          },
           "/update": () => data.update(true),
         };
         const route = routes[url.pathname];

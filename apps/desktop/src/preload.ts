@@ -28,6 +28,9 @@ const api: IaframeDesktopApi = {
   getTheme: () => ipcRenderer.invoke(IPC.getTheme),
   onThemeChange: (listener) => subscribe<Theme>(IPC.themeChanged, listener),
   getLocale: () => ipcRenderer.invoke(IPC.getLocale),
+  getSettings: () => ipcRenderer.invoke(IPC.getSettings),
+  updateSettings: (patch) => ipcRenderer.invoke(IPC.updateSettings, patch),
+  getItemNames: (language) => ipcRenderer.invoke(IPC.getItemNames, language),
 };
 
 contextBridge.exposeInMainWorld("iaframe", api);

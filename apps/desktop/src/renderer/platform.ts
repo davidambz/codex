@@ -25,5 +25,8 @@ export function createDesktopPlatform(api: IaframeDesktopApi = window.iaframe): 
     getSystemTheme: () => api.getTheme(),
     onSystemThemeChange: (listener) => api.onThemeChange(listener),
     getSystemLocale: () => api.getLocale(),
+    getSettings: () => api.getSettings(),
+    updateSettings: (patch) => api.updateSettings(patch),
+    getItemNames: (language) => api.getItemNames(language),
   };
 }

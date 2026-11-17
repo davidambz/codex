@@ -43,5 +43,8 @@ export function createWebPlatform(): Platform {
       return () => dark?.removeEventListener("change", onChange);
     },
     getSystemLocale: async () => navigator.language,
+    getSettings: () => api("settings"),
+    updateSettings: (patch) => api("settings", { patch: JSON.stringify(patch) }, "POST"),
+    getItemNames: (language) => api("names", { lang: language }),
   };
 }
