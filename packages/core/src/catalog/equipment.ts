@@ -74,9 +74,10 @@ export const IMAGE_BASE_URL = "https://raw.githubusercontent.com/WFCD/warframe-i
 
 /**
  * The game's generic picture for a kind of part, so part icons look like
- * the in-game Foundry. Unknown pieces fall back to the blueprint.
+ * the in-game Foundry. Blueprints, and pieces with no generic picture,
+ * have none: the game draws those as the item itself on blueprint paper.
  */
-export function partImage(label: string, prime: boolean): string {
+export function partImage(label: string, prime: boolean): string | undefined {
   const p = prime ? "Prime" : "";
   switch (label) {
     case "Chassis":
@@ -112,7 +113,7 @@ export function partImage(label: string, prime: boolean): string {
     case "Lower Limb":
       return `GenericComponent${p}Latch.png`;
     default:
-      return "blueprint.png";
+      return undefined;
   }
 }
 
