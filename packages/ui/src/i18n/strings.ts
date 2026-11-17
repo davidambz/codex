@@ -73,6 +73,16 @@ export interface Strings {
     tierLabel: string;
     tierAll: string;
   };
+  languages: {
+    open: string;
+    title: string;
+    itemLanguage: string;
+    searchLanguages: string;
+    searchHint: string;
+    note: string;
+    fetching: string;
+    english: (name: string) => string;
+  };
   warframe: {
     partsLabel: string;
     slots: Record<WarframePart["slot"], string>;

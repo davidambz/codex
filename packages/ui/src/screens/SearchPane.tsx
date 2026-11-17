@@ -4,6 +4,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { SearchHit } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
+import { useItemNames } from "../names/ItemNamesContext";
 import { usePlatform } from "../platform/PlatformContext";
 import { SearchIcon } from "../components/icons";
 import { Chips } from "../components/Chips";
@@ -26,6 +27,7 @@ interface SearchPaneProps {
 /** Search field over a listbox of matches; arrows move, Enter opens. */
 export function SearchPane({ query, onQueryChange, selected, onSelect, dataVersion }: SearchPaneProps) {
   const { t } = useI18n();
+  const { itemName } = useItemNames();
   const platform = usePlatform();
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [active, setActive] = useState(0);
@@ -126,7 +128,10 @@ export function SearchPane({ query, onQueryChange, selected, onSelect, dataVersi
                 onSelect(hit.name);
               }}
             >
-              <span className={styles.hitName}>{hit.name}</span>
+              <span className={styles.hitNames}>
+                <span className={styles.hitName}>{itemName(hit.name)}</span>
+                {itemName(hit.name) !== hit.name && <span className={styles.hitAlt}>{hit.name}</span>}
+              </span>
               <span className={styles.hitKind}>{t.kinds[hit.kind]}</span>
             </li>
           ))}

@@ -108,6 +108,16 @@ export const ptBR: Strings = {
     tierLabel: "Tier",
     tierAll: "Todos",
   },
+  languages: {
+    open: "Idiomas dos itens",
+    title: "Idiomas dos itens",
+    itemLanguage: "Mostrar nomes dos itens em",
+    searchLanguages: "Buscar também em",
+    searchHint: "A busca acha o item pelo nome em qualquer um destes.",
+    note: "Só os nomes que o próprio jogo traduz: a maioria das peças Prime e blueprints fica com o nome em inglês. Cada idioma novo baixa uns 5 MB.",
+    fetching: "Baixando os nomes…",
+    english: (name) => `Em inglês: ${name}`,
+  },
   warframe: {
     partsLabel: "Blueprints",
     slots: { blueprint: "Blueprint principal", chassis: "Chassis", neuroptics: "Neuroptics", systems: "Systems" },

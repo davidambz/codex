@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { tokenize, type SourceItemRow } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
+import { useItemNames } from "../names/ItemNamesContext";
 import { usePlatform } from "../platform/PlatformContext";
 import { useQuery } from "../hooks/useQuery";
 import { Chance } from "../components/Chance";
@@ -21,6 +22,7 @@ interface SourceViewProps extends Navigate {
 /** What one mission, relic, enemy or bounty drops, grouped by rotation, stage or refinement. */
 export function SourceView({ sourceKey, dataVersion, openItem }: SourceViewProps) {
   const { t } = useI18n();
+  const { itemName } = useItemNames();
   const platform = usePlatform();
   const details = useQuery(() => platform.getSource(sourceKey), [platform, sourceKey, dataVersion]);
   const [text, setText] = useState("");
@@ -30,7 +32,7 @@ export function SourceView({ sourceKey, dataVersion, openItem }: SourceViewProps
   const words = tokenize(text);
   const shown = words.length
     ? drops.filter((row) => {
-        const tokens = tokenize(row.item);
+        const tokens = [...tokenize(row.item), ...tokenize(itemName(row.item))];
         return words.every((word) => tokens.some((token) => token.startsWith(word)));
       })
     : drops;
@@ -51,7 +53,10 @@ export function SourceView({ sourceKey, dataVersion, openItem }: SourceViewProps
           <Tag>{t.sourceKinds[source.kind]}</Tag>
           {source.isEvent && <Tag>{t.table.event}</Tag>}
         </div>
-        <h1 className={styles.title}>{source.name}</h1>
+        <h1 className={styles.title}>{source.kind === "relic" ? itemName(source.name) : source.name}</h1>
+        {source.kind === "relic" && itemName(source.name) !== source.name && (
+          <p className={styles.subtitle}>{t.languages.english(source.name)}</p>
+        )}
         {(source.location || source.gameMode) && (
           <p className={styles.subtitle}>{[source.location, source.gameMode].filter(Boolean).join(" · ")}</p>
         )}
@@ -72,7 +77,7 @@ export function SourceView({ sourceKey, dataVersion, openItem }: SourceViewProps
                 <li key={`${row.item}-${index}`} className={styles.reward}>
                   <button type="button" className={styles.rewardName} onClick={() => openItem(row.item)}>
                     {row.quantity ? `${row.quantity}× ` : ""}
-                    {row.item}
+                    {itemName(row.item)}
                   </button>
                   <span className={styles.rarity}>{row.rarity}</span>
                   <Chance chance={row.chance} conditional={row.conditional} />

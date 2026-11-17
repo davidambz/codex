@@ -5,6 +5,7 @@ import { useState } from "react";
 import { expectedRuns, runsForConfidence, type DropRow, type DropSortKey, type SortDirection } from "@iaframe/core";
 import { formatChance, formatCount } from "../format";
 import { useI18n } from "../i18n/I18nContext";
+import { useItemNames } from "../names/ItemNamesContext";
 import type { Strings } from "../i18n";
 import { Chance } from "./Chance";
 import { Tag } from "./Tag";
@@ -25,6 +26,7 @@ interface DropTableProps {
 /** Where something drops: source, when, chance, and how many tries that means. */
 export function DropTable({ rows, onOpenSource, page = PAGE, sort, onSort }: DropTableProps) {
   const { t, locale } = useI18n();
+  const { itemName } = useItemNames();
   const [shown, setShown] = useState(page);
   const visible = rows.slice(0, shown);
 
@@ -44,7 +46,7 @@ export function DropTable({ rows, onOpenSource, page = PAGE, sort, onSort }: Dro
             <tr key={`${row.source.key}-${row.rotation}-${row.refinement}-${row.stage}-${index}`}>
               <td>
                 <button type="button" className={styles.source} onClick={() => onOpenSource(row.source.key)}>
-                  {row.source.name}
+                  {row.source.kind === "relic" ? itemName(row.source.name) : row.source.name}
                 </button>
                 <span className={styles.where}>
                   {[row.source.location, row.source.gameMode, t.sourceKinds[row.source.kind]].filter(Boolean).join(" · ")}

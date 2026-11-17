@@ -5,6 +5,7 @@ import type { DataStatus } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
 import { formatDate } from "../format";
 import { IAFrameMark, RefreshIcon } from "./icons";
+import { LanguagePanel } from "./LanguagePanel";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
@@ -31,6 +32,7 @@ export function Header({ status, onUpdate }: HeaderProps) {
         <span className={styles.wordmark}>IAFrame</span>
       </div>
       <div className={styles.feed}>
+        {status.info && <LanguagePanel busy={status.busy} />}
         <span className="lamp" data-lit={lit} />
         <span className={styles.feedText} role="status">
           <span className="label">{t.data.label}</span>

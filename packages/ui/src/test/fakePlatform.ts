@@ -1,7 +1,12 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { DataStatus, DeepDrops, ItemDetails, Platform, SourceDetails } from "@iaframe/core";
+import type { DataStatus, DeepDrops, ItemDetails, ItemLanguage, Platform, Settings, SourceDetails } from "@iaframe/core";
+
+/** Names the fake knows in Portuguese, as the real data would have them. */
+export const names: Partial<Record<ItemLanguage, Record<string, string>>> = {
+  pt: { "Axi A21 Relic": "Relíquia Axi A21", "Arcane Momentum": "Impulso Arcano" },
+};
 
 const hydron = { key: "mission:Sedna/Hydron", kind: "mission", name: "Hydron", location: "Sedna", gameMode: "Defense" } as const;
 
@@ -14,6 +19,7 @@ export const items: Record<string, ItemDetails> = {
   "Axi A21 Relic": { name: "Axi A21 Relic", kind: "relic", relic: { tier: "Axi", code: "A21", vaulted: false } },
   Serration: { name: "Serration", kind: "mod" },
   "Mystery Thing": { name: "Mystery Thing", kind: "other" },
+  "Arcane Momentum": { name: "Arcane Momentum", kind: "arcane" },
   Nezha: {
     name: "Nezha",
     kind: "warframe",
@@ -82,6 +88,7 @@ export const deep: Record<string, DeepDrops> = {
     relics: [],
   },
   "Mystery Thing": { direct: [], relics: [] },
+  "Arcane Momentum": { direct: [{ source: hydron, rotation: "C", chance: 2, slots: 1, conditional: false }], relics: [] },
   "Gara Chassis Blueprint": {
     direct: [
       { source: ghoul, chance: 20, slots: 1, conditional: false },
@@ -110,8 +117,11 @@ export const sources: Record<string, SourceDetails> = {
   },
 };
 
-export function fakePlatform(overrides: Partial<Platform> & { status?: DataStatus } = {}): Platform {
+export function fakePlatform(
+  overrides: Partial<Platform> & { status?: DataStatus; settings?: Settings } = {},
+): Platform {
   const listeners = new Set<(status: DataStatus) => void>();
+  let settings: Settings = overrides.settings ?? { itemLanguage: "en", searchLanguages: [] };
   let status: DataStatus = overrides.status ?? {
     busy: false,
     outcome: "up-to-date",
@@ -122,7 +132,13 @@ export function fakePlatform(overrides: Partial<Platform> & { status?: DataStatu
     appVersion: "0.0.0",
     search: async (query, _limit, kinds) =>
       Object.values(items)
-        .filter((item) => query.trim() && item.name.toLowerCase().includes(query.trim().toLowerCase().split(" ")[0]))
+        .filter((item) => {
+          const word = query.trim().toLowerCase().split(" ")[0];
+          if (!word) return false;
+          const languages = [settings.itemLanguage, ...settings.searchLanguages];
+          const aliases = languages.map((language) => names[language]?.[item.name]).filter(Boolean) as string[];
+          return [item.name, ...aliases].some((name) => name.toLowerCase().includes(word));
+        })
         .filter((item) => !kinds?.length || kinds.includes(item.kind))
         .map((item) => ({ name: item.name, kind: item.kind, score: 1 })),
     getItem: async (name) => items[name],
@@ -137,6 +153,9 @@ export function fakePlatform(overrides: Partial<Platform> & { status?: DataStatu
     getSystemTheme: async () => "dark",
     onSystemThemeChange: () => () => {},
     getSystemLocale: async () => "en-US",
+    getSettings: async () => settings,
+    updateSettings: async (patch) => (settings = { ...settings, ...patch }),
+    getItemNames: async (language) => names[language] ?? {},
     ...overrides,
     // Lets a test push a new status as the main process would.
     ...({ emit: (next: DataStatus) => ((status = next), listeners.forEach((l) => l(next))) } as object),
