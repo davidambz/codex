@@ -1,8 +1,8 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { ItemKind, RelicSortKey, SourceKind, WarframePart } from "@iaframe/core";
-import type { KindGroup } from "../kindGroups";
+import type { ItemKind, RelicSortKey, SourceKind } from "@iaframe/core";
+import type { KindGroup, WeaponGroup } from "../kindGroups";
 
 export interface Strings {
   app: {
@@ -12,6 +12,8 @@ export interface Strings {
     back: string;
     kindFilterLabel: string;
     kindGroups: Record<KindGroup, string>;
+    weaponFilterLabel: string;
+    weaponGroups: Record<WeaponGroup, string>;
   };
   data: {
     label: string;
@@ -83,9 +85,11 @@ export interface Strings {
     fetching: string;
     english: (name: string) => string;
   };
-  warframe: {
+  equipment: {
     partsLabel: string;
-    slots: Record<WarframePart["slot"], string>;
+    /** Names of the pieces ("Blueprint", "Chassis", "Barrel"...); others show as they come. */
+    parts: Record<string, string>;
+    noParts: string;
     drops: (chance: string) => string;
     relics: (open: number, total: number) => string;
     vaulted: (total: number) => string;

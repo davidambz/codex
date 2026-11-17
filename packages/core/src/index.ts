@@ -13,7 +13,19 @@ export * from "./queries.ts";
 export type { Platform, Theme, DataStatus, SourceDetails, Settings } from "./platform.ts";
 export { sanitizeSettings, settingsLanguages } from "./platform.ts";
 export { resolveSupportedLocale } from "./locale.ts";
-export { parseWarframeList, warframeParts, wikiMainPage, type WarframeEntry } from "./catalog/warframes.ts";
+export {
+  EQUIPMENT_CATEGORIES,
+  EQUIPMENT_FILES,
+  WEAPON_CATEGORIES,
+  assignWeaponParts,
+  joinCatalog,
+  parseEquipment,
+  partLabel,
+  warframeParts,
+  wikiPage,
+  type CatalogEntry,
+  type EquipmentCategory,
+} from "./catalog/equipment.ts";
 export { extractAcquisition, toPlainText } from "./wiki/wikitext.ts";
 export {
   bestBet,

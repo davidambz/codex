@@ -1,13 +1,24 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// The Warframe list and how to get each regular frame, from sources other
-// than the drop tables: WFCD's item catalog and the Warframe Wiki.
+// Warframes, weapons and companions, and how to get the ones that don't
+// come from relics, from sources other than the drop tables: WFCD's item
+// catalog and the Warframe Wiki.
 
-import { extractAcquisition, parseWarframeList, wikiMainPage, type WarframeEntry } from "@iaframe/core";
+import {
+  EQUIPMENT_CATEGORIES,
+  EQUIPMENT_FILES,
+  assignWeaponParts,
+  extractAcquisition,
+  joinCatalog,
+  parseEquipment,
+  wikiPage,
+  type CatalogEntry,
+} from "@iaframe/core";
 import type { FetchJson } from "./ingest.ts";
+import { catalogFileUrl } from "./names.ts";
 
-export const WARFRAMES_URL = "https://raw.githubusercontent.com/WFCD/warframe-items/master/data/json/Warframes.json";
+export const WARFRAMES_URL = catalogFileUrl("Warframes");
 export const WIKI_API_URL = "https://wiki.warframe.com/api.php";
 
 /** MediaWiki serves at most 50 pages' content per request. */
@@ -35,23 +46,39 @@ export function wikiPagesUrl(titles: string[]): string {
   return `${WIKI_API_URL}?${params}`;
 }
 
-/** Every Warframe, with the wiki's acquisition text for the regular ones. */
-export async function fetchWarframes(fetchJson: FetchJson): Promise<WarframeEntry[]> {
-  const frames = parseWarframeList(await fetchJson(WARFRAMES_URL));
-  const regular = frames.filter((f) => !f.prime);
+/**
+ * Every Warframe, weapon and companion, with its parts among `items` (the
+ * drop tables' item names) and, where it doesn't simply come from relics,
+ * the wiki's text on how to get it.
+ */
+export async function fetchCatalog(fetchJson: FetchJson, items: readonly string[]): Promise<CatalogEntry[]> {
+  const lists = await Promise.all(
+    EQUIPMENT_CATEGORIES.flatMap((category) =>
+      EQUIPMENT_FILES[category].map(async (file) => parseEquipment(category, await fetchJson(catalogFileUrl(file)))),
+    ),
+  );
+  const entries = joinCatalog(lists);
+  assignWeaponParts(entries, items);
+  await addAcquisition(fetchJson, entries.filter(needsAcquisition));
+  return entries;
+}
 
-  for (let i = 0; i < regular.length; i += PAGES_PER_REQUEST) {
-    const batch = regular.slice(i, i + PAGES_PER_REQUEST);
-    const titles = batch.map(wikiMainPage);
-    const result = (await fetchJson(wikiPagesUrl(titles))) as WikiQuery;
-    const content = pageContents(result);
-    batch.forEach((frame, j) => {
+/** Regular things, and Primes whose parts aren't in the drop tables (War Prime, from Hunhow). */
+export function needsAcquisition(entry: CatalogEntry): boolean {
+  return !entry.prime || (entry.category !== "warframe" && !entry.parts?.length);
+}
+
+async function addAcquisition(fetchJson: FetchJson, entries: CatalogEntry[]): Promise<void> {
+  for (let i = 0; i < entries.length; i += PAGES_PER_REQUEST) {
+    const batch = entries.slice(i, i + PAGES_PER_REQUEST);
+    const titles = batch.map(wikiPage);
+    const content = pageContents((await fetchJson(wikiPagesUrl(titles))) as WikiQuery);
+    batch.forEach((entry, j) => {
       const text = content.get(titles[j]);
       const paragraphs = text ? extractAcquisition(text) : [];
-      if (paragraphs.length > 0) frame.acquisition = paragraphs;
+      if (paragraphs.length > 0) entry.acquisition = paragraphs;
     });
   }
-  return frames;
 }
 
 /** Page text by the title it was asked for, following the API's title normalisation and redirects. */

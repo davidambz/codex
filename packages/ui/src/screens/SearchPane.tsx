@@ -9,7 +9,15 @@ import { usePlatform } from "../platform/PlatformContext";
 import { SearchIcon } from "../components/icons";
 import { Chips } from "../components/Chips";
 import { usePreference } from "../hooks/usePreference";
-import { isKindGroup, KIND_GROUPS, type KindGroup } from "../kindGroups";
+import {
+  isKindGroup,
+  isWeaponGroup,
+  KIND_GROUPS,
+  searchKinds,
+  WEAPON_GROUPS,
+  type KindGroup,
+  type WeaponGroup,
+} from "../kindGroups";
 import styles from "./SearchPane.module.css";
 
 const DEBOUNCE_MS = 120;
@@ -34,11 +42,12 @@ export function SearchPane({ query, onQueryChange, selected, onSelect, dataVersi
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [group, setGroup] = usePreference<KindGroup>("searchKinds", "all", isKindGroup);
+  const [weapon, setWeapon] = usePreference<WeaponGroup>("searchWeapons", "all", isWeaponGroup);
 
   useEffect(() => {
     let current = true;
     const timer = setTimeout(() => {
-      void platform.search(query, LIMIT, KIND_GROUPS[group]).then((result) => {
+      void platform.search(query, LIMIT, searchKinds(group, weapon)).then((result) => {
         if (!current) return;
         setHits(result);
         setActive(0);
@@ -48,7 +57,7 @@ export function SearchPane({ query, onQueryChange, selected, onSelect, dataVersi
       current = false;
       clearTimeout(timer);
     };
-  }, [platform, query, group, dataVersion]);
+  }, [platform, query, group, weapon, dataVersion]);
 
   // "/" or Ctrl+K jumps to the search field from anywhere.
   useEffect(() => {
@@ -109,6 +118,17 @@ export function SearchPane({ query, onQueryChange, selected, onSelect, dataVersi
           onChange={setGroup}
           options={(Object.keys(KIND_GROUPS) as KindGroup[]).map((value) => ({ value, label: t.app.kindGroups[value] }))}
         />
+        {group === "weapon" && (
+          <Chips<WeaponGroup>
+            label={t.app.weaponFilterLabel}
+            value={weapon}
+            onChange={setWeapon}
+            options={(Object.keys(WEAPON_GROUPS) as WeaponGroup[]).map((value) => ({
+              value,
+              label: t.app.weaponGroups[value],
+            }))}
+          />
+        )}
       </div>
       {query.trim() && hits.length === 0 ? (
         <p className={styles.empty}>{t.app.noResults(query.trim())}</p>

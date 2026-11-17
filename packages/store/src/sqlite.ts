@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DatabaseSync } from "node:sqlite";
-import { isItemLanguage, type Db, type SqlValue, type WarframeEntry } from "@iaframe/core";
+import { EQUIPMENT_CATEGORIES, isItemLanguage, type CatalogEntry, type Db, type SqlValue } from "@iaframe/core";
 import type { ItemNames } from "./names.ts";
 
 /** A read-only connection to a built database, as the queries see it. */
@@ -47,23 +47,32 @@ export function readMeta(path: string): Record<string, string> | undefined {
   }
 }
 
-/** The Warframe list stored in the database at `path`, to carry over when the catalog can't be fetched. */
-export function readWarframes(path: string): WarframeEntry[] {
+/** The catalog stored in the database at `path` (without parts), to carry over when it can't be fetched. */
+export function readCatalog(path: string): CatalogEntry[] {
   let db: DatabaseSync | undefined;
   try {
     db = new DatabaseSync(path, { readOnly: true });
     const rows = db
       .prepare(
-        `SELECT i.name, w.prime, w.counterpart, w.wiki_url, w.acquisition
-         FROM warframes w JOIN items i ON i.id = w.item_id ORDER BY i.name`,
+        `SELECT i.name, e.category, e.prime, e.counterpart, e.wiki_url, e.acquisition
+         FROM equipment e JOIN items i ON i.id = e.item_id ORDER BY i.name`,
       )
-      .all() as { name: string; prime: number; counterpart: string | null; wiki_url: string | null; acquisition: string | null }[];
-    return rows.map((r) => {
-      const entry: WarframeEntry = { name: r.name, prime: r.prime === 1 };
+      .all() as {
+      name: string;
+      category: string;
+      prime: number;
+      counterpart: string | null;
+      wiki_url: string | null;
+      acquisition: string | null;
+    }[];
+    return rows.flatMap((r) => {
+      const category = EQUIPMENT_CATEGORIES.find((c) => c === r.category);
+      if (!category) return [];
+      const entry: CatalogEntry = { name: r.name, category, prime: r.prime === 1 };
       if (r.counterpart) entry.counterpart = r.counterpart;
       if (r.wiki_url) entry.wikiUrl = r.wiki_url;
       if (r.acquisition) entry.acquisition = JSON.parse(r.acquisition) as string[];
-      return entry;
+      return [entry];
     });
   } catch {
     return [];

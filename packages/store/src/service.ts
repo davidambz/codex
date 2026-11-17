@@ -100,7 +100,7 @@ export function createDataService(options: DataServiceOptions): DataService {
       if (result.status === "updated") open();
       emit({ busy: false, info: status.info, checkedAt: now().toISOString(), outcome: result.status });
       if (result.status === "rejected") console.warn("WFCD data rejected:", result.problems);
-      if (result.status === "updated" && result.catalogError) console.warn("Warframe list kept:", result.catalogError);
+      if (result.status === "updated" && result.catalogError) console.warn("Catalog kept:", result.catalogError);
       if (result.status === "updated" && result.namesError) console.warn("Item names kept:", result.namesError);
     } catch (error) {
       // A failed swap may have closed the database; whatever is on disk is still good.

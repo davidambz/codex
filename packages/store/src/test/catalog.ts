@@ -1,7 +1,7 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// A tiny stand-in for WFCD's Warframes.json and the wiki API, for tests.
+// A tiny stand-in for WFCD's item catalog and the wiki API, for tests.
 
 import { WARFRAMES_URL, WIKI_API_URL } from "../catalog.ts";
 import { catalogFileUrl, i18nUrl } from "../names.ts";
@@ -20,6 +20,8 @@ export const WARFRAMES = [
 ];
 
 export const WIKI_PAGES: Record<string, string> = {
+  "War/Prime": "==Acquisition==\nWar Prime is acquired by crafting [[Hunhow's Trinket]].\n\n==Notes==\n",
+  "Helios/Main": "==Acquisition==\nHelios is [[research]]ed in the [[Tenno Lab]].\n",
   "Khora/Main":
     "Intro.\n\n{{Acquisition|name=Khora|Khora's main [[blueprint]] can be purchased from the [[Market]].}}\n\n==Crafting==\n",
   "Nezha/Main":
@@ -35,6 +37,16 @@ export const CATALOG: Record<string, unknown[]> = {
     { name: "Axi G13 Radiant", uniqueName: "/Relics/AxiG13Platinum" },
   ],
   Resources: [{ name: "Oxium", uniqueName: "/Resources/Oxium" }],
+  Primary: [
+    { name: "Lex Prime", isPrime: true, productCategory: "Pistols", wikiaUrl: "https://wiki.warframe.com/w/Lex%2FPrime" },
+    { name: "Amp Prism", productCategory: "OperatorAmps" },
+  ],
+  Melee: [
+    { name: "War", isPrime: false, productCategory: "Melee", wikiaUrl: "https://wiki.warframe.com/w/War" },
+    { name: "War Prime", isPrime: true, productCategory: "Melee", wikiaUrl: "https://wiki.warframe.com/w/War%2FPrime" },
+    { name: "Plague Kripath", type: "Zaw Component" },
+  ],
+  Sentinels: [{ name: "Helios", type: "Sentinel", productCategory: "Sentinels", wikiaUrl: "https://wiki.warframe.com/w/Helios" }],
 };
 
 export const I18N: Record<string, Record<string, { name: string }>> = {

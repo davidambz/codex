@@ -156,6 +156,28 @@ describe("App", () => {
     expect(screen.getAllByRole("option")).toHaveLength(2);
   });
 
+  it("narrows weapon results down to one kind of weapon", async () => {
+    renderApp();
+    await userEvent.type(await screen.findByRole("combobox"), "prime");
+    await screen.findByRole("option", { name: /War Prime/ });
+    await userEvent.click(screen.getByRole("radio", { name: "Weapons" }));
+    await waitFor(() => expect(screen.queryByRole("option", { name: /Nezha/ })).not.toBeInTheDocument());
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+    await userEvent.click(screen.getByRole("radio", { name: "Secondary" }));
+    await waitFor(() => expect(screen.queryByRole("option", { name: /War Prime/ })).not.toBeInTheDocument());
+    expect(screen.getByRole("option", { name: /Lex Prime/ })).toBeInTheDocument();
+  });
+
+  it("shows a weapon with no parts in the drop tables and how to get it", async () => {
+    renderApp();
+    await open("war prime", /War Prime/);
+    expect(await screen.findByRole("heading", { level: 1, name: "War Prime" })).toBeInTheDocument();
+    expect(screen.getAllByText("Melee").length).toBeGreaterThan(0);
+    expect(screen.getByText("None of its parts are in the drop tables.")).toBeInTheDocument();
+    expect(screen.getByText(/Hunhow's Trinket/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "See War" })).toBeInTheDocument();
+  });
+
   it("filters a source's rewards by name", async () => {
     renderApp();
     await open("serration", /^Serration/i);

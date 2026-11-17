@@ -5,7 +5,10 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ingest, WFCD_DATA_URL, WFCD_INFO_URL, type FetchJson } from "./ingest.ts";
-import { openStore, readItemNames, readMeta, readWarframes } from "./sqlite.ts";
+import { openStore, readCatalog, readItemNames, readMeta } from "./sqlite.ts";
+import { SCHEMA_VERSION } from "./schema.ts";
+
+const readWarframes = (path: string) => readCatalog(path).filter((e) => e.category === "warframe");
 import { fakeCatalog } from "./test/catalog.ts";
 import sample from "../../core/src/wfcd/fixtures/sample.json" with { type: "json" };
 
@@ -48,8 +51,8 @@ describe("ingest", () => {
       drops_hash: "h1",
       ingested_at: "2026-11-17T12:00:00.000Z",
       source_modified: "2026-11-17T00:00:00.000Z",
-      schema_version: "3",
-      warframes: "3",
+      schema_version: String(SCHEMA_VERSION),
+      equipment: "7",
     });
     expect(existsSync(`${dbPath}.tmp`)).toBe(false);
   });
@@ -107,24 +110,52 @@ describe("ingest", () => {
 
   it("stores the Warframe list with the wiki's acquisition text", async () => {
     const result = await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
-    expect(result).toMatchObject({ status: "updated", warframes: 3 });
+    expect(result).toMatchObject({ status: "updated", equipment: 7 });
     expect(result).not.toHaveProperty("catalogError");
     expect(readWarframes(dbPath)).toEqual([
       {
         name: "Khora",
+        category: "warframe",
         prime: false,
         counterpart: "Khora Prime",
         wikiUrl: "https://wiki.warframe.com/w/Khora",
         acquisition: ["Khora's main blueprint can be purchased from the Market."],
       },
-      { name: "Khora Prime", prime: true, counterpart: "Khora", wikiUrl: "https://wiki.warframe.com/w/Khora%2FPrime" },
+      { name: "Khora Prime", category: "warframe", prime: true, counterpart: "Khora", wikiUrl: "https://wiki.warframe.com/w/Khora%2FPrime" },
       {
         name: "Nezha",
+        category: "warframe",
         prime: false,
         wikiUrl: "https://wiki.warframe.com/w/Nezha",
         acquisition: ["Nezha's blueprints can be researched from the Tenno Lab in the dojo."],
       },
     ]);
+  });
+
+  it("stores weapons and companions, with parts from the drop tables and wiki text when they don't come from relics", async () => {
+    await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
+    expect(readCatalog(dbPath).filter((e) => e.category !== "warframe")).toEqual([
+      { name: "Helios", category: "companion", prime: false, wikiUrl: "https://wiki.warframe.com/w/Helios", acquisition: ["Helios is researched in the Tenno Lab."] },
+      { name: "Lex Prime", category: "primary", prime: true, wikiUrl: "https://wiki.warframe.com/w/Lex%2FPrime" },
+      { name: "War", category: "melee", prime: false, counterpart: "War Prime", wikiUrl: "https://wiki.warframe.com/w/War" },
+      {
+        name: "War Prime",
+        category: "melee",
+        prime: true,
+        counterpart: "War",
+        wikiUrl: "https://wiki.warframe.com/w/War%2FPrime",
+        acquisition: ["War Prime is acquired by crafting Hunhow's Trinket."],
+      },
+    ]);
+    const store = openStore(dbPath);
+    try {
+      expect(store.all("SELECT p.part FROM parts p JOIN items i ON i.id = p.owner_id WHERE i.name = 'Lex Prime'")).toEqual([
+        { part: "Lex Prime Barrel" },
+      ]);
+      expect(store.get("SELECT kind FROM items WHERE name = 'Lex Prime Barrel'")).toEqual({ kind: "prime_part" });
+    } finally {
+      store.close();
+    }
   });
 
   it("still updates the drops when the catalog is down, keeping the last Warframe list", async () => {
@@ -133,7 +164,7 @@ describe("ingest", () => {
     const down = wfcd("h2");
     down.catalogUp = false;
     const result = await ingest({ dbPath, fetchJson: down.fetchJson, now });
-    expect(result).toMatchObject({ status: "updated", hash: "h2", warframes: 3 });
+    expect(result).toMatchObject({ status: "updated", hash: "h2", equipment: 7 });
     expect(result).toHaveProperty("catalogError");
     expect(readWarframes(dbPath).map((w) => w.name)).toEqual(["Khora", "Khora Prime", "Nezha"]);
 
@@ -147,7 +178,7 @@ describe("ingest", () => {
   it("builds without Warframes when the catalog is down on the first run", async () => {
     const down = wfcd("h1");
     down.catalogUp = false;
-    expect(await ingest({ dbPath, fetchJson: down.fetchJson, now })).toMatchObject({ status: "updated", warframes: 0 });
+    expect(await ingest({ dbPath, fetchJson: down.fetchJson, now })).toMatchObject({ status: "updated", equipment: 0 });
   });
 
   it("stores item names in the languages asked for, only where they differ", async () => {
