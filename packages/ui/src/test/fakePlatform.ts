@@ -10,6 +10,37 @@ export const items: Record<string, ItemDetails> = {
   "Axi A21 Relic": { name: "Axi A21 Relic", kind: "relic", relic: { tier: "Axi", code: "A21", vaulted: false } },
   Serration: { name: "Serration", kind: "mod" },
   "Mystery Thing": { name: "Mystery Thing", kind: "other" },
+  Nezha: {
+    name: "Nezha",
+    kind: "warframe",
+    warframe: {
+      prime: false,
+      counterpart: "Nezha Prime",
+      wikiUrl: "https://wiki.warframe.com/w/Nezha",
+      acquisition: ["Nezha's blueprints can be researched from the Tenno Lab in the dojo."],
+      parts: [
+        { name: "Nezha Blueprint", slot: "blueprint", status: "none" },
+        { name: "Nezha Chassis Blueprint", slot: "chassis", status: "none" },
+        { name: "Nezha Neuroptics Blueprint", slot: "neuroptics", status: "none" },
+        { name: "Nezha Systems Blueprint", slot: "systems", status: "none" },
+      ],
+    },
+  },
+  "Nezha Prime": {
+    name: "Nezha Prime",
+    kind: "warframe",
+    warframe: {
+      prime: true,
+      counterpart: "Nezha",
+      parts: [
+        { name: "Nezha Prime Blueprint", slot: "blueprint", status: "vaulted", relics: 8, openRelics: 0 },
+        { name: "Nezha Prime Chassis Blueprint", slot: "chassis", status: "relics", relics: 5, openRelics: 2 },
+        { name: "Nezha Prime Neuroptics Blueprint", slot: "neuroptics", status: "drops", bestChance: 12.5 },
+        { name: "Nezha Prime Systems Blueprint", slot: "systems", status: "vaulted", relics: 9, openRelics: 0 },
+      ],
+    },
+  },
+  "Nezha Prime Chassis Blueprint": { name: "Nezha Prime Chassis Blueprint", kind: "prime_part", vaulted: false },
 };
 
 export const deep: Record<string, DeepDrops> = {

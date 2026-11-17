@@ -1,7 +1,7 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { ItemKind, SourceKind } from "@iaframe/core";
+import type { ItemKind, SourceKind, WarframePart } from "@iaframe/core";
 
 export interface Strings {
   app: {
@@ -48,6 +48,19 @@ export interface Strings {
     filterLabel: string;
     filterAll: string;
     hideVaulted: string;
+  };
+  warframe: {
+    partsLabel: string;
+    slots: Record<WarframePart["slot"], string>;
+    drops: (chance: string) => string;
+    relics: (open: number, total: number) => string;
+    vaulted: (total: number) => string;
+    none: string;
+    noneHint: string;
+    howLabel: string;
+    wikiCredit: string;
+    openWiki: string;
+    counterpart: (name: string) => string;
   };
   table: {
     source: string;
