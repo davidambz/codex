@@ -234,6 +234,9 @@ export interface EquipmentCard {
   prime: boolean;
   imageName?: string;
   parts: Pick<EquipmentPart, "name" | "label" | "status">[];
+  /** What else the recipe consumes, as on the item sheet. */
+  materials: Omit<RecipeMaterial, "linked">[];
+  credits?: number;
   /** The first sentence of how to get it, from the wiki, for a hint on the card. */
   howTo?: string;
   note?: AcquisitionNote;
@@ -278,9 +281,26 @@ export function listEquipment(db: Db): EquipmentCard[] {
   )) {
     owned.set(owner, [...(owned.get(owner) ?? []), part]);
   }
+  const consumed = new Map<string, EquipmentCard["materials"]>();
+  for (const m of db.all<{ owner: string; name: string; count: number; image_name: string | null }>(
+    `SELECT o.name AS owner, i.name, m.count, i.image_name
+     FROM materials m JOIN items o ON o.id = m.owner_id JOIN items i ON i.id = m.item_id
+     ORDER BY o.name, m.position`,
+  )) {
+    const material: EquipmentCard["materials"][number] = { name: m.name, count: m.count };
+    if (m.image_name) material.imageName = m.image_name;
+    consumed.set(m.owner, [...(consumed.get(m.owner) ?? []), material]);
+  }
   return db
-    .all<{ name: string; category: EquipmentCategory; prime: number; image_name: string | null; acquisition: string | null }>(
-      `SELECT i.name, e.category, e.prime, e.image_name, e.acquisition
+    .all<{
+      name: string;
+      category: EquipmentCategory;
+      prime: number;
+      image_name: string | null;
+      acquisition: string | null;
+      credits: number | null;
+    }>(
+      `SELECT i.name, e.category, e.prime, e.image_name, e.acquisition, e.credits
        FROM equipment e JOIN items i ON i.id = e.item_id ORDER BY i.name`,
     )
     .map((row) => {
@@ -292,7 +312,9 @@ export function listEquipment(db: Db): EquipmentCard[] {
         category: row.category,
         prime: row.prime === 1,
         parts: names.map(([name, label]) => ({ name, label, status: partStatus(stats.get(name)).status })),
+        materials: consumed.get(row.name) ?? [],
       };
+      if (row.credits !== null) card.credits = row.credits;
       if (row.image_name) card.imageName = row.image_name;
       const acquisition = row.acquisition ? (JSON.parse(row.acquisition) as string[]) : [];
       if (acquisition[0]) card.howTo = firstSentence(acquisition[0]);
