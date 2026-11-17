@@ -5,7 +5,11 @@ import type { DataStatus, DeepDrops, ItemDetails, Platform, SourceDetails } from
 
 const hydron = { key: "mission:Sedna/Hydron", kind: "mission", name: "Hydron", location: "Sedna", gameMode: "Defense" } as const;
 
+const cetus = { key: "bounty:Plains of Eidolon/Level 5 - 15 Cetus Bounty", kind: "bounty", name: "Level 5 - 15 Cetus Bounty", location: "Plains of Eidolon" } as const;
+const ghoul = { key: "bounty:Plains of Eidolon/Ghoul Purge", kind: "bounty", name: "Ghoul Purge", location: "Plains of Eidolon", isEvent: true } as const;
+
 export const items: Record<string, ItemDetails> = {
+  "Gara Chassis Blueprint": { name: "Gara Chassis Blueprint", kind: "blueprint" },
   "Alternox Prime Stock": { name: "Alternox Prime Stock", kind: "prime_part", vaulted: false },
   "Axi A21 Relic": { name: "Axi A21 Relic", kind: "relic", relic: { tier: "Axi", code: "A21", vaulted: false } },
   Serration: { name: "Serration", kind: "mod" },
@@ -78,6 +82,15 @@ export const deep: Record<string, DeepDrops> = {
     relics: [],
   },
   "Mystery Thing": { direct: [], relics: [] },
+  "Gara Chassis Blueprint": {
+    direct: [
+      { source: ghoul, chance: 20, slots: 1, conditional: false },
+      { source: cetus, chance: 10, slots: 1, conditional: false },
+      { source: hydron, rotation: "C", chance: 7, slots: 1, conditional: false },
+      { source: hydron, rotation: "B", chance: 5, slots: 1, conditional: false },
+    ],
+    relics: [],
+  },
 };
 
 export const sources: Record<string, SourceDetails> = {
@@ -87,7 +100,13 @@ export const sources: Record<string, SourceDetails> = {
   },
   [hydron.key]: {
     source: hydron,
-    drops: [{ item: "Serration", kind: "mod", rotation: "B", rarity: "Rare", chance: 8.6, conditional: false }],
+    drops: [
+      { item: "Serration", kind: "mod", rotation: "B", rarity: "Rare", chance: 8.6, conditional: false },
+      { item: "400 Endo", kind: "endo", rotation: "A", rarity: "Common", chance: 20, conditional: false },
+      ...["Oxium", "Polymer Bundle", "Rubedo", "Plastids", "Ferrite", "Salvage", "Circuits", "Alloy Plate", "Nano Spores", "Morphics"].map(
+        (item) => ({ item, kind: "other" as const, rotation: "A" as const, rarity: "Common", chance: 8, conditional: false }),
+      ),
+    ],
   },
 };
 
@@ -101,9 +120,10 @@ export function fakePlatform(overrides: Partial<Platform> & { status?: DataStatu
   return {
     kind: "web",
     appVersion: "0.0.0",
-    search: async (query) =>
+    search: async (query, _limit, kinds) =>
       Object.values(items)
         .filter((item) => query.trim() && item.name.toLowerCase().includes(query.trim().toLowerCase().split(" ")[0]))
+        .filter((item) => !kinds?.length || kinds.includes(item.kind))
         .map((item) => ({ name: item.name, kind: item.kind, score: 1 })),
     getItem: async (name) => items[name],
     getDropsDeep: async (name) => deep[name] ?? { direct: [], relics: [] },

@@ -4,7 +4,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, screen, session, shell } from "electron";
-import type { DataStatus, Theme } from "@iaframe/core";
+import { ITEM_KINDS, type DataStatus, type ItemKind, type Theme } from "@iaframe/core";
 import { createDataService, type DataService } from "@iaframe/store";
 import { IPC } from "../shared/api";
 
@@ -53,9 +53,21 @@ function text(value: unknown, max = 200): string {
   return value;
 }
 
+function itemKinds(value: unknown): ItemKind[] | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value) || !value.every((kind) => ITEM_KINDS.includes(kind as ItemKind))) {
+    throw new Error("expected a list of item kinds");
+  }
+  return value as ItemKind[];
+}
+
 function registerIpc(service: DataService) {
-  ipcMain.handle(IPC.search, (_event, query: unknown, limit: unknown) =>
-    service.search(text(query), typeof limit === "number" ? Math.min(Math.max(1, limit), 50) : undefined),
+  ipcMain.handle(IPC.search, (_event, query: unknown, limit: unknown, kinds: unknown) =>
+    service.search(
+      text(query),
+      typeof limit === "number" ? Math.min(Math.max(1, limit), 50) : undefined,
+      itemKinds(kinds),
+    ),
   );
   ipcMain.handle(IPC.getItem, (_event, name: unknown) => service.getItem(text(name)));
   ipcMain.handle(IPC.getDropsDeep, (_event, name: unknown) => service.getDropsDeep(text(name)));

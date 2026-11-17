@@ -11,6 +11,9 @@ function dataApi(): Plugin {
     apply: "serve",
     async configureServer(server) {
       const { createDataService } = await import("@iaframe/store");
+      const { ITEM_KINDS } = await import("@iaframe/core");
+      const kinds = (value: string) =>
+        value ? ITEM_KINDS.filter((kind) => value.split(",").includes(kind)) : undefined;
       const data = createDataService({
         dbPath: fileURLToPath(new URL("../../data/iaframe.db", import.meta.url)),
       });
@@ -20,7 +23,7 @@ function dataApi(): Plugin {
         const url = new URL(req.url ?? "/", "http://localhost");
         const p = (name: string) => url.searchParams.get(name) ?? "";
         const routes: Record<string, () => unknown> = {
-          "/search": () => data.search(p("q"), Number(p("limit")) || 10),
+          "/search": () => data.search(p("q"), Number(p("limit")) || 10, kinds(p("kinds"))),
           "/item": () => data.getItem(p("name")),
           "/deep": () => data.getDropsDeep(p("name")),
           "/source": () => data.getSource(p("key")),

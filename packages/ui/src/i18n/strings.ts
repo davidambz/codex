@@ -1,7 +1,8 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { ItemKind, SourceKind, WarframePart } from "@iaframe/core";
+import type { ItemKind, RelicSortKey, SourceKind, WarframePart } from "@iaframe/core";
+import type { KindGroup } from "../kindGroups";
 
 export interface Strings {
   app: {
@@ -9,6 +10,8 @@ export interface Strings {
     searchPlaceholder: string;
     noResults: (query: string) => string;
     back: string;
+    kindFilterLabel: string;
+    kindGroups: Record<KindGroup, string>;
   };
   data: {
     label: string;
@@ -48,6 +51,27 @@ export interface Strings {
     filterLabel: string;
     filterAll: string;
     hideVaulted: string;
+    bestLabel: string;
+    bestDirect: string;
+    bestRelic: string;
+    bestRelicChances: (intact: string, radiant: string) => string;
+    bestRelicWhere: (source: string) => string;
+    bestRelicNoSource: string;
+    planetLabel: string;
+    planetAll: string;
+    rotationLabel: string;
+    rotationAll: string;
+    textFilterLabel: string;
+    textFilterPlaceholder: string;
+    hideEvents: string;
+    hideConditional: string;
+    shownOf: (shown: number, total: number) => string;
+    noMatches: string;
+    clearFilters: string;
+    relicSortLabel: string;
+    relicSorts: Record<RelicSortKey, string>;
+    tierLabel: string;
+    tierAll: string;
   };
   warframe: {
     partsLabel: string;
@@ -73,11 +97,15 @@ export interface Strings {
     average: (count: string, unit: string) => string;
     forNinety: (count: string) => string;
     event: string;
+    sortBy: (column: string) => string;
   };
   source: {
     rewardsLabel: string;
     rotationGroup: (r: string) => string;
     noRotation: string;
+    filterLabel: string;
+    filterPlaceholder: string;
+    noMatches: string;
   };
   refinements: Record<"Intact" | "Exceptional" | "Flawless" | "Radiant", string>;
 }

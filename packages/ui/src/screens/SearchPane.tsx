@@ -6,6 +6,9 @@ import type { SearchHit } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
 import { usePlatform } from "../platform/PlatformContext";
 import { SearchIcon } from "../components/icons";
+import { Chips } from "../components/Chips";
+import { usePreference } from "../hooks/usePreference";
+import { isKindGroup, KIND_GROUPS, type KindGroup } from "../kindGroups";
 import styles from "./SearchPane.module.css";
 
 const DEBOUNCE_MS = 120;
@@ -28,11 +31,12 @@ export function SearchPane({ query, onQueryChange, selected, onSelect, dataVersi
   const [active, setActive] = useState(0);
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [group, setGroup] = usePreference<KindGroup>("searchKinds", "all", isKindGroup);
 
   useEffect(() => {
     let current = true;
     const timer = setTimeout(() => {
-      void platform.search(query, LIMIT).then((result) => {
+      void platform.search(query, LIMIT, KIND_GROUPS[group]).then((result) => {
         if (!current) return;
         setHits(result);
         setActive(0);
@@ -42,7 +46,7 @@ export function SearchPane({ query, onQueryChange, selected, onSelect, dataVersi
       current = false;
       clearTimeout(timer);
     };
-  }, [platform, query, dataVersion]);
+  }, [platform, query, group, dataVersion]);
 
   // "/" or Ctrl+K jumps to the search field from anywhere.
   useEffect(() => {
@@ -96,6 +100,12 @@ export function SearchPane({ query, onQueryChange, selected, onSelect, dataVersi
           autoFocus
           spellCheck={false}
           autoComplete="off"
+        />
+        <Chips<KindGroup>
+          label={t.app.kindFilterLabel}
+          value={group}
+          onChange={setGroup}
+          options={(Object.keys(KIND_GROUPS) as KindGroup[]).map((value) => ({ value, label: t.app.kindGroups[value] }))}
         />
       </div>
       {query.trim() && hits.length === 0 ? (

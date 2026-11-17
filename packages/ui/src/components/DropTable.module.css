@@ -101,3 +101,31 @@
     display: none;
   }
 }
+
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sort:hover,
+.sort[data-active="true"] {
+  color: var(--color-text);
+}
+
+.arrow {
+  font-size: 0.7em;
+  color: var(--color-text-tertiary);
+}
+
+.sort[data-active="true"] .arrow {
+  color: var(--color-accent);
+}

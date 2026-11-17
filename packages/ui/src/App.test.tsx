@@ -1,7 +1,7 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { DataStatus, Platform } from "@iaframe/core";
 import { App } from "./App";
@@ -26,6 +26,8 @@ async function open(query: string, name: RegExp) {
   await screen.findByRole("option", { name });
   await userEvent.keyboard("{Enter}");
 }
+
+beforeEach(() => localStorage.clear());
 
 describe("App", () => {
   it("explains the first download while there is no data", async () => {
@@ -54,7 +56,8 @@ describe("App", () => {
     await open("alternox", /^Alternox/i);
     expect(await screen.findByRole("heading", { level: 1, name: "Alternox Prime Stock" })).toBeInTheDocument();
 
-    const relic = screen.getByRole("button", { name: "Axi A21 Relic" }).closest("div")!.parentElement!;
+    const relics = screen.getByRole("heading", { name: "Relics" }).closest("section")!;
+    const relic = within(relics).getByRole("button", { name: "Axi A21 Relic" }).closest("div")!.parentElement!;
     expect(within(relic).getByText("Radiant")).toBeInTheDocument();
     expect(within(relic).getByText("10%")).toBeInTheDocument();
     expect(within(relic).getByRole("button", { name: "Hydron" })).toBeInTheDocument();
@@ -77,19 +80,90 @@ describe("App", () => {
     await screen.findByRole("heading", { level: 1, name: "Serration" });
     expect(screen.getByText("0.332%")).toHaveAttribute("title", "The enemy drops from this table 3% of the time; this item is 11.1% of it");
     await userEvent.click(screen.getByRole("radio", { name: "Enemy" }));
-    expect(screen.queryByRole("button", { name: "Hydron" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Void Shade" })).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).queryByRole("button", { name: "Hydron" })).not.toBeInTheDocument();
+    expect(within(table).getByRole("button", { name: "Void Shade" })).toBeInTheDocument();
   });
 
   it("navigates from an item to a source and back", async () => {
     renderApp();
     await open("serration", /^Serration/i);
-    await userEvent.click(await screen.findByRole("button", { name: "Hydron" }));
+    await userEvent.click(within(await screen.findByRole("table")).getByRole("button", { name: "Hydron" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Hydron" })).toBeInTheDocument();
     expect(screen.getByText("Sedna · Defense")).toBeInTheDocument();
     expect(screen.getByText("Rotation B")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Serration" })).toBeInTheDocument();
+  });
+
+  it("sums up the best bet before the tables", async () => {
+    renderApp();
+    await open("alternox", /^Alternox/i);
+    const best = (await screen.findByRole("heading", { name: "Best bet" })).closest("section")!;
+    expect(within(best).getByRole("button", { name: "Axi A21 Relic" })).toBeInTheDocument();
+    expect(within(best).getByText("2% Intact · 10% Radiant")).toBeInTheDocument();
+    expect(within(best).getByText(/Farm the relic at Hydron · Sedna · Rotation C/)).toBeInTheDocument();
+  });
+
+  it("sorts the drop table from its headers, and remembers it", async () => {
+    renderApp();
+    await open("serration", /^Serration/i);
+    const names = () =>
+      within(screen.getByRole("table"))
+        .getAllByRole("button")
+        .filter((b) => !b.closest("th"))
+        .map((b) => b.textContent);
+    expect(names()).toEqual(["Hydron", "Void Shade"]);
+    await userEvent.click(screen.getByRole("button", { name: /^Chance/ }));
+    expect(names()).toEqual(["Void Shade", "Hydron"]);
+    expect(screen.getByRole("columnheader", { name: /Chance/ })).toHaveAttribute("aria-sort", "ascending");
+    await userEvent.click(screen.getByRole("button", { name: /^Source/ }));
+    expect(names()).toEqual(["Hydron", "Void Shade"]);
+    expect(JSON.parse(localStorage.getItem("iaframe:dropSort")!)).toEqual({ key: "source", direction: "asc" });
+  });
+
+  it("filters the drop table by planet, rotation, text and hides events", async () => {
+    renderApp();
+    await open("gara chassis", /^Gara Chassis/i);
+    await screen.findByRole("heading", { level: 1, name: "Gara Chassis Blueprint" });
+    const rows = () => within(screen.getByRole("table")).getAllByRole("row").length - 1;
+    expect(rows()).toBe(4);
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Planet" }), "Sedna");
+    expect(rows()).toBe(2);
+    expect(screen.getByText("2 of 4")).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Rotation" }), "C");
+    expect(rows()).toBe(1);
+    await userEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(rows()).toBe(4);
+
+    await userEvent.type(screen.getByRole("searchbox", { name: "Filter sources" }), "cetus");
+    expect(rows()).toBe(1);
+    await userEvent.clear(screen.getByRole("searchbox", { name: "Filter sources" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Hide events" }));
+    expect(rows()).toBe(3);
+
+    await userEvent.type(screen.getByRole("searchbox", { name: "Filter sources" }), "zzz");
+    expect(screen.getByText("No source matches these filters.")).toBeInTheDocument();
+  });
+
+  it("filters search results by type", async () => {
+    renderApp();
+    await userEvent.type(await screen.findByRole("combobox"), "nezha");
+    await screen.findByRole("option", { name: /Nezha Prime Chassis/ });
+    await userEvent.click(screen.getByRole("radio", { name: "Warframes" }));
+    await waitFor(() => expect(screen.queryByRole("option", { name: /Nezha Prime Chassis/ })).not.toBeInTheDocument());
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+  });
+
+  it("filters a source's rewards by name", async () => {
+    renderApp();
+    await open("serration", /^Serration/i);
+    await userEvent.click(within(await screen.findByRole("table")).getByRole("button", { name: "Hydron" }));
+    await screen.findByRole("heading", { level: 1, name: "Hydron" });
+    await userEvent.type(screen.getByRole("searchbox", { name: "Filter rewards" }), "endo");
+    expect(screen.getByText("1 of 12")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Serration" })).not.toBeInTheDocument();
   });
 
   it("says when nothing drops an item", async () => {

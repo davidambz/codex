@@ -14,3 +14,18 @@ export type { Platform, Theme, DataStatus, SourceDetails } from "./platform.ts";
 export { resolveSupportedLocale } from "./locale.ts";
 export { parseWarframeList, warframeParts, wikiMainPage, type WarframeEntry } from "./catalog/warframes.ts";
 export { extractAcquisition, toPlainText } from "./wiki/wikitext.ts";
+export {
+  bestBet,
+  dropFacets,
+  filterDrops,
+  filterRelics,
+  relicTiers,
+  sortDrops,
+  sortRelics,
+  type BestBet,
+  type DropFilter,
+  type DropSortKey,
+  type RelicFilter,
+  type RelicSortKey,
+  type SortDirection,
+} from "./filters.ts";
