@@ -1,13 +1,15 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { SourceItemRow } from "@iaframe/core";
+import { useState } from "react";
+import { tokenize, type SourceItemRow } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
 import { usePlatform } from "../platform/PlatformContext";
 import { useQuery } from "../hooks/useQuery";
 import { Chance } from "../components/Chance";
 import { Runs } from "../components/DropTable";
 import { Tag } from "../components/Tag";
+import { FilterBar, FilterText } from "../components/FilterControls";
 import type { Navigate } from "../navigation";
 import styles from "./Detail.module.css";
 
@@ -21,11 +23,20 @@ export function SourceView({ sourceKey, dataVersion, openItem }: SourceViewProps
   const { t } = useI18n();
   const platform = usePlatform();
   const details = useQuery(() => platform.getSource(sourceKey), [platform, sourceKey, dataVersion]);
+  const [text, setText] = useState("");
   if (!details) return <div className={styles.view} aria-busy={details === undefined} />;
   const { source, drops } = details;
 
+  const words = tokenize(text);
+  const shown = words.length
+    ? drops.filter((row) => {
+        const tokens = tokenize(row.item);
+        return words.every((word) => tokens.some((token) => token.startsWith(word)));
+      })
+    : drops;
+
   const groups = new Map<string, SourceItemRow[]>();
-  for (const row of drops) {
+  for (const row of shown) {
     const title =
       [row.rotation && t.source.rotationGroup(row.rotation), row.stage, row.refinement && t.refinements[row.refinement]]
         .filter(Boolean)
@@ -45,6 +56,13 @@ export function SourceView({ sourceKey, dataVersion, openItem }: SourceViewProps
           <p className={styles.subtitle}>{[source.location, source.gameMode].filter(Boolean).join(" · ")}</p>
         )}
       </header>
+      {drops.length > 10 && (
+        <FilterBar>
+          <FilterText label={t.source.filterLabel} placeholder={t.source.filterPlaceholder} value={text} onChange={setText} />
+          {shown.length !== drops.length && <span className={styles.count}>{t.item.shownOf(shown.length, drops.length)}</span>}
+        </FilterBar>
+      )}
+      {shown.length === 0 && <p className={styles.note}>{t.source.noMatches}</p>}
       <div className={styles.groups}>
         {[...groups].map(([title, rows]) => (
           <section key={title} className={styles.section}>
