@@ -46,6 +46,16 @@ describe("editDistance", () => {
 });
 
 describe("search", () => {
+  it("finds an item by any of its names, returning the English one", () => {
+    const multi = buildSearchIndex([
+      { name: "Oxium", kind: "other", aliases: ["Óxio", "Oxio"] },
+      { name: "Arcane Momentum", kind: "arcane", aliases: ["Impulso Arcano"] },
+    ]);
+    expect(multi.search("oxio", 1)).toEqual([{ name: "Oxium", kind: "other", score: expect.any(Number) }]);
+    expect(multi.search("impulso arc", 1)[0]?.name).toBe("Arcane Momentum");
+    expect(multi.search("momentum", 1)[0]?.name).toBe("Arcane Momentum");
+  });
+
   it("keeps only the kinds asked for", () => {
     expect(index.search("khora", 10, ["relic"])).toEqual([]);
     expect(index.search("g1", 10, ["relic"]).map((h) => h.name)).toEqual(["Lith G1 Relic", "Axi G13 Relic"]);

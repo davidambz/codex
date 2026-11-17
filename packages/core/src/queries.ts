@@ -9,6 +9,7 @@ import type { ItemKind, Refinement, RelicTier, Rotation, Source, SourceKind } fr
 import { REFINEMENTS } from "./types.ts";
 import type { SearchEntry } from "./search/index.ts";
 import { warframeParts } from "./catalog/warframes.ts";
+import type { ItemLanguage } from "./catalog/names.ts";
 
 export interface RelicInfo {
   tier: RelicTier;
@@ -150,9 +151,31 @@ const DROPS_OF_ITEM = `
   WHERE i.name = ?
   ORDER BY d.chance DESC, s.name`;
 
-/** Every item, for the search index. */
-export function listItems(db: Db): SearchEntry[] {
-  return db.all<SearchEntry>("SELECT name, kind FROM items ORDER BY name");
+/** Every item, for the search index, with its names in `languages` as aliases. */
+export function listItems(db: Db, languages: readonly ItemLanguage[] = []): SearchEntry[] {
+  const items = db.all<{ name: string; kind: ItemKind }>("SELECT name, kind FROM items ORDER BY name");
+  const wanted = languages.filter((language) => language !== "en");
+  if (wanted.length === 0) return items;
+  const aliases = new Map<string, string[]>();
+  for (const language of wanted) {
+    for (const [item, name] of Object.entries(getItemNames(db, language))) {
+      aliases.set(item, [...(aliases.get(item) ?? []), name]);
+    }
+  }
+  return items.map((item) => {
+    const extra = aliases.get(item.name);
+    return extra ? { ...item, aliases: extra } : item;
+  });
+}
+
+/** English name -> name in `language`, for every item whose name differs. */
+export function getItemNames(db: Db, language: ItemLanguage): Record<string, string> {
+  if (language === "en") return {};
+  const rows = db.all<{ item: string; name: string }>(
+    "SELECT i.name AS item, n.name FROM names n JOIN items i ON i.id = n.item_id WHERE n.lang = ?",
+    language,
+  );
+  return Object.fromEntries(rows.map((row) => [row.item, row.name]));
 }
 
 export function getItem(db: Db, name: string): ItemDetails | undefined {
