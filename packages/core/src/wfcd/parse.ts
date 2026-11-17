@@ -92,7 +92,15 @@ const KIND_RANK: Record<ItemKind, number> = {
   ayatan: 3,
   prime_part: 3,
   relic: 4,
+  part: 1,
   warframe: 5,
+  primary: 5,
+  secondary: 5,
+  melee: 5,
+  arch_gun: 5,
+  arch_melee: 5,
+  companion: 5,
+  companion_weapon: 5,
 };
 
 interface DropFields {

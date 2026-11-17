@@ -3,9 +3,19 @@
 
 /** What a thing is, guessed from its name and the table it came from. */
 export const ITEM_KINDS = [
+  // Equipment, one kind per category (see catalog/equipment.ts).
   "warframe",
+  "primary",
+  "secondary",
+  "melee",
+  "arch_gun",
+  "arch_melee",
+  "companion",
+  "companion_weapon",
   "relic",
   "prime_part",
+  /** A part of a regular weapon or companion ("War Blade"). */
+  "part",
   "blueprint",
   "mod",
   "arcane",
