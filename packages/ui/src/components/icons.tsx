@@ -31,6 +31,25 @@ export function IAFrameMark(props: IconProps) {
   );
 }
 
+/**
+ * Credits, which warframe-items has no picture of: a coin with the
+ * game's barred C.
+ */
+export function CreditsIcon(props: IconProps) {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden {...props}>
+      <circle cx="12" cy="12" r="10.5" fill="var(--credits-coin)" stroke="var(--credits-rim)" strokeWidth="1.5" />
+      <path
+        d="M16 8.6A5 5 0 1 0 16 15.4M12.5 5.5v13"
+        fill="none"
+        stroke="var(--credits-mark)"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function SearchIcon(props: IconProps) {
   return (
     <svg {...base(props)}>

@@ -390,6 +390,13 @@
   object-fit: contain;
 }
 
+/* The drawn coin is all coin; the pictures have some margin. */
+.creditsIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  justify-self: center;
+}
+
 .materialCount {
   font-size: var(--text-sm);
   font-weight: 600;

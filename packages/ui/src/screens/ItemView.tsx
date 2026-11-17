@@ -36,6 +36,7 @@ import { Chance } from "../components/Chance";
 import { Segmented } from "../components/Segmented";
 import { Tag } from "../components/Tag";
 import { ItemImage } from "../components/ItemImage";
+import { CreditsIcon } from "../components/icons";
 import { formatChance, formatCount } from "../format";
 import type { Navigate } from "../navigation";
 import styles from "./Detail.module.css";
@@ -406,7 +407,7 @@ function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openIte
             ))}
             {sheet.credits !== undefined && (
               <li className={styles.material}>
-                <span className={styles.materialIcon} data-empty="" aria-hidden />
+                <CreditsIcon className={styles.creditsIcon} />
                 <span className={styles.materialCount}>{formatCount(sheet.credits, locale)}</span>
                 <span className={styles.materialName}>{t.equipment.credits}</span>
               </li>
