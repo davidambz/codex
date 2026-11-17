@@ -11,6 +11,7 @@ import type {
   Settings,
   SourceDetails,
 } from "@iaframe/core";
+import { firstSentence } from "@iaframe/core";
 
 /** Names the fake knows in Portuguese, as the real data would have them. */
 export const names: Partial<Record<ItemLanguage, Record<string, string>>> = {
@@ -203,6 +204,7 @@ export function fakePlatform(
                 prime: item.equipment.prime,
                 imageName: `${item.name.replace(/ /g, "")}.png`,
                 parts: item.equipment.parts.map(({ name, label, status }) => ({ name, label, status })),
+                ...(item.equipment.acquisition ? { howTo: firstSentence(item.equipment.acquisition[0]) } : {}),
               },
             ]
           : [],

@@ -255,13 +255,17 @@ describe("App", () => {
     // Nezha Prime: neuroptics drop, chassis from farmable relics, the rest vaulted.
     expect(screen.getByRole("button", { name: "Nezha Prime Chassis Blueprint · farmable relics" })).toBeInTheDocument();
     // Parts no drop table names still show, greyed out.
-    expect(screen.getAllByRole("img", { name: /not in the drop tables/ })).toHaveLength(5);
-    expect(screen.getByRole("img", { name: "Receiver: not in the drop tables" })).toBeInTheDocument();
+    expect(screen.getAllByRole("img", { name: /not a drop/ })).toHaveLength(5);
+    expect(screen.getByRole("img", { name: "Receiver: not a drop (bought, quest, research...)" })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("radio", { name: "Melee" }));
     expect(screen.getByText("1 of 4")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "War Prime" })).toBeInTheDocument();
-    expect(screen.getByText("Not in drop tables", { selector: "span" })).toBeInTheDocument();
+    // How to get it, from the wiki, on hover.
+    expect(screen.getByText("Other ways to get it", { selector: "span" })).toHaveAttribute(
+      "title",
+      "War Prime is acquired upon crafting Hunhow's Trinket.",
+    );
 
     await userEvent.click(screen.getByRole("radio", { name: "All" }));
     await userEvent.selectOptions(screen.getByRole("combobox", { name: "Availability" }), "vaulted");

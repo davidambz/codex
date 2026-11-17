@@ -111,6 +111,7 @@ describe("queries", () => {
       label: "Chassis",
       status: "vaulted",
     });
+    expect(cards.find((c) => c.name === "War Prime")?.howTo).toBe("Crafted from Hunhow's Trinket.");
     expect(cards.find((c) => c.name === "Lex Prime")).toMatchObject({ category: "secondary", prime: true, parts: [{ label: "Barrel" }] });
     // Same answers as the item page.
     for (const card of cards) {

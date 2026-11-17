@@ -3,7 +3,9 @@
 
 import {
   assignWeaponParts,
+  equipmentPartLabel,
   joinCatalog,
+  partImage,
   parseEquipment,
   partLabel,
   recipePiece,
@@ -94,6 +96,38 @@ describe("warframeParts", () => {
   });
 });
 
+describe("Warframe parts", () => {
+  it("are the four blueprints, unless the drop tables name variants like Equinox's", () => {
+    const frames: CatalogEntry[] = [
+      { name: "Nezha", category: "warframe", prime: false },
+      { name: "Equinox", category: "warframe", prime: false },
+      { name: "Equinox Prime", category: "warframe", prime: true },
+    ];
+    assignWeaponParts(frames, [
+      "Equinox Night Chassis Blueprint",
+      "Equinox Day Chassis Blueprint",
+      "Equinox Day Aspect Blueprint",
+      "Equinox Prime Chassis Blueprint",
+      "Equinox Prime Blueprint",
+    ]);
+    expect(frames[0].parts).toEqual(warframeParts("Nezha"));
+    expect(frames[1].parts).toEqual([
+      "Equinox Blueprint",
+      "Equinox Day Aspect Blueprint",
+      "Equinox Day Chassis Blueprint",
+      "Equinox Night Chassis Blueprint",
+    ]);
+    expect(frames[2].parts).toEqual(warframeParts("Equinox Prime"));
+  });
+
+  it("names each piece", () => {
+    expect(equipmentPartLabel("warframe", "Equinox", "Equinox Day Chassis Blueprint")).toBe("Day Chassis");
+    expect(equipmentPartLabel("warframe", "Nezha", "Nezha Blueprint")).toBe("Blueprint");
+    expect(equipmentPartLabel("primary", "Soma", "Soma Barrel")).toBe("Barrel");
+    expect(partImage("Night Chassis", false)).toBe("GenericWarframeChassis.png");
+  });
+});
+
 describe("recipe pieces", () => {
   it("reads the piece from the component's internal name", () => {
     expect(recipePiece("/Lotus/Types/Recipes/Weapons/WeaponParts/SomaPrimeBarrel")).toBe("Barrel");
@@ -160,7 +194,7 @@ describe("weapon parts", () => {
       ["Lex", ["Lex Blueprint"]],
       ["Lex Prime", ["Lex Prime Blueprint", "Lex Prime Barrel", "Lex Prime Receiver"]],
       ["Gorgon", undefined],
-      ["Nezha", undefined],
+      ["Nezha", warframeParts("Nezha")],
     ]);
   });
 });

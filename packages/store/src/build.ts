@@ -86,8 +86,7 @@ export function buildDatabase(
         entry.wikiUrl ?? null,
         entry.acquisition?.length ? JSON.stringify(entry.acquisition) : null,
       );
-      // Warframes' parts are always their four blueprints; listed too, so a part can find its owner.
-      (entry.category === "warframe" ? warframeParts(entry.name) : entry.parts)?.forEach((part, position) => {
+      (entry.parts ?? (entry.category === "warframe" ? warframeParts(entry.name) : undefined))?.forEach((part, position) => {
         insertPart.run(id, part, position);
         // "War Blade" was a plain "other" until now; Prime parts keep their own kind.
         const partId = itemIds.get(part);

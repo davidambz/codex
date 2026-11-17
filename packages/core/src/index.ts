@@ -21,6 +21,7 @@ export {
   WEAPON_CATEGORIES,
   partImage,
   assignWeaponParts,
+  equipmentPartLabel,
   joinCatalog,
   parseEquipment,
   partLabel,
