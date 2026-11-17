@@ -119,7 +119,7 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
   let namesAt = now().toISOString();
   let namesError: string | undefined;
   try {
-    const items = [...dropItems, ...catalog.map((entry) => entry.name)];
+    const items = [...dropItems, ...catalog.flatMap((entry) => [entry.name, ...(entry.materials ?? []).map((m) => m.name)])];
     names = await fetchItemNames(fetchJson, items, languages);
   } catch (error) {
     namesError = error instanceof Error ? error.message : String(error);

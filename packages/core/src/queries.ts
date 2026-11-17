@@ -54,6 +54,15 @@ export interface EquipmentPart {
   openRelics?: number;
 }
 
+/** Something else a recipe consumes: "15 Orokin Cell", "2 Bolto". */
+export interface RecipeMaterial {
+  name: string;
+  count: number;
+  imageName?: string;
+  /** Whether it has a page of its own: a drop table has it, or it's equipment ("Bolto"). */
+  linked: boolean;
+}
+
 /** A Warframe, weapon or companion: its parts and how to get it. */
 export interface EquipmentSheet {
   category: EquipmentCategory;
@@ -62,6 +71,10 @@ export interface EquipmentSheet {
   counterpart?: string;
   /** Warframes always list their four blueprints; others, the parts the drop tables name. */
   parts: EquipmentPart[];
+  /** Resources (and whole weapons, for some) the recipe consumes, in recipe order. */
+  materials: RecipeMaterial[];
+  /** Credits the Foundry charges. */
+  credits?: number;
   wikiUrl?: string;
   /** How to get it, from the Warframe Wiki (English, CC BY-SA). */
   acquisition?: string[];
@@ -394,8 +407,9 @@ function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
     counterpart: string | null;
     wiki_url: string | null;
     acquisition: string | null;
+    credits: number | null;
   }>(
-    `SELECT e.category, e.prime, e.counterpart, e.wiki_url, e.acquisition
+    `SELECT e.category, e.prime, e.counterpart, e.wiki_url, e.acquisition, e.credits
      FROM equipment e JOIN items i ON i.id = e.item_id WHERE i.name = ?`,
     name,
   );
@@ -406,7 +420,24 @@ function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
       name,
     )
     .map(({ part }) => partOf(db, part, equipmentPartLabel(row.category, name, part) ?? part));
-  const sheet: EquipmentSheet = { category: row.category, prime: row.prime === 1, parts };
+  const materials = db
+    .all<{ name: string; count: number; image_name: string | null; linked: number }>(
+      `SELECT m_item.name, m.count, m_item.image_name,
+              EXISTS (SELECT 1 FROM drops d WHERE d.item_id = m_item.id)
+                OR EXISTS (SELECT 1 FROM equipment e WHERE e.item_id = m_item.id) AS linked
+       FROM materials m
+       JOIN items o ON o.id = m.owner_id
+       JOIN items m_item ON m_item.id = m.item_id
+       WHERE o.name = ? ORDER BY m.position`,
+      name,
+    )
+    .map((m) => {
+      const material: RecipeMaterial = { name: m.name, count: m.count, linked: m.linked === 1 };
+      if (m.image_name) material.imageName = m.image_name;
+      return material;
+    });
+  const sheet: EquipmentSheet = { category: row.category, prime: row.prime === 1, parts, materials };
+  if (row.credits !== null) sheet.credits = row.credits;
   if (row.counterpart) sheet.counterpart = row.counterpart;
   if (row.wiki_url) sheet.wikiUrl = row.wiki_url;
   if (row.acquisition) {

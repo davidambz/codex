@@ -64,7 +64,7 @@ export function buildDatabase(
     for (const r of data.relics) insertRelic.run(idOf(itemIds, r.item), r.tier, r.code, r.vaulted ? 1 : 0);
 
     const insertEquipment = db.prepare(
-      "INSERT INTO equipment (item_id, category, prime, counterpart, image_name, wiki_url, acquisition) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO equipment (item_id, category, prime, counterpart, image_name, wiki_url, acquisition, credits) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     );
     const setKind = db.prepare("UPDATE items SET kind = ? WHERE id = ?");
     const insertPart = db.prepare("INSERT INTO parts (owner_id, part, position) VALUES (?, ?, ?)");
@@ -85,6 +85,7 @@ export function buildDatabase(
         entry.imageName ?? null,
         entry.wikiUrl ?? null,
         entry.acquisition?.length ? JSON.stringify(entry.acquisition) : null,
+        entry.credits ?? null,
       );
       (entry.parts ?? (entry.category === "warframe" ? warframeParts(entry.name) : undefined))?.forEach((part, position) => {
         insertPart.run(id, part, position);
@@ -92,6 +93,20 @@ export function buildDatabase(
         const partId = itemIds.get(part);
         const kind = partId === undefined ? undefined : (kindOf.get(partId) as { kind: string } | undefined)?.kind;
         if (partId !== undefined && kind !== "prime_part") setKind.run("part", partId);
+      });
+    }
+
+    // After every entry has its id, so a recipe consuming another weapon finds it.
+    const insertMaterial = db.prepare("INSERT INTO materials (owner_id, item_id, count, position) VALUES (?, ?, ?, ?)");
+    for (const entry of catalog) {
+      const owner = itemIds.get(entry.name)!;
+      entry.materials?.forEach(({ name, count }, position) => {
+        let id = itemIds.get(name);
+        if (id === undefined) {
+          id = Number(insertItem.run(name, "other").lastInsertRowid);
+          itemIds.set(name, id);
+        }
+        insertMaterial.run(owner, id, count, position);
       });
     }
 

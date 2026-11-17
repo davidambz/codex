@@ -124,6 +124,8 @@ describe("ingest", () => {
         wikiUrl: "https://wiki.warframe.com/w/Excalibur%2FUmbra",
         // Found on the page itself, there being no "/Main" subpage.
         acquisition: ["The blueprint for Excalibur Umbra is given to players upon completing The Sacrifice quest."],
+        // Resources come by internal name from the Resources and Misc files.
+        materials: [{ name: "Orokin Cell", count: 1 }],
       },
       {
         name: "Khora",
@@ -133,7 +135,15 @@ describe("ingest", () => {
         wikiUrl: "https://wiki.warframe.com/w/Khora",
         acquisition: ["Khora's main blueprint can be purchased from the Market."],
       },
-      { name: "Khora Prime", category: "warframe", prime: true, counterpart: "Khora", wikiUrl: "https://wiki.warframe.com/w/Khora%2FPrime" },
+      {
+        name: "Khora Prime",
+        category: "warframe",
+        prime: true,
+        counterpart: "Khora",
+        wikiUrl: "https://wiki.warframe.com/w/Khora%2FPrime",
+        materials: [{ name: "Oxium", count: 2 }],
+        credits: 25000,
+      },
       {
         name: "Nezha",
         category: "warframe",
@@ -149,6 +159,8 @@ describe("ingest", () => {
     expect(readItemImages(dbPath)).toEqual(
       new Map([
         ["Axi G13 Relic", "RelicAxiD.png"],
+        // Only in a recipe, not in the drop tables.
+        ["Orokin Cell", "ComponentCell.png"],
         ["Serration", "Serration.png"],
       ]),
     );

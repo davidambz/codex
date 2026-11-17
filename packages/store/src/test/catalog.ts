@@ -24,7 +24,9 @@ export const WARFRAMES = [
       { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeChassisComponent" },
       { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeHelmetComponent" },
       { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeSystemsComponent" },
+      { uniqueName: "/Resources/Oxium", itemCount: 2 },
     ],
+    buildPrice: 25000,
   },
   { name: "Nezha", isPrime: false, productCategory: "Suits", wikiaUrl: "https://wiki.warframe.com/w/Nezha" },
   {
@@ -61,6 +63,7 @@ export const CATALOG: Record<string, unknown[]> = {
     { name: "Axi G13 Radiant", uniqueName: "/Relics/AxiG13Platinum", imageName: "RelicAxiC.png" },
   ],
   Resources: [{ name: "Oxium", uniqueName: "/Resources/Oxium" }],
+  Misc: [{ name: "Orokin Cell", uniqueName: "/Lotus/Types/Items/MiscItems/OrokinCell", imageName: "ComponentCell.png" }],
   Primary: [
     { name: "Lex Prime", isPrime: true, productCategory: "Pistols", wikiaUrl: "https://wiki.warframe.com/w/Lex%2FPrime" },
     { name: "Amp Prism", productCategory: "OperatorAmps" },
