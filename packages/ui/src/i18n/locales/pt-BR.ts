@@ -30,7 +30,7 @@ export const ptBR: Strings = {
     availabilityLabel: "Disponibilidade",
     availability: { all: "Qualquer", farmable: "Farmável", vaulted: "Vaultado", none: "Outra forma de obter" },
     summary: { farmable: "Farmável", vaulted: "Vaultado", none: "Outra forma de obter" },
-    partStatus: { drops: "dropa", relics: "relíquias farmáveis", vaulted: "vaultada", none: "não dropa (compra, quest, pesquisa...)" },
+    partStatus: { drops: "dropa", relics: "relíquias farmáveis", vaulted: "vaultada", none: "não dropa (compra, quest, pesquisa...)", other: "Mercado, Dojo, quest ou vendedor: veja como obter" },
     count: (shown, total) => (shown === total ? `${total} itens` : `${shown} de ${total}`),
     empty: "Nada com esses filtros.",
     more: "Mostrar mais",

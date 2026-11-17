@@ -28,7 +28,7 @@ export const en: Strings = {
     availabilityLabel: "Availability",
     availability: { all: "Any", farmable: "Farmable", vaulted: "Vaulted", none: "Other ways to get it" },
     summary: { farmable: "Farmable", vaulted: "Vaulted", none: "Other ways to get it" },
-    partStatus: { drops: "drops", relics: "farmable relics", vaulted: "vaulted", none: "not a drop (bought, quest, research...)" },
+    partStatus: { drops: "drops", relics: "farmable relics", vaulted: "vaulted", none: "not a drop (bought, quest, research...)", other: "Market, Dojo, quest or vendor: see how to get it" },
     count: (shown, total) => (shown === total ? `${total} items` : `${shown} of ${total}`),
     empty: "Nothing matches these filters.",
     more: "Show more",

@@ -254,9 +254,12 @@ describe("App", () => {
     expect(screen.getByText("4 items")).toBeInTheDocument();
     // Nezha Prime: neuroptics drop, chassis from farmable relics, the rest vaulted.
     expect(screen.getByRole("button", { name: "Nezha Prime Chassis Blueprint · farmable relics" })).toBeInTheDocument();
-    // Parts no drop table names still show, greyed out.
-    expect(screen.getAllByRole("img", { name: /not a drop/ })).toHaveLength(5);
+    // A Prime's part no drop table names is greyed out; a regular frame's is had some other way.
     expect(screen.getByRole("img", { name: "Receiver: not a drop (bought, quest, research...)" })).toBeInTheDocument();
+    expect(screen.getAllByRole("img", { name: /Market, Dojo, quest or vendor/ })).toHaveLength(4);
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Availability" }), "farmable");
+    expect(screen.getByRole("button", { name: "Nezha" })).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Availability" }), "all");
 
     await userEvent.click(screen.getByRole("radio", { name: "Melee" }));
     expect(screen.getByText("1 of 4")).toBeInTheDocument();

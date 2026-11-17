@@ -24,7 +24,7 @@ export interface Strings {
     availability: Record<Availability, string>;
     /** Card footers. */
     summary: Record<Exclude<Availability, "all">, string>;
-    partStatus: Record<"drops" | "relics" | "vaulted" | "none", string>;
+    partStatus: Record<"drops" | "relics" | "vaulted" | "none" | "other", string>;
     count: (shown: number, total: number) => string;
     empty: string;
     more: string;
