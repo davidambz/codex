@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -73,6 +73,8 @@ CREATE TABLE parts (
   owner_id INTEGER NOT NULL REFERENCES items(id),
   part     TEXT NOT NULL,
   position INTEGER NOT NULL,
+  -- How many the recipe takes (two barrels for an Akbolto Prime).
+  count    INTEGER NOT NULL DEFAULT 1,
   PRIMARY KEY (owner_id, part)
 );
 

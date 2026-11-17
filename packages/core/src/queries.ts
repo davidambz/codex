@@ -46,6 +46,8 @@ export interface EquipmentPart {
   name: string;
   /** Which piece it is, in English: "Blueprint" (the main one), "Chassis", "Barrel"... */
   label: string;
+  /** How many the recipe takes, when more than one. */
+  count?: number;
   status: PartStatus;
   /** Best chance per attempt among its direct drops, for "drops". */
   bestChance?: number;
@@ -233,7 +235,7 @@ export interface EquipmentCard {
   category: EquipmentCategory;
   prime: boolean;
   imageName?: string;
-  parts: Pick<EquipmentPart, "name" | "label" | "status">[];
+  parts: Pick<EquipmentPart, "name" | "label" | "count" | "status">[];
   /** What else the recipe consumes, as on the item sheet. */
   materials: Omit<RecipeMaterial, "linked">[];
   credits?: number;
@@ -275,11 +277,11 @@ interface PartStats {
 export function listEquipment(db: Db): EquipmentCard[] {
   const stats = new Map<string, PartStats>();
   for (const row of db.all<PartStats & { name: string }>(`${PART_STATS} GROUP BY i.id`)) stats.set(row.name, row);
-  const owned = new Map<string, string[]>();
-  for (const { owner, part } of db.all<{ owner: string; part: string }>(
-    `SELECT i.name AS owner, p.part FROM parts p JOIN items i ON i.id = p.owner_id ORDER BY i.name, p.position`,
+  const owned = new Map<string, { part: string; count: number }[]>();
+  for (const row of db.all<{ owner: string; part: string; count: number }>(
+    `SELECT i.name AS owner, p.part, p.count FROM parts p JOIN items i ON i.id = p.owner_id ORDER BY i.name, p.position`,
   )) {
-    owned.set(owner, [...(owned.get(owner) ?? []), part]);
+    owned.set(row.owner, [...(owned.get(row.owner) ?? []), row]);
   }
   const consumed = new Map<string, EquipmentCard["materials"]>();
   for (const m of db.all<{ owner: string; name: string; count: number; image_name: string | null }>(
@@ -305,13 +307,18 @@ export function listEquipment(db: Db): EquipmentCard[] {
     )
     .map((row) => {
       const names = (owned.get(row.name) ?? []).map(
-        (name) => [name, equipmentPartLabel(row.category, row.name, name) ?? name] as const,
+        ({ part, count }) => [part, equipmentPartLabel(row.category, row.name, part) ?? part, count] as const,
       );
       const card: EquipmentCard = {
         name: row.name,
         category: row.category,
         prime: row.prime === 1,
-        parts: names.map(([name, label]) => ({ name, label, status: partStatus(stats.get(name)).status })),
+        parts: names.map(([name, label, count]) => ({
+          name,
+          label,
+          ...(count > 1 ? { count } : {}),
+          status: partStatus(stats.get(name)).status,
+        })),
         materials: consumed.get(row.name) ?? [],
       };
       if (row.credits !== null) card.credits = row.credits;
@@ -437,11 +444,14 @@ function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
   );
   if (!row) return undefined;
   const parts = db
-    .all<{ part: string }>(
-      `SELECT p.part FROM parts p JOIN items i ON i.id = p.owner_id WHERE i.name = ? ORDER BY p.position`,
+    .all<{ part: string; count: number }>(
+      `SELECT p.part, p.count FROM parts p JOIN items i ON i.id = p.owner_id WHERE i.name = ? ORDER BY p.position`,
       name,
     )
-    .map(({ part }) => partOf(db, part, equipmentPartLabel(row.category, name, part) ?? part));
+    .map(({ part, count }) => {
+      const sheetPart = partOf(db, part, equipmentPartLabel(row.category, name, part) ?? part);
+      return count > 1 ? { ...sheetPart, count } : sheetPart;
+    });
   const materials = db
     .all<{ name: string; count: number; image_name: string | null; linked: number }>(
       `SELECT m_item.name, m.count, m_item.image_name,

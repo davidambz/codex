@@ -52,6 +52,8 @@ export interface CatalogEntry {
   parts?: string[];
   /** The pieces its recipe calls for ("Blueprint", "Barrel"), from the catalog, whether they drop or not. */
   recipe?: string[];
+  /** How many of a piece the recipe takes, by piece, when more than one ("Barrel": 2 for Akbolto Prime). */
+  pieceCounts?: Record<string, number>;
   /** Everything else the recipe consumes: resources, and whole weapons for some ("Bolto" for Akbolto). */
   materials?: Material[];
   /** Credits the Foundry charges to build it. */
@@ -177,6 +179,14 @@ export function parseEquipment(
         ...new Set(components.flatMap((c) => (typeof c?.uniqueName === "string" ? (recipePiece(c.uniqueName) ?? []) : []))),
       ];
       if (recipe.length > 0) entry.recipe = recipe;
+      const counts: Record<string, number> = {};
+      for (const c of components) {
+        const piece = typeof c?.uniqueName === "string" ? recipePiece(c.uniqueName) : undefined;
+        if (!piece) continue;
+        counts[piece] = (counts[piece] ?? 0) + (typeof c.itemCount === "number" && c.itemCount > 0 ? c.itemCount : 1);
+      }
+      const many = Object.entries(counts).filter(([, count]) => count > 1);
+      if (many.length > 0) entry.pieceCounts = Object.fromEntries(many);
       const materials = recipeMaterials(components, names);
       if (materials.length > 0) entry.materials = materials;
     }

@@ -49,7 +49,7 @@ beforeAll(() => {
       ],
       credits: 25000,
     },
-    { name: "Lex Prime", category: "secondary", prime: true },
+    { name: "Lex Prime", category: "secondary", prime: true, pieceCounts: { Barrel: 2 } },
     { name: "War Prime", category: "melee", prime: true, acquisition: ["Crafted from Hunhow's Trinket."] },
   ];
   assignWeaponParts(catalog, data.items.map((item) => item.name));
@@ -101,7 +101,7 @@ describe("queries", () => {
   it("lists a weapon's parts found in the drop tables", () => {
     expect(getItem(store, "Lex Prime")).toMatchObject({
       kind: "secondary",
-      equipment: { category: "secondary", prime: true, parts: [{ name: "Lex Prime Barrel", label: "Barrel" }] },
+      equipment: { category: "secondary", prime: true, parts: [{ name: "Lex Prime Barrel", label: "Barrel", count: 2 }] },
     });
     expect(getItem(store, "War Prime")?.equipment).toEqual({
       category: "melee",
@@ -135,7 +135,7 @@ describe("queries", () => {
       status: "vaulted",
     });
     expect(cards.find((c) => c.name === "War Prime")?.howTo).toBe("Crafted from Hunhow's Trinket.");
-    expect(cards.find((c) => c.name === "Lex Prime")).toMatchObject({ category: "secondary", prime: true, parts: [{ label: "Barrel" }] });
+    expect(cards.find((c) => c.name === "Lex Prime")).toMatchObject({ category: "secondary", prime: true, parts: [{ label: "Barrel", count: 2 }] });
     // Same answers as the item page.
     for (const card of cards) {
       expect(card.parts.map((p) => p.status)).toEqual(getItem(store, card.name)?.equipment?.parts.map((p) => p.status));

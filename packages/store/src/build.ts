@@ -3,7 +3,7 @@
 
 import { rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
-import { warframeParts, type CatalogEntry, type DropData } from "@iaframe/core";
+import { equipmentPartLabel, warframeParts, type CatalogEntry, type DropData } from "@iaframe/core";
 import type { ItemNames } from "./names.ts";
 import { SCHEMA, SCHEMA_VERSION } from "./schema.ts";
 
@@ -67,7 +67,7 @@ export function buildDatabase(
       "INSERT INTO equipment (item_id, category, prime, counterpart, image_name, wiki_url, acquisition, credits) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     );
     const setKind = db.prepare("UPDATE items SET kind = ? WHERE id = ?");
-    const insertPart = db.prepare("INSERT INTO parts (owner_id, part, position) VALUES (?, ?, ?)");
+    const insertPart = db.prepare("INSERT INTO parts (owner_id, part, position, count) VALUES (?, ?, ?, ?)");
     const kindOf = db.prepare("SELECT kind FROM items WHERE id = ?");
     for (const entry of catalog) {
       let id = itemIds.get(entry.name);
@@ -88,7 +88,8 @@ export function buildDatabase(
         entry.credits ?? null,
       );
       (entry.parts ?? (entry.category === "warframe" ? warframeParts(entry.name) : undefined))?.forEach((part, position) => {
-        insertPart.run(id, part, position);
+        const label = equipmentPartLabel(entry.category, entry.name, part);
+        insertPart.run(id, part, position, (label && entry.pieceCounts?.[label]) || 1);
         // "War Blade" was a plain "other" until now; Prime parts keep their own kind.
         const partId = itemIds.get(part);
         const kind = partId === undefined ? undefined : (kindOf.get(partId) as { kind: string } | undefined)?.kind;

@@ -77,6 +77,21 @@ describe("parseEquipment", () => {
       { name: "Orokin Cell", count: 1 },
     ]);
     expect(akbolto.credits).toBe(25000);
+    expect(akbolto.pieceCounts).toBeUndefined();
+  });
+
+  it("counts pieces the recipe takes more than once", () => {
+    const [prime] = parseEquipment("secondary", [
+      {
+        name: "Akbolto Prime",
+        components: [
+          { uniqueName: "/Lotus/Types/Recipes/Weapons/AkboltoPrimeBlueprint", itemCount: 1 },
+          { uniqueName: "/Lotus/Types/Recipes/Weapons/WeaponParts/AkboltoPrimeBarrel", itemCount: 2 },
+          { uniqueName: "/Lotus/Types/Recipes/Weapons/WeaponParts/AkboltoPrimeReceiver", itemCount: 2 },
+        ],
+      },
+    ]);
+    expect(prime.pieceCounts).toEqual({ Barrel: 2, Receiver: 2 });
   });
 
   it("rejects anything that isn't a list", () => {

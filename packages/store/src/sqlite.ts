@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DatabaseSync } from "node:sqlite";
-import { EQUIPMENT_CATEGORIES, isItemLanguage, type CatalogEntry, type Db, type Material, type SqlValue } from "@iaframe/core";
+import { EQUIPMENT_CATEGORIES, equipmentPartLabel, isItemLanguage, type CatalogEntry, type Db, type Material, type SqlValue } from "@iaframe/core";
 import type { ItemNames } from "./names.ts";
 
 /** A read-only connection to a built database, as the queries see it. */
@@ -67,11 +67,11 @@ export function readCatalog(path: string): CatalogEntry[] {
       acquisition: string | null;
       credits: number | null;
     }[];
-    const parts = new Map<string, string[]>();
-    for (const { owner, part } of db
-      .prepare("SELECT i.name AS owner, p.part FROM parts p JOIN items i ON i.id = p.owner_id ORDER BY p.position")
-      .all() as { owner: string; part: string }[]) {
-      parts.set(owner, [...(parts.get(owner) ?? []), part]);
+    const parts = new Map<string, { part: string; count: number }[]>();
+    for (const row of db
+      .prepare("SELECT i.name AS owner, p.part, p.count FROM parts p JOIN items i ON i.id = p.owner_id ORDER BY p.position")
+      .all() as { owner: string; part: string; count: number }[]) {
+      parts.set(row.owner, [...(parts.get(row.owner) ?? []), row]);
     }
     const materials = new Map<string, Material[]>();
     for (const { owner, name, count } of db
@@ -91,7 +91,14 @@ export function readCatalog(path: string): CatalogEntry[] {
       if (r.wiki_url) entry.wikiUrl = r.wiki_url;
       if (r.acquisition) entry.acquisition = JSON.parse(r.acquisition) as string[];
       const owned = parts.get(r.name);
-      if (owned) entry.parts = owned;
+      if (owned) {
+        entry.parts = owned.map(({ part }) => part);
+        const many = owned.flatMap(({ part, count }) => {
+          const label = count > 1 ? equipmentPartLabel(category, r.name, part) : undefined;
+          return label ? [[label, count] as const] : [];
+        });
+        if (many.length > 0) entry.pieceCounts = Object.fromEntries(many);
+      }
       const consumed = materials.get(r.name);
       if (consumed) entry.materials = consumed;
       if (r.credits !== null) entry.credits = r.credits;
