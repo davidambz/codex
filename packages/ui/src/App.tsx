@@ -1,41 +1,96 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { useEffect, useState } from "react";
-import type { DataStatus, Platform, SearchHit } from "@iaframe/core";
+import { useCallback, useRef, useState } from "react";
+import { Header } from "./components/Header";
+import { BackIcon } from "./components/icons";
+import { useDataStatus } from "./hooks/useDataStatus";
+import { useSystemTheme } from "./hooks/useSystemTheme";
+import { useI18n } from "./i18n/I18nContext";
+import type { View } from "./navigation";
+import { Home } from "./screens/Home";
+import { ItemView } from "./screens/ItemView";
+import { NoData } from "./screens/NoData";
+import { SearchPane } from "./screens/SearchPane";
+import { SourceView } from "./screens/SourceView";
+import styles from "./App.module.css";
 
-// Placeholder screen proving the desktop plumbing end to end; the real
-// search UI replaces it.
-export function App({ platform }: { platform: Platform }) {
+/**
+ * Search on the left, details on the right. On a narrow window only one
+ * shows at a time: the details, with a back button, once something is open.
+ */
+export function App() {
+  useSystemTheme();
+  const { t } = useI18n();
+  const { status, update } = useDataStatus();
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
-  const [status, setStatus] = useState<DataStatus>({ busy: false });
+  const [stack, setStack] = useState<View[]>([]);
+  const detailRef = useRef<HTMLElement>(null);
+  const view = stack.at(-1);
+  const dataVersion = status.info?.hash;
 
-  useEffect(() => {
-    void platform.getDataStatus().then(setStatus);
-    return platform.onDataStatus(setStatus);
-  }, [platform]);
+  const go = useCallback((next: View, reset = false) => {
+    setStack((current) => (reset ? [next] : [...current, next]));
+    detailRef.current?.scrollTo?.({ top: 0 });
+  }, []);
+  const openItem = useCallback((name: string) => go({ kind: "item", name }), [go]);
+  const openSource = useCallback((key: string) => go({ kind: "source", key }), [go]);
+  const back = () => setStack((current) => current.slice(0, -1));
 
-  useEffect(() => {
-    let current = true;
-    void platform.search(query).then((result) => current && setHits(result));
-    return () => {
-      current = false;
-    };
-  }, [platform, query, status.info?.hash]);
+  if (!status.info) {
+    return (
+      <div className={styles.app}>
+        <Header status={status} onUpdate={update} />
+        <main className={styles.single}>
+          <NoData status={status} onRetry={update} />
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <main>
-      <h1>IAFrame</h1>
-      <p data-testid="status">
-        {status.busy ? "Updating…" : status.info ? `${status.info.items} items` : "No data yet"}
-      </p>
-      <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" />
-      <ul>
-        {hits.map((hit) => (
-          <li key={hit.name}>{hit.name}</li>
-        ))}
-      </ul>
-    </main>
+    <div className={styles.app}>
+      <Header status={status} onUpdate={update} />
+      <main className={styles.split} data-detail={view ? "open" : "closed"}>
+        <aside className={styles.search}>
+          <SearchPane
+            query={query}
+            onQueryChange={setQuery}
+            selected={view?.kind === "item" ? view.name : undefined}
+            onSelect={(name) => go({ kind: "item", name }, true)}
+            dataVersion={dataVersion}
+          />
+        </aside>
+        <section className={styles.detail} ref={detailRef}>
+          {view && (
+            <nav className={styles.crumbs}>
+              <button type="button" className={styles.back} onClick={back}>
+                <BackIcon />
+                {t.app.back}
+              </button>
+            </nav>
+          )}
+          {!view && <Home onExample={setQuery} />}
+          {view?.kind === "item" && (
+            <ItemView
+              key={view.name}
+              name={view.name}
+              dataVersion={dataVersion}
+              openItem={openItem}
+              openSource={openSource}
+            />
+          )}
+          {view?.kind === "source" && (
+            <SourceView
+              key={view.key}
+              sourceKey={view.key}
+              dataVersion={dataVersion}
+              openItem={openItem}
+              openSource={openSource}
+            />
+          )}
+        </section>
+      </main>
+    </div>
   );
 }

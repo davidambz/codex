@@ -1,0 +1,252 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6) var(--space-8);
+  max-width: 980px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.subtitle {
+  color: var(--color-text-secondary);
+}
+
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.note {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.link {
+  padding: var(--space-1) var(--space-3);
+  min-height: 32px;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 0 var(--color-bevel-light) inset;
+  cursor: pointer;
+}
+
+.link:hover {
+  border-color: var(--color-accent-subtle-border);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+/* A raised panel plate holding a table or list. */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.relics {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.relic {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* A vaulted relic is still worth knowing about, but it steps back. */
+.relic[data-vaulted="true"] {
+  background: transparent;
+  box-shadow: none;
+}
+
+.relicHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.relicName {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--text-lg);
+  font-weight: 650;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.relicName:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rarity {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.refinements {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.refinement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-inset);
+}
+
+.refinement dd {
+  margin: 0;
+}
+
+.relicSources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-5);
+}
+
+.rewardList {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+}
+
+.reward {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "name chance runs"
+    "rarity chance runs";
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.reward:last-child {
+  border-bottom: none;
+}
+
+.reward > :nth-child(3) {
+  grid-area: chance;
+}
+
+.reward > :nth-child(4) {
+  grid-area: runs;
+}
+
+.rewardName {
+  grid-area: name;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.rewardName:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reward .rarity {
+  grid-area: rarity;
+}
+
+@media (max-width: 560px) {
+  .view {
+    padding: var(--space-4) var(--space-3) var(--space-7);
+  }
+  .refinements {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .reward > :nth-child(4) {
+    display: none;
+  }
+}
