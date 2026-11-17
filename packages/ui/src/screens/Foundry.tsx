@@ -115,11 +115,12 @@ function Card({ card, selected, openItem }: { card: EquipmentCard; selected: boo
         <ul className={styles.parts}>
           {card.parts.map((part) => {
             const label = `${t.equipment.parts[part.label] ?? part.label}: ${t.foundry.partStatus[part.status]}`;
-            const icon = <ItemImage imageName={partImage(part.label, card.prime)} className={styles.partIcon} />;
+            const generic = partImage(part.label, card.prime);
+            const icon = <ItemImage imageName={generic ?? card.imageName} className={styles.partIcon} />;
             return (
               <li key={part.name}>
                 {part.status === "none" ? (
-                  <span className={styles.part} data-status={part.status} title={label} aria-label={label} role="img">
+                  <span className={styles.part} data-status={part.status} data-blueprint={!generic || undefined} title={label} aria-label={label} role="img">
                     {icon}
                   </span>
                 ) : (
@@ -127,6 +128,7 @@ function Card({ card, selected, openItem }: { card: EquipmentCard; selected: boo
                     type="button"
                     className={styles.part}
                     data-status={part.status}
+                    data-blueprint={!generic || undefined}
                     title={label}
                     aria-label={`${itemName(part.name)} · ${t.foundry.partStatus[part.status]}`}
                     onClick={() => openItem(part.name)}
