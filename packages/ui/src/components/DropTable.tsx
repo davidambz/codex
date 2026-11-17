@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useState } from "react";
-import { expectedRuns, runsForConfidence, type DropRow } from "@iaframe/core";
+import { expectedRuns, runsForConfidence, type DropRow, type DropSortKey, type SortDirection } from "@iaframe/core";
 import { formatChance, formatCount } from "../format";
 import { useI18n } from "../i18n/I18nContext";
 import type { Strings } from "../i18n";
@@ -17,10 +17,13 @@ interface DropTableProps {
   onOpenSource: (key: string) => void;
   /** Rows shown before "show more". */
   page?: number;
+  /** Makes the headers sort buttons; the rows are expected already sorted this way. */
+  sort?: { key: DropSortKey; direction: SortDirection };
+  onSort?: (key: DropSortKey) => void;
 }
 
 /** Where something drops: source, when, chance, and how many tries that means. */
-export function DropTable({ rows, onOpenSource, page = PAGE }: DropTableProps) {
+export function DropTable({ rows, onOpenSource, page = PAGE, sort, onSort }: DropTableProps) {
   const { t, locale } = useI18n();
   const [shown, setShown] = useState(page);
   const visible = rows.slice(0, shown);
@@ -30,9 +33,9 @@ export function DropTable({ rows, onOpenSource, page = PAGE }: DropTableProps) {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th className="label">{t.table.source}</th>
-            <th className="label">{t.table.detail}</th>
-            <th className={`label ${styles.num}`}>{t.table.chance}</th>
+            <Header column="source" label={t.table.source} sort={sort} onSort={onSort} />
+            <Header column="when" label={t.table.detail} sort={sort} onSort={onSort} />
+            <Header column="chance" label={t.table.chance} sort={sort} onSort={onSort} numeric />
             <th className={`label ${styles.num} ${styles.runsCol}`}>{t.table.runs}</th>
           </tr>
         </thead>
@@ -76,6 +79,44 @@ export function DropTable({ rows, onOpenSource, page = PAGE }: DropTableProps) {
         </button>
       )}
     </div>
+  );
+}
+
+function Header({
+  column,
+  label,
+  sort,
+  onSort,
+  numeric,
+}: {
+  column: DropSortKey;
+  label: string;
+  sort?: DropTableProps["sort"];
+  onSort?: (key: DropSortKey) => void;
+  numeric?: boolean;
+}) {
+  const { t } = useI18n();
+  const className = `label${numeric ? ` ${styles.num}` : ""}`;
+  if (!onSort) return <th className={className}>{label}</th>;
+  const active = sort?.key === column;
+  return (
+    <th
+      className={className}
+      aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : undefined}
+    >
+      <button
+        type="button"
+        className={styles.sort}
+        data-active={active}
+        title={t.table.sortBy(label.toLowerCase())}
+        onClick={() => onSort(column)}
+      >
+        {label}
+        <span aria-hidden="true" className={styles.arrow}>
+          {active ? (sort.direction === "asc" ? "\u25B2" : "\u25BC") : "\u25BD"}
+        </span>
+      </button>
+    </th>
   );
 }
 
