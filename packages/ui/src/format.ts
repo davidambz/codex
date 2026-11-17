@@ -14,6 +14,12 @@ export function formatCount(count: number, locale: string): string {
   return formatNumber(count, locale, count < 10 ? 1 : 0);
 }
 
+/** A big amount, short: "30K", "30 mil". */
+export function formatCompact(count: number, locale: string): string {
+  if (!Number.isFinite(count)) return "—";
+  return new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(count);
+}
+
 export function formatDate(iso: string, locale: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;

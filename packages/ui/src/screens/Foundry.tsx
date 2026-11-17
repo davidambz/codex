@@ -6,6 +6,8 @@ import { partImage, type EquipmentCard } from "@iaframe/core";
 import { Chips } from "../components/Chips";
 import { FilterBar, FilterSelect, FilterText } from "../components/FilterControls";
 import { ItemImage } from "../components/ItemImage";
+import { CreditsIcon } from "../components/icons";
+import { formatCompact, formatCount } from "../format";
 import { oneOf, usePreference } from "../hooks/usePreference";
 import { useQuery } from "../hooks/useQuery";
 import { useI18n } from "../i18n/I18nContext";
@@ -101,7 +103,7 @@ export function Foundry({ dataVersion, selected, openItem }: FoundryProps) {
 }
 
 function Card({ card, selected, openItem }: { card: EquipmentCard; selected: boolean; openItem: (name: string) => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { itemName } = useItemNames();
   const availability = cardAvailability(card);
   const name = itemName(card.name);
@@ -141,6 +143,29 @@ function Card({ card, selected, openItem }: { card: EquipmentCard; selected: boo
               </li>
             );
           })}
+        </ul>
+      )}
+      {(card.materials.length > 0 || card.credits !== undefined) && (
+        <ul className={styles.materials} aria-label={t.equipment.resourcesLabel}>
+          {card.materials.map((material) => {
+            const label = `${formatCount(material.count, locale)}× ${itemName(material.name)}`;
+            return (
+              <li key={material.name} className={styles.material} title={label} aria-label={label}>
+                <ItemImage imageName={material.imageName} className={styles.materialIcon} />
+                {formatCount(material.count, locale)}
+              </li>
+            );
+          })}
+          {card.credits !== undefined && (
+            <li
+              className={styles.material}
+              title={`${formatCount(card.credits, locale)} ${t.equipment.credits}`}
+              aria-label={`${formatCount(card.credits, locale)} ${t.equipment.credits}`}
+            >
+              <CreditsIcon className={styles.materialIcon} />
+              {formatCompact(card.credits, locale)}
+            </li>
+          )}
         </ul>
       )}
       {availability !== "mixed" && (

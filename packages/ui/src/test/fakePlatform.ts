@@ -209,6 +209,8 @@ export function fakePlatform(
                 prime: item.equipment.prime,
                 imageName: `${item.name.replace(/ /g, "")}.png`,
                 parts: item.equipment.parts.map(({ name, label, status }) => ({ name, label, status })),
+                materials: item.equipment.materials.map(({ name, count }) => ({ name, count })),
+                ...(item.equipment.credits !== undefined ? { credits: item.equipment.credits } : {}),
                 ...(item.equipment.acquisition ? { howTo: firstSentence(item.equipment.acquisition[0]) } : {}),
               },
             ]

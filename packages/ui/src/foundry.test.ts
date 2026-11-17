@@ -9,6 +9,7 @@ const card = (overrides: Partial<EquipmentCard>): EquipmentCard => ({
   category: "warframe",
   prime: false,
   parts: [],
+  materials: [],
   ...overrides,
 });
 const part = (status: EquipmentCard["parts"][number]["status"]) => ({ name: "X Part", label: "Chassis", status });
