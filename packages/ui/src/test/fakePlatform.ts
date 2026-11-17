@@ -41,7 +41,7 @@ export const items: Record<string, ItemDetails> = {
       acquisition: ["Nezha's blueprints can be researched from the Tenno Lab in the dojo."],
       parts: [
         { name: "Nezha Blueprint", label: "Blueprint", status: "none" },
-        { name: "Nezha Chassis Blueprint", label: "Chassis", status: "none" },
+        { name: "Nezha Chassis Blueprint", label: "Chassis", status: "none", craftable: true },
         { name: "Nezha Neuroptics Blueprint", label: "Neuroptics", status: "none" },
         { name: "Nezha Systems Blueprint", label: "Systems", status: "none" },
       ],
@@ -92,6 +92,11 @@ export const items: Record<string, ItemDetails> = {
     },
   },
   "Nezha Prime Chassis Blueprint": { name: "Nezha Prime Chassis Blueprint", kind: "prime_part", vaulted: false },
+  "Nezha Chassis Blueprint": {
+    name: "Nezha Chassis Blueprint",
+    kind: "blueprint",
+    crafting: { materials: [{ name: "Ferrite", count: 3200, linked: false }], credits: 15000 },
+  },
 };
 
 export const deep: Record<string, DeepDrops> = {

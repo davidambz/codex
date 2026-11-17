@@ -138,6 +138,8 @@ export const ptBR: Strings = {
     sortie: "sorties",
   },
   item: {
+    craftingLabel: "Para fabricar",
+    craftingHint: "O que a Fundição pede para montar esta peça a partir do blueprint.",
     vaulted: "Vaultado",
     obtainable: "Farmável",
     relicsLabel: "Relíquias",

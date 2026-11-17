@@ -81,6 +81,9 @@ export interface Strings {
   /** What one attempt is called for each kind of source. */
   attempts: Record<SourceKind, string>;
   item: {
+    /** Above a part's own recipe. */
+    craftingLabel: string;
+    craftingHint: string;
     vaulted: string;
     obtainable: string;
     relicsLabel: string;

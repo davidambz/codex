@@ -23,6 +23,7 @@ import {
   type SourceKind,
   type EquipmentPart,
   type EquipmentSheet,
+  type Crafting,
   type RecipeMaterial,
 } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
@@ -162,6 +163,9 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
       )}
 
       {item.equipment && <EquipmentSections sheet={item.equipment} openItem={openItem} />}
+      {item.crafting && (
+        <MaterialsSection title={t.item.craftingLabel} hint={t.item.craftingHint} crafting={item.crafting} openItem={openItem} />
+      )}
 
       {deep.relics.length > 0 && (
         <section className={styles.section}>
@@ -280,7 +284,9 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
         </section>
       )}
 
-      {!item.equipment && deep.relics.length === 0 && deep.direct.length === 0 && <p className={styles.note}>{t.item.noDrops}</p>}
+      {!item.equipment && !item.crafting && deep.relics.length === 0 && deep.direct.length === 0 && (
+        <p className={styles.note}>{t.item.noDrops}</p>
+      )}
     </article>
   );
 }
@@ -371,7 +377,7 @@ function RelicCard({ route, openItem, openSource }: { route: RelicRoute } & Navi
 }
 
 function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openItem: (name: string) => void }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const anyMissing = sheet.parts.some((part) => part.status === "none");
   const note = sheet.note && t.equipment.notes[sheet.note];
   return (
@@ -398,23 +404,7 @@ function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openIte
         )}
       </section>
 
-      {(sheet.materials.length > 0 || sheet.credits !== undefined) && (
-        <section className={styles.section}>
-          <h2 className="label">{t.equipment.resourcesLabel}</h2>
-          <ul className={`${styles.panel} ${styles.materials}`}>
-            {sheet.materials.map((material) => (
-              <MaterialRow key={material.name} material={material} openItem={openItem} />
-            ))}
-            {sheet.credits !== undefined && (
-              <li className={styles.material}>
-                <CreditsIcon className={styles.creditsIcon} />
-                <span className={styles.materialCount}>{formatCount(sheet.credits, locale)}</span>
-                <span className={styles.materialName}>{t.equipment.credits}</span>
-              </li>
-            )}
-          </ul>
-        </section>
-      )}
+      <MaterialsSection title={t.equipment.resourcesLabel} crafting={sheet} openItem={openItem} />
 
       {sheet.acquisition && (
         <section className={styles.section}>
@@ -435,6 +425,30 @@ function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openIte
         </section>
       )}
     </>
+  );
+}
+
+/** Resources and credits a recipe takes; nothing when it takes neither. */
+function MaterialsSection({ title, hint, crafting, openItem }: { title: string; hint?: string; crafting: Crafting; openItem: (name: string) => void }) {
+  const { t, locale } = useI18n();
+  if (crafting.materials.length === 0 && crafting.credits === undefined) return null;
+  return (
+    <section className={styles.section}>
+      <h2 className="label">{title}</h2>
+      {hint && <p className={styles.hint}>{hint}</p>}
+      <ul className={`${styles.panel} ${styles.materials}`}>
+        {crafting.materials.map((material) => (
+          <MaterialRow key={material.name} material={material} openItem={openItem} />
+        ))}
+        {crafting.credits !== undefined && (
+          <li className={styles.material}>
+            <CreditsIcon className={styles.creditsIcon} />
+            <span className={styles.materialCount}>{formatCount(crafting.credits, locale)}</span>
+            <span className={styles.materialName}>{t.equipment.credits}</span>
+          </li>
+        )}
+      </ul>
+    </section>
   );
 }
 
@@ -472,7 +486,7 @@ function PartRow({ part, openItem }: { part: EquipmentPart; openItem: (name: str
   return (
     <li className={styles.part}>
       <span className="label">{t.equipment.parts[part.label] ?? part.label}</span>
-      {part.status === "none" ? (
+      {part.status === "none" && !part.craftable ? (
         <span className={styles.partName}>
           {count}
           {itemName(part.name)}

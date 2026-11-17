@@ -221,7 +221,7 @@ describe("App", () => {
 
   it("shows a Warframe's blueprints, how to get it, and its Prime", async () => {
     renderApp();
-    await open("nezha", /^Nezha(?! Prime)/);
+    await open("nezha", /^Nezha(?! Prime| Chassis)/);
     expect(await screen.findByRole("heading", { level: 1, name: "Nezha" })).toBeInTheDocument();
     expect(screen.getAllByText("Not in the drop tables")).toHaveLength(4);
     expect(screen.getByText(/researched from the Tenno Lab/)).toBeInTheDocument();
@@ -241,6 +241,17 @@ describe("App", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Nezha Prime Chassis Blueprint" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Nezha Prime Chassis Blueprint" })).toBeInTheDocument();
+  });
+
+  it("opens a part with its own blueprint on what building it takes", async () => {
+    renderApp();
+    await open("nezha", /^Nezha(?! Prime| Chassis)/);
+    await userEvent.click(await screen.findByRole("button", { name: "Nezha Chassis Blueprint" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Nezha Chassis Blueprint" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "To build it" })).toBeInTheDocument();
+    expect(screen.getByText("Ferrite")).toBeInTheDocument();
+    expect(screen.getByText("15,000")).toBeInTheDocument();
+    expect(screen.queryByText(/No drop table lists this item/)).not.toBeInTheDocument();
   });
 
   it("starts on the Foundry and remembers the section", async () => {

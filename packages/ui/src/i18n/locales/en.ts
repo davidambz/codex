@@ -136,6 +136,8 @@ export const en: Strings = {
     sortie: "sorties",
   },
   item: {
+    craftingLabel: "To build it",
+    craftingHint: "What the Foundry asks to build this part from its blueprint.",
     vaulted: "Vaulted",
     obtainable: "Farmable",
     relicsLabel: "Relics",
