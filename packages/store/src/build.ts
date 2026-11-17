@@ -98,17 +98,32 @@ export function buildDatabase(
     }
 
     // After every entry has its id, so a recipe consuming another weapon finds it.
-    const insertMaterial = db.prepare("INSERT INTO materials (owner_id, item_id, count, position) VALUES (?, ?, ?, ?)");
+    const insertMaterial = db.prepare(
+      "INSERT OR IGNORE INTO materials (owner_id, item_id, count, position) VALUES (?, ?, ?, ?)",
+    );
+    const insertPartCredits = db.prepare("INSERT OR IGNORE INTO part_credits (item_id, credits) VALUES (?, ?)");
+    const idFor = (name: string, kind: string) => {
+      let id = itemIds.get(name);
+      if (id === undefined) {
+        id = Number(insertItem.run(name, kind).lastInsertRowid);
+        itemIds.set(name, id);
+      }
+      return id;
+    };
+    const addMaterials = (owner: number, materials: CatalogEntry["materials"]) =>
+      materials?.forEach(({ name, count }, position) => insertMaterial.run(owner, idFor(name, "other"), count, position));
     for (const entry of catalog) {
-      const owner = itemIds.get(entry.name)!;
-      entry.materials?.forEach(({ name, count }, position) => {
-        let id = itemIds.get(name);
-        if (id === undefined) {
-          id = Number(insertItem.run(name, "other").lastInsertRowid);
-          itemIds.set(name, id);
-        }
-        insertMaterial.run(owner, id, count, position);
-      });
+      addMaterials(itemIds.get(entry.name)!, entry.materials);
+      if (!entry.partRecipes) continue;
+      for (const part of entry.parts ?? []) {
+        const label = equipmentPartLabel(entry.category, entry.name, part);
+        const recipe = label ? entry.partRecipes[label] : undefined;
+        if (!recipe) continue;
+        // A part no drop table names gets an item here, so it has a page to show its recipe on.
+        const id = idFor(part, entry.prime ? "prime_part" : "part");
+        addMaterials(id, recipe.materials);
+        if (recipe.credits !== undefined) insertPartCredits.run(id, recipe.credits);
+      }
     }
 
     const setImage = db.prepare("UPDATE items SET image_name = ? WHERE id = ?");

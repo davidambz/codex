@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -79,12 +79,19 @@ CREATE TABLE parts (
 );
 
 -- What a recipe consumes besides its parts: resources, and whole weapons for some.
+-- The owner is a Warframe, weapon or companion, or one of their parts (its own blueprint).
 CREATE TABLE materials (
   owner_id INTEGER NOT NULL REFERENCES items(id),
   item_id  INTEGER NOT NULL REFERENCES items(id),
   count    INTEGER NOT NULL,
   position INTEGER NOT NULL,
   PRIMARY KEY (owner_id, item_id)
+);
+
+-- Credits a part's own blueprint costs (a Warframe's are in equipment.credits).
+CREATE TABLE part_credits (
+  item_id INTEGER PRIMARY KEY REFERENCES items(id),
+  credits INTEGER NOT NULL
 );
 
 -- Item names in other languages, only where they differ from English.

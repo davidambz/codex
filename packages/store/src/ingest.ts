@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Keeps the local database in step with WFCD's drop data:
-//   1. fetch info.json (~100 bytes) and stop if its hash is the one we have;
+//   1. fetch info.json (~100 bytes), the catalog's last commit and the Public Export index
+//      (~500 bytes), and stop if none changed;
 //   2. fetch all.json (~7 MB), parse and validate it;
-//   3. fetch the Warframe, weapon and companion catalog and the wiki's acquisition text (optional:
-//      when that fails, the last good list is kept and retried next time);
+//   3. fetch the Warframe, weapon and companion catalog, the game's part recipes and the
+//      wiki's acquisition text (optional: when that fails, the last good list is kept and
+//      retried next time);
 //   4. fetch item names in the languages asked for (optional in the same way);
 //   5. build a fresh database next to the live one and rename it over it.
 // The live file is never written in place, so a failed or rejected
@@ -22,7 +24,8 @@ import {
   type CatalogEntry,
 } from "@iaframe/core";
 import { buildDatabase } from "./build.ts";
-import { fetchCatalog } from "./catalog.ts";
+import { fetchCatalog, fetchCatalogVersion } from "./catalog.ts";
+import { fetchRecipesEntry, type FetchBytes } from "./export.ts";
 import { SCHEMA_VERSION } from "./schema.ts";
 import { fetchItemImages, fetchItemNames, type ItemNames } from "./names.ts";
 import { readCatalog, readItemImages, readItemNames, readMeta } from "./sqlite.ts";
@@ -38,6 +41,11 @@ export interface IngestOptions {
   /** Rebuild even when the hash hasn't changed. */
   force?: boolean;
   fetchJson?: FetchJson;
+  /**
+   * For the Public Export's packed index. When only `fetchJson` is given
+   * (tests), it serves these too, returning the bytes.
+   */
+  fetchBytes?: FetchBytes;
   now?: () => Date;
   /** Called right before the new file replaces the old one: close any open connection here. */
   beforeSwap?: () => void;
@@ -76,6 +84,16 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
     return result;
   };
   const now = options.now ?? (() => new Date());
+  const injected = options.fetchJson;
+  const fetchBytes: FetchBytes =
+    options.fetchBytes ??
+    (injected
+      ? async (url) => {
+          const bytes = await injected(url);
+          if (!(bytes instanceof Uint8Array)) throw new Error(`${url}: expected bytes`);
+          return bytes;
+        }
+      : defaultFetchBytes);
 
   const info = (await fetchJson(WFCD_INFO_URL)) as { hash?: unknown; modified?: unknown } | null;
   const hash = info?.hash;
@@ -91,7 +109,16 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
     Boolean(meta?.catalog_at) &&
     (languages.length === 0 || Boolean(meta?.names_at)) &&
     languages.every((language) => stored.has(language));
-  if (!options.force && sameSchema && complete && meta?.drops_hash === hash) return { status: "up-to-date", hash };
+  // The catalog and the recipes change without the drop tables (new items, Prime Access):
+  // a newer version of either is reason enough to rebuild. Unreachable ones don't count.
+  const [catalogVersion, recipesEntry] = await Promise.all([
+    fetchCatalogVersion(fetchJson).catch(() => undefined),
+    fetchRecipesEntry(fetchBytes).catch(() => undefined),
+  ]);
+  const newer =
+    (catalogVersion !== undefined && catalogVersion !== meta?.catalog_version) ||
+    (recipesEntry !== undefined && recipesEntry !== meta?.recipes_entry);
+  if (!options.force && sameSchema && complete && meta?.drops_hash === hash && !newer) return { status: "up-to-date", hash };
 
   const data = parseDropData(await fetchJson(WFCD_DATA_URL));
   const previous: PreviousCounts | undefined =
@@ -105,7 +132,8 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
   let catalogAt = now().toISOString();
   let catalogError: string | undefined;
   try {
-    [catalog, images] = await Promise.all([fetchCatalog(fetchJson, dropItems), fetchItemImages(fetchJson)]);
+    if (!recipesEntry) throw new Error("The game's Public Export is unreachable");
+    [catalog, images] = await Promise.all([fetchCatalog(fetchJson, dropItems, recipesEntry), fetchItemImages(fetchJson)]);
   } catch (error) {
     catalogError = error instanceof Error ? error.message : String(error);
     catalog = sameSchema ? readCatalog(options.dbPath) : [];
@@ -119,7 +147,15 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
   let namesAt = now().toISOString();
   let namesError: string | undefined;
   try {
-    const items = [...dropItems, ...catalog.flatMap((entry) => [entry.name, ...(entry.materials ?? []).map((m) => m.name)])];
+    const items = [
+      ...dropItems,
+      ...catalog.flatMap((entry) => [
+        entry.name,
+        ...(entry.parts ?? []),
+        ...(entry.materials ?? []).map((m) => m.name),
+        ...Object.values(entry.partRecipes ?? {}).flatMap((r) => r.materials.map((m) => m.name)),
+      ]),
+    ];
     names = await fetchItemNames(fetchJson, items, languages);
   } catch (error) {
     namesError = error instanceof Error ? error.message : String(error);
@@ -136,6 +172,9 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
       source_modified: typeof info?.modified === "number" ? new Date(info.modified).toISOString() : "",
       ingested_at: now().toISOString(),
       catalog_at: catalogAt,
+      // Kept only for a fresh catalog, so a fallback one is retried next time.
+      catalog_version: catalogAt ? (catalogVersion ?? "") : "",
+      recipes_entry: catalogAt ? (recipesEntry ?? "") : "",
       names_at: namesAt,
     }, catalog, names, images);
     options.beforeSwap?.();
@@ -154,6 +193,15 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
   if (catalogError) result.catalogError = catalogError;
   if (namesError) result.namesError = namesError;
   return result;
+}
+
+async function defaultFetchBytes(url: string): Promise<Uint8Array> {
+  const response = await fetch(url, {
+    headers: { "User-Agent": USER_AGENT },
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 async function defaultFetchJson(url: string): Promise<unknown> {

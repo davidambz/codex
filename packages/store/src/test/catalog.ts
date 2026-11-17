@@ -3,7 +3,9 @@
 
 // A tiny stand-in for WFCD's item catalog and the wiki API, for tests.
 
-import { WARFRAMES_URL, WIKI_API_URL } from "../catalog.ts";
+import { readFileSync } from "node:fs";
+import { CATALOG_COMMITS_URL, WARFRAMES_URL, WIKI_API_URL } from "../catalog.ts";
+import { EXPORT_INDEX_URL, exportFileUrl } from "../export.ts";
 import { catalogFileUrl, i18nUrl } from "../names.ts";
 
 export const WARFRAMES = [
@@ -86,9 +88,34 @@ export const I18N: Record<string, Record<string, { name: string }>> = {
   },
 };
 
+/** The real Public Export index of 2026-11-17, packed as served. */
+export const EXPORT_INDEX = new Uint8Array(readFileSync(new URL("./fixtures/export-index.lzma", import.meta.url)));
+export const RECIPES_ENTRY = "ExportRecipes_en.json!00_oac+LCAtIyqDxZF8Qe1ZZA";
+
+/** A slice of ExportRecipes: the blueprint that builds Khora Prime's chassis. */
+export const EXPORT_RECIPES = {
+  ExportRecipes: [
+    {
+      uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeChassisBlueprint",
+      resultType: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeChassisComponent",
+      buildPrice: 15000,
+      ingredients: [
+        { ItemType: "/Resources/Oxium", ItemCount: 300 },
+        { ItemType: "/Lotus/Types/Items/MiscItems/OrokinCell", ItemCount: 2 },
+      ],
+    },
+  ],
+};
+
+/** The catalog's commit, which tests change to fake a new catalog. */
+export const catalogVersion = { sha: "c1" };
+
 /** Answers the catalog URLs, or undefined for anything else. */
 export function fakeCatalog(url: string): unknown {
   if (url === WARFRAMES_URL) return WARFRAMES;
+  if (url === CATALOG_COMMITS_URL) return [{ sha: catalogVersion.sha }];
+  if (url === EXPORT_INDEX_URL) return EXPORT_INDEX;
+  if (url === exportFileUrl(RECIPES_ENTRY)) return EXPORT_RECIPES;
   for (const [file, items] of Object.entries(CATALOG)) if (url === catalogFileUrl(file)) return items;
   for (const [language, table] of Object.entries(I18N)) if (url === i18nUrl(language as "pt")) return table;
   if (url.startsWith(catalogFileUrl("").replace(/\.json$/, ""))) return [];

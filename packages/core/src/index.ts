@@ -21,6 +21,7 @@ export {
   SAFE_IMAGE,
   WEAPON_CATEGORIES,
   partImage,
+  applyPartRecipes,
   assignWeaponParts,
   equipmentPartLabel,
   joinCatalog,
@@ -32,6 +33,7 @@ export {
   type CatalogEntry,
   type EquipmentCategory,
   type Material,
+  type PartRecipe,
 } from "./catalog/equipment.ts";
 export { acquisitionNote, extractAcquisition, toPlainText } from "./wiki/wikitext.ts";
 export {

@@ -9,6 +9,7 @@ import {
   EQUIPMENT_CATEGORIES,
   EQUIPMENT_FILES,
   MATERIAL_FILES,
+  applyPartRecipes,
   assignWeaponParts,
   extractAcquisition,
   joinCatalog,
@@ -17,10 +18,13 @@ import {
   wikiPage,
   type CatalogEntry,
 } from "@iaframe/core";
+import { fetchRecipes } from "./export.ts";
 import type { FetchJson } from "./ingest.ts";
 import { catalogFileUrl } from "./names.ts";
 
 export const WARFRAMES_URL = catalogFileUrl("Warframes");
+/** The last warframe-items commit that touched its data: a version for the whole catalog. */
+export const CATALOG_COMMITS_URL = "https://api.github.com/repos/WFCD/warframe-items/commits?path=data/json&per_page=1";
 export const WIKI_API_URL = "https://wiki.warframe.com/api.php";
 
 /** MediaWiki serves at most 50 pages' content per request. */
@@ -48,12 +52,25 @@ export function wikiPagesUrl(titles: string[]): string {
   return `${WIKI_API_URL}?${params}`;
 }
 
+/** The current catalog version (a commit hash). */
+export async function fetchCatalogVersion(fetchJson: FetchJson): Promise<string> {
+  const commits = await fetchJson(CATALOG_COMMITS_URL);
+  const sha = Array.isArray(commits) ? (commits[0] as { sha?: unknown } | undefined)?.sha : undefined;
+  if (typeof sha !== "string" || !sha) throw new Error("warframe-items: no commit");
+  return sha;
+}
+
 /**
  * Every Warframe, weapon and companion, with its parts among `items` (the
- * drop tables' item names) and, where it doesn't simply come from relics,
- * the wiki's text on how to get it.
+ * drop tables' item names), what each part's blueprint costs (from the
+ * Public Export file `recipesEntry`) and, where it doesn't simply come
+ * from relics, the wiki's text on how to get it.
  */
-export async function fetchCatalog(fetchJson: FetchJson, items: readonly string[]): Promise<CatalogEntry[]> {
+export async function fetchCatalog(
+  fetchJson: FetchJson,
+  items: readonly string[],
+  recipesEntry: string,
+): Promise<CatalogEntry[]> {
   const files = EQUIPMENT_CATEGORIES.flatMap((category) => EQUIPMENT_FILES[category].map((file) => [category, file] as const));
   const [equipment, materials] = await Promise.all([
     Promise.all(files.map(([, file]) => fetchJson(catalogFileUrl(file)))),
@@ -62,6 +79,7 @@ export async function fetchCatalog(fetchJson: FetchJson, items: readonly string[
   // Recipes name what they consume by internal name: resources, and some whole weapons.
   const names = namesById([...materials, ...equipment]);
   const entries = joinCatalog(files.map(([category], i) => parseEquipment(category, equipment[i], names)));
+  applyPartRecipes(entries, await fetchRecipes(fetchJson, recipesEntry), names);
   assignWeaponParts(entries, items);
   const drops = new Set(items);
   await addAcquisition(

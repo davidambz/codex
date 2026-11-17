@@ -30,6 +30,14 @@ export interface ItemDetails {
   vaulted?: boolean;
   /** When the item is a Warframe, weapon or companion. */
   equipment?: EquipmentSheet;
+  /** When the item is a part with a blueprint of its own: what building it takes. */
+  crafting?: Crafting;
+}
+
+/** What building something in the Foundry takes, besides its parts. */
+export interface Crafting {
+  materials: RecipeMaterial[];
+  credits?: number;
 }
 
 /**
@@ -48,6 +56,8 @@ export interface EquipmentPart {
   label: string;
   /** How many the recipe takes, when more than one. */
   count?: number;
+  /** It has a blueprint of its own, with resources to show. */
+  craftable?: boolean;
   status: PartStatus;
   /** Best chance per attempt among its direct drops, for "drops". */
   bestChance?: number;
@@ -225,6 +235,10 @@ export function getItem(db: Db, name: string): ItemDetails | undefined {
   if (routes && routes.relics > 0) details.vaulted = routes.open === 0 && routes.direct === 0;
   const equipment = getEquipmentSheet(db, row.name);
   if (equipment) details.equipment = equipment;
+  else {
+    const crafting = getCrafting(db, row.name);
+    if (crafting) details.crafting = crafting;
+  }
   return details;
 }
 
@@ -449,25 +463,12 @@ function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
       name,
     )
     .map(({ part, count }) => {
-      const sheetPart = partOf(db, part, equipmentPartLabel(row.category, name, part) ?? part);
-      return count > 1 ? { ...sheetPart, count } : sheetPart;
+      const sheetPart: EquipmentPart = partOf(db, part, equipmentPartLabel(row.category, name, part) ?? part);
+      if (count > 1) sheetPart.count = count;
+      if (getCrafting(db, part)) sheetPart.craftable = true;
+      return sheetPart;
     });
-  const materials = db
-    .all<{ name: string; count: number; image_name: string | null; linked: number }>(
-      `SELECT m_item.name, m.count, m_item.image_name,
-              EXISTS (SELECT 1 FROM drops d WHERE d.item_id = m_item.id)
-                OR EXISTS (SELECT 1 FROM equipment e WHERE e.item_id = m_item.id) AS linked
-       FROM materials m
-       JOIN items o ON o.id = m.owner_id
-       JOIN items m_item ON m_item.id = m.item_id
-       WHERE o.name = ? ORDER BY m.position`,
-      name,
-    )
-    .map((m) => {
-      const material: RecipeMaterial = { name: m.name, count: m.count, linked: m.linked === 1 };
-      if (m.image_name) material.imageName = m.image_name;
-      return material;
-    });
+  const materials = materialsOf(db, name);
   const sheet: EquipmentSheet = { category: row.category, prime: row.prime === 1, parts, materials };
   if (row.credits !== null) sheet.credits = row.credits;
   if (row.counterpart) sheet.counterpart = row.counterpart;
@@ -478,6 +479,36 @@ function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
     if (note) sheet.note = note;
   }
   return sheet;
+}
+
+function materialsOf(db: Db, owner: string): RecipeMaterial[] {
+  return db
+    .all<{ name: string; count: number; image_name: string | null; linked: number }>(
+      `SELECT m_item.name, m.count, m_item.image_name,
+              EXISTS (SELECT 1 FROM drops d WHERE d.item_id = m_item.id)
+                OR EXISTS (SELECT 1 FROM equipment e WHERE e.item_id = m_item.id) AS linked
+       FROM materials m
+       JOIN items o ON o.id = m.owner_id
+       JOIN items m_item ON m_item.id = m.item_id
+       WHERE o.name = ? ORDER BY m.position`,
+      owner,
+    )
+    .map((m) => {
+      const material: RecipeMaterial = { name: m.name, count: m.count, linked: m.linked === 1 };
+      if (m.image_name) material.imageName = m.image_name;
+      return material;
+    });
+}
+
+/** A part's own blueprint: the resources and credits it takes. */
+function getCrafting(db: Db, name: string): Crafting | undefined {
+  const materials = materialsOf(db, name);
+  const credits = db.get<{ credits: number }>(
+    "SELECT c.credits FROM part_credits c JOIN items i ON i.id = c.item_id WHERE i.name = ?",
+    name,
+  )?.credits;
+  if (materials.length === 0 && credits === undefined) return undefined;
+  return credits === undefined ? { materials } : { materials, credits };
 }
 
 const PART_STATS = `SELECT

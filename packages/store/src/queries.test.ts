@@ -48,6 +48,7 @@ beforeAll(() => {
         { name: "Orokin Cell", count: 1 },
       ],
       credits: 25000,
+      partRecipes: { Chassis: { materials: [{ name: "Neurodes", count: 4 }], credits: 15000 } },
     },
     { name: "Lex Prime", category: "secondary", prime: true, pieceCounts: { Barrel: 2 } },
     { name: "War Prime", category: "melee", prime: true, acquisition: ["Crafted from Hunhow's Trinket."] },
@@ -91,6 +92,7 @@ describe("queries", () => {
     expect(khoraPrime?.parts[1]).toEqual({
       name: "Khora Prime Chassis Blueprint",
       label: "Chassis",
+      craftable: true,
       status: "vaulted",
       relics: 1,
       openRelics: 0,
@@ -123,6 +125,17 @@ describe("queries", () => {
       ],
       credits: 25000,
     });
+  });
+
+  it("tells what a part's own blueprint takes", () => {
+    expect(getItem(store, "Khora Prime Chassis Blueprint")?.crafting).toEqual({
+      materials: [{ name: "Neurodes", count: 4, linked: true }],
+      credits: 15000,
+    });
+    const parts = getItem(store, "Khora Prime")?.equipment?.parts ?? [];
+    expect(parts.find((p) => p.label === "Chassis")?.craftable).toBe(true);
+    expect(parts.find((p) => p.label === "Systems")?.craftable).toBeUndefined();
+    expect(getItem(store, "Khora Prime Systems Blueprint")?.crafting).toBeUndefined();
   });
 
   it("lists every piece of equipment with its parts' status for the grid", () => {

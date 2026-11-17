@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DatabaseSync } from "node:sqlite";
-import { EQUIPMENT_CATEGORIES, equipmentPartLabel, isItemLanguage, type CatalogEntry, type Db, type Material, type SqlValue } from "@iaframe/core";
+import { EQUIPMENT_CATEGORIES, equipmentPartLabel, isItemLanguage, type CatalogEntry, type Db, type Material, type PartRecipe, type SqlValue } from "@iaframe/core";
 import type { ItemNames } from "./names.ts";
 
 /** A read-only connection to a built database, as the queries see it. */
@@ -82,6 +82,14 @@ export function readCatalog(path: string): CatalogEntry[] {
       .all() as { owner: string; name: string; count: number }[]) {
       materials.set(owner, [...(materials.get(owner) ?? []), { name, count }]);
     }
+    const partCredits = new Map(
+      (
+        db.prepare("SELECT i.name, c.credits FROM part_credits c JOIN items i ON i.id = c.item_id").all() as {
+          name: string;
+          credits: number;
+        }[]
+      ).map(({ name, credits }) => [name, credits]),
+    );
     return rows.flatMap((r) => {
       const category = EQUIPMENT_CATEGORIES.find((c) => c === r.category);
       if (!category) return [];
@@ -101,6 +109,16 @@ export function readCatalog(path: string): CatalogEntry[] {
       }
       const consumed = materials.get(r.name);
       if (consumed) entry.materials = consumed;
+      const recipes: Record<string, PartRecipe> = {};
+      for (const part of entry.parts ?? []) {
+        const label = equipmentPartLabel(category, r.name, part);
+        const partMaterials = materials.get(part);
+        const credits = partCredits.get(part);
+        if (!label || (!partMaterials && credits === undefined)) continue;
+        recipes[label] = { materials: partMaterials ?? [] };
+        if (credits !== undefined) recipes[label].credits = credits;
+      }
+      if (Object.keys(recipes).length > 0) entry.partRecipes = recipes;
       if (r.credits !== null) entry.credits = r.credits;
       return [entry];
     });

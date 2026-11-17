@@ -54,9 +54,19 @@ export interface CatalogEntry {
   recipe?: string[];
   /** How many of a piece the recipe takes, by piece, when more than one ("Barrel": 2 for Akbolto Prime). */
   pieceCounts?: Record<string, number>;
+  /** Each piece's internal name ("Chassis" -> ".../NezhaChassisComponent"), to find its own recipe. */
+  pieceIds?: Record<string, string>;
+  /** What building each piece in the Foundry takes, by piece: Nezha's Chassis takes Ferrite, Rubedo... */
+  partRecipes?: Record<string, PartRecipe>;
   /** Everything else the recipe consumes: resources, and whole weapons for some ("Bolto" for Akbolto). */
   materials?: Material[];
   /** Credits the Foundry charges to build it. */
+  credits?: number;
+}
+
+/** What a part's own blueprint consumes. */
+export interface PartRecipe {
+  materials: Material[];
   credits?: number;
 }
 
@@ -180,13 +190,16 @@ export function parseEquipment(
       ];
       if (recipe.length > 0) entry.recipe = recipe;
       const counts: Record<string, number> = {};
+      const ids: Record<string, string> = {};
       for (const c of components) {
         const piece = typeof c?.uniqueName === "string" ? recipePiece(c.uniqueName) : undefined;
         if (!piece) continue;
+        if (piece !== "Blueprint") ids[piece] ??= c.uniqueName as string;
         counts[piece] = (counts[piece] ?? 0) + (typeof c.itemCount === "number" && c.itemCount > 0 ? c.itemCount : 1);
       }
       const many = Object.entries(counts).filter(([, count]) => count > 1);
       if (many.length > 0) entry.pieceCounts = Object.fromEntries(many);
+      if (Object.keys(ids).length > 0) entry.pieceIds = ids;
       const materials = recipeMaterials(components, names);
       if (materials.length > 0) entry.materials = materials;
     }
@@ -208,12 +221,48 @@ function recipeMaterials(
   const counts = new Map<string, number>();
   for (const c of components) {
     if (typeof c?.uniqueName !== "string" || c.uniqueName.includes("/Recipes/") || recipePiece(c.uniqueName)) continue;
+    if (c.uniqueName.includes("/FishBait/")) continue;
     const name = names.get(c.uniqueName);
     if (!name) continue;
     const count = typeof c.itemCount === "number" && c.itemCount > 0 ? c.itemCount : 1;
     counts.set(name, (counts.get(name) ?? 0) + count);
   }
   return [...counts].map(([name, count]) => ({ name, count }));
+}
+
+interface ExportRecipe {
+  resultType?: unknown;
+  buildPrice?: unknown;
+  ingredients?: { ItemType?: unknown; ItemCount?: unknown }[];
+}
+
+/**
+ * Gives each piece its own blueprint's cost, from the game's Public
+ * Export (ExportRecipes): the recipe whose result is the piece. Prime
+ * weapon parts are found ready-made and have none.
+ */
+export function applyPartRecipes(entries: readonly CatalogEntry[], exportRecipes: unknown, names: ReadonlyMap<string, string>): void {
+  const list = (exportRecipes as { ExportRecipes?: unknown } | null)?.ExportRecipes;
+  if (!Array.isArray(list)) throw new Error("Not a Public Export recipes file: expected ExportRecipes");
+  const byResult = new Map<string, ExportRecipe>();
+  for (const recipe of list as ExportRecipe[]) {
+    if (typeof recipe?.resultType === "string" && !byResult.has(recipe.resultType)) byResult.set(recipe.resultType, recipe);
+  }
+  for (const entry of entries) {
+    const recipes: Record<string, PartRecipe> = {};
+    for (const [piece, id] of Object.entries(entry.pieceIds ?? {})) {
+      const recipe = byResult.get(id);
+      if (!recipe) continue;
+      const components = (Array.isArray(recipe.ingredients) ? recipe.ingredients : []).map((i) => ({
+        uniqueName: i?.ItemType,
+        itemCount: i?.ItemCount,
+      }));
+      const part: PartRecipe = { materials: recipeMaterials(components, names) };
+      if (typeof recipe.buildPrice === "number" && recipe.buildPrice > 0) part.credits = recipe.buildPrice;
+      if (part.materials.length > 0 || part.credits !== undefined) recipes[piece] = part;
+    }
+    if (Object.keys(recipes).length > 0) entry.partRecipes = recipes;
+  }
 }
 
 function belongs(category: EquipmentCategory, item: RawItem): boolean {

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import {
+  applyPartRecipes,
   assignWeaponParts,
   equipmentPartLabel,
   joinCatalog,
@@ -92,6 +93,39 @@ describe("parseEquipment", () => {
       },
     ]);
     expect(prime.pieceCounts).toEqual({ Barrel: 2, Receiver: 2 });
+  });
+
+  it("gives each piece its own blueprint's cost from the Public Export", () => {
+    const names = new Map([["/Lotus/Types/Items/MiscItems/Ferrite", "Ferrite"]]);
+    const [nezha] = parseEquipment("warframe", [
+      {
+        name: "Nezha",
+        productCategory: "Suits",
+        components: [
+          { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/NezhaBlueprint", itemCount: 1 },
+          { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/NezhaChassisComponent", itemCount: 1 },
+          { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/NezhaHelmetComponent", itemCount: 1 },
+        ],
+      },
+    ]);
+    applyPartRecipes(
+      [nezha],
+      {
+        ExportRecipes: [
+          {
+            resultType: "/Lotus/Types/Recipes/WarframeRecipes/NezhaChassisComponent",
+            buildPrice: 15000,
+            ingredients: [
+              { ItemType: "/Lotus/Types/Items/MiscItems/Ferrite", ItemCount: 3200 },
+              { ItemType: "/Lotus/Types/Items/Unknown", ItemCount: 1 },
+            ],
+          },
+        ],
+      },
+      names,
+    );
+    expect(nezha.partRecipes).toEqual({ Chassis: { materials: [{ name: "Ferrite", count: 3200 }], credits: 15000 } });
+    expect(() => applyPartRecipes([nezha], {}, names)).toThrow(/ExportRecipes/);
   });
 
   it("rejects anything that isn't a list", () => {

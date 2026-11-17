@@ -13,7 +13,9 @@ const readWarframes = (path: string) =>
   readCatalog(path)
     .filter((e) => e.category === "warframe")
     .map(({ parts: _parts, ...entry }) => entry);
-import { fakeCatalog } from "./test/catalog.ts";
+import { CATALOG_COMMITS_URL } from "./catalog.ts";
+import { EXPORT_INDEX_URL } from "./export.ts";
+import { catalogVersion, fakeCatalog } from "./test/catalog.ts";
 import sample from "../../core/src/wfcd/fixtures/sample.json" with { type: "json" };
 
 let dir: string;
@@ -23,7 +25,10 @@ beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "iaframe-store-"));
   dbPath = join(dir, "nested", "iaframe.db");
 });
-afterEach(() => rmSync(dir, { recursive: true, force: true }));
+afterEach(() => {
+  rmSync(dir, { recursive: true, force: true });
+  catalogVersion.sha = "c1";
+});
 
 /** A fake WFCD serving `data` under `hash`, counting downloads of all.json; `catalogUp` toggles the catalog. */
 function wfcd(hash: string, data: unknown = sample) {
@@ -86,6 +91,27 @@ describe("ingest", () => {
     expect(source.downloads).toBe(1);
   });
 
+  it("rebuilds when the item catalog changes, even with the same drop tables", async () => {
+    const source = wfcd("h1");
+    await ingest({ dbPath, fetchJson: source.fetchJson, now });
+    expect(readMeta(dbPath)).toMatchObject({
+      catalog_version: "c1",
+      recipes_entry: "ExportRecipes_en.json!00_oac+LCAtIyqDxZF8Qe1ZZA",
+    });
+    catalogVersion.sha = "c2";
+    expect((await ingest({ dbPath, fetchJson: source.fetchJson, now })).status).toBe("updated");
+    expect(readMeta(dbPath)?.catalog_version).toBe("c2");
+    expect((await ingest({ dbPath, fetchJson: source.fetchJson, now })).status).toBe("up-to-date");
+  });
+
+  it("doesn't rebuild because the version checks are unreachable", async () => {
+    const source = wfcd("h1");
+    await ingest({ dbPath, fetchJson: source.fetchJson, now });
+    const offline: FetchJson = (url) =>
+      url === CATALOG_COMMITS_URL || url === EXPORT_INDEX_URL ? Promise.reject(new Error("offline")) : source.fetchJson(url);
+    expect((await ingest({ dbPath, fetchJson: offline, now })).status).toBe("up-to-date");
+  });
+
   it("rebuilds when forced or when the hash changes", async () => {
     await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
     expect((await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now, force: true })).status).toBe("updated");
@@ -143,6 +169,16 @@ describe("ingest", () => {
         wikiUrl: "https://wiki.warframe.com/w/Khora%2FPrime",
         materials: [{ name: "Oxium", count: 2 }],
         credits: 25000,
+        // The chassis blueprint's own cost, from the game's Public Export.
+        partRecipes: {
+          Chassis: {
+            materials: [
+              { name: "Oxium", count: 300 },
+              { name: "Orokin Cell", count: 2 },
+            ],
+            credits: 15000,
+          },
+        },
       },
       {
         name: "Nezha",
@@ -201,6 +237,8 @@ describe("ingest", () => {
     expect(result).toMatchObject({ status: "updated", hash: "h2", equipment: 8 });
     expect(result).toHaveProperty("catalogError");
     expect(readWarframes(dbPath).map((w) => w.name)).toEqual(["Excalibur Umbra", "Khora", "Khora Prime", "Nezha"]);
+    // Recipes, the parts' too, come back from the database.
+    expect(readWarframes(dbPath).find((w) => w.name === "Khora Prime")?.partRecipes?.Chassis?.credits).toBe(15000);
 
     // Same drop hash, but the catalog is retried until it comes through.
     expect((await ingest({ dbPath, fetchJson: down.fetchJson, now })).status).toBe("updated");
