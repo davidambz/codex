@@ -45,6 +45,8 @@ export const items: Record<string, ItemDetails> = {
         { name: "Nezha Neuroptics Blueprint", label: "Neuroptics", status: "none" },
         { name: "Nezha Systems Blueprint", label: "Systems", status: "none" },
       ],
+      materials: [{ name: "Orokin Cell", count: 1, linked: true }],
+      credits: 25000,
     },
   },
   "Nezha Prime": {
@@ -60,6 +62,7 @@ export const items: Record<string, ItemDetails> = {
         { name: "Nezha Prime Neuroptics Blueprint", label: "Neuroptics", status: "drops", bestChance: 12.5 },
         { name: "Nezha Prime Systems Blueprint", label: "Systems", status: "vaulted", relics: 9, openRelics: 0 },
       ],
+      materials: [],
     },
   },
   "War Prime": {
@@ -70,6 +73,7 @@ export const items: Record<string, ItemDetails> = {
       prime: true,
       counterpart: "War",
       parts: [],
+      materials: [],
       acquisition: ["War Prime is acquired upon crafting Hunhow's Trinket."],
     },
   },
@@ -84,6 +88,7 @@ export const items: Record<string, ItemDetails> = {
         { name: "Lex Prime Barrel", label: "Barrel", status: "relics", relics: 3, openRelics: 1 },
         { name: "Lex Prime Receiver", label: "Receiver", status: "none" },
       ],
+      materials: [],
     },
   },
   "Nezha Prime Chassis Blueprint": { name: "Nezha Prime Chassis Blueprint", kind: "prime_part", vaulted: false },

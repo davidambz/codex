@@ -130,6 +130,9 @@ export interface Strings {
     /** Names of the pieces ("Blueprint", "Chassis", "Barrel"...); others show as they come. */
     parts: Record<string, string>;
     noParts: string;
+    resourcesLabel: string;
+    /** The Foundry's price, beside the amount. */
+    credits: string;
     drops: (chance: string) => string;
     relics: (open: number, total: number) => string;
     vaulted: (total: number) => string;

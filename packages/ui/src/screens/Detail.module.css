@@ -365,6 +365,45 @@
   font-variant-numeric: tabular-nums;
 }
 
+.materials {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.material {
+  display: grid;
+  grid-template-columns: 2rem 4.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.material:last-child {
+  border-bottom: none;
+}
+
+.materialIcon {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.materialCount {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.materialName {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 .prose {
   display: flex;
   flex-direction: column;
