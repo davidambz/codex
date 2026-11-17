@@ -136,7 +136,7 @@ describe("ingest", () => {
     await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
     expect(readCatalog(dbPath).filter((e) => e.category !== "warframe")).toEqual([
       { name: "Helios", category: "companion", prime: false, wikiUrl: "https://wiki.warframe.com/w/Helios", acquisition: ["Helios is researched in the Tenno Lab."] },
-      { name: "Lex Prime", category: "primary", prime: true, wikiUrl: "https://wiki.warframe.com/w/Lex%2FPrime" },
+      { name: "Lex Prime", category: "primary", prime: true, wikiUrl: "https://wiki.warframe.com/w/Lex%2FPrime", parts: ["Lex Prime Barrel"] },
       { name: "War", category: "melee", prime: false, counterpart: "War Prime", wikiUrl: "https://wiki.warframe.com/w/War" },
       {
         name: "War Prime",

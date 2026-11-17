@@ -78,7 +78,11 @@ export const items: Record<string, ItemDetails> = {
     equipment: {
       category: "secondary",
       prime: true,
-      parts: [{ name: "Lex Prime Barrel", label: "Barrel", status: "relics", relics: 3, openRelics: 1 }],
+      parts: [
+        { name: "Lex Prime Blueprint", label: "Blueprint", status: "vaulted", relics: 2, openRelics: 0 },
+        { name: "Lex Prime Barrel", label: "Barrel", status: "relics", relics: 3, openRelics: 1 },
+        { name: "Lex Prime Receiver", label: "Receiver", status: "none" },
+      ],
     },
   },
   "Nezha Prime Chassis Blueprint": { name: "Nezha Prime Chassis Blueprint", kind: "prime_part", vaulted: false },

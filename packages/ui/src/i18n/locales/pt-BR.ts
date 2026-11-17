@@ -216,7 +216,7 @@ export const ptBR: Strings = {
       Cerebrum: "Cérebro",
       Carapace: "Carapaça",
     },
-    noParts: "Nenhuma peça dele está nas tabelas de drop.",
+    noParts: "Não é montado a partir de peças, ou o catálogo não as lista.",
     drops: (chance) => `Dropa · até ${chance}`,
     relics: (open, total) => `Relíquias · ${open} de ${total} farmáveis`,
     vaulted: (total) => `Vaultada · ${total} relíquias, nenhuma farmável`,

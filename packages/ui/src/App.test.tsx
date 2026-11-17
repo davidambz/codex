@@ -177,7 +177,7 @@ describe("App", () => {
     await open("war prime", /War Prime/);
     expect(await screen.findByRole("heading", { level: 1, name: "War Prime" })).toBeInTheDocument();
     expect(screen.getAllByText("Melee").length).toBeGreaterThan(0);
-    expect(screen.getByText("None of its parts are in the drop tables.")).toBeInTheDocument();
+    expect(screen.getByText("It isn't built from parts, or the catalog doesn't list them.")).toBeInTheDocument();
     expect(screen.getByText(/Hunhow's Trinket/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "See War" })).toBeInTheDocument();
   });
@@ -254,7 +254,9 @@ describe("App", () => {
     expect(screen.getByText("4 items")).toBeInTheDocument();
     // Nezha Prime: neuroptics drop, chassis from farmable relics, the rest vaulted.
     expect(screen.getByRole("button", { name: "Nezha Prime Chassis Blueprint · farmable relics" })).toBeInTheDocument();
-    expect(screen.getAllByRole("img", { name: /not in the drop tables/ })).toHaveLength(4);
+    // Parts no drop table names still show, greyed out.
+    expect(screen.getAllByRole("img", { name: /not in the drop tables/ })).toHaveLength(5);
+    expect(screen.getByRole("img", { name: "Receiver: not in the drop tables" })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("radio", { name: "Melee" }));
     expect(screen.getByText("1 of 4")).toBeInTheDocument();

@@ -1,7 +1,16 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { assignWeaponParts, joinCatalog, parseEquipment, partLabel, warframeParts, wikiPage, type CatalogEntry } from "./equipment.ts";
+import {
+  assignWeaponParts,
+  joinCatalog,
+  parseEquipment,
+  partLabel,
+  recipePiece,
+  warframeParts,
+  wikiPage,
+  type CatalogEntry,
+} from "./equipment.ts";
 
 describe("parseEquipment", () => {
   it("keeps playable Warframes only", () => {
@@ -82,6 +91,43 @@ describe("warframeParts", () => {
       "Khora Prime Neuroptics Blueprint",
       "Khora Prime Systems Blueprint",
     ]);
+  });
+});
+
+describe("recipe pieces", () => {
+  it("reads the piece from the component's internal name", () => {
+    expect(recipePiece("/Lotus/Types/Recipes/Weapons/WeaponParts/SomaPrimeBarrel")).toBe("Barrel");
+    expect(recipePiece("/Lotus/Types/Recipes/Weapons/SomaPrimeBlueprint")).toBe("Blueprint");
+    expect(recipePiece("/Lotus/Types/Recipes/Weapons/StalkerTwoGreatswordBlueprint")).toBe("Blueprint");
+    expect(recipePiece("/Lotus/Types/Recipes/Weapons/WeaponParts/AkbroncoPrimeLink")).toBe("Link");
+    expect(recipePiece("/Lotus/Types/Recipes/Weapons/WeaponParts/CernosPrimeUpperLimb")).toBe("Upper Limb");
+    expect(recipePiece("/Lotus/Types/Recipes/Weapons/WeaponParts/OkinaPrimeLeftGauntlet")).toBe("Left Gauntlet");
+    expect(recipePiece("/Lotus/Types/Game/SentinelPowersuits/PrimeHeliosCarapace")).toBeUndefined();
+    expect(recipePiece("/Lotus/Types/Recipes/Helmets/PrimeHeliosCerebrum")).toBe("Cerebrum");
+    expect(recipePiece("/Lotus/Types/Recipes/WarframeRecipes/NezhaHelmetComponent")).toBe("Neuroptics");
+    expect(recipePiece("/Lotus/Types/Items/MiscItems/OrokinCell")).toBeUndefined();
+    expect(recipePiece("/Lotus/Weapons/ClanTech/Energy/ChainLightningRifleBlueprint")).toBe("Blueprint");
+    expect(recipePiece("/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipOne")).toBeUndefined();
+    expect(recipePiece("/Lotus/Weapons/Tenno/Pistol/BroncoPrime")).toBeUndefined();
+  });
+
+  it("puts every piece of the recipe on the weapon, whether it drops or not", () => {
+    const [soma] = parseEquipment("primary", [
+      {
+        name: "Soma Prime",
+        components: [
+          { uniqueName: "/Lotus/Types/Recipes/Weapons/WeaponParts/SomaPrimeBarrel" },
+          { uniqueName: "/Lotus/Types/Recipes/Weapons/SomaPrimeBlueprint" },
+          { uniqueName: "/Lotus/Types/Items/MiscItems/OrokinCell" },
+          { uniqueName: "/Lotus/Types/Recipes/Weapons/WeaponParts/SomaPrimeStock" },
+        ],
+      },
+    ]);
+    expect(soma.recipe).toEqual(["Barrel", "Blueprint", "Stock"]);
+    const ruvox: CatalogEntry = { name: "Ruvox", category: "melee", prime: false, recipe: ["Blueprint", "Glove"] };
+    assignWeaponParts([soma, ruvox], ["Soma Prime Barrel", "Ruvox Glove Blueprint"]);
+    expect(soma.parts).toEqual(["Soma Prime Blueprint", "Soma Prime Barrel", "Soma Prime Stock"]);
+    expect(ruvox.parts).toEqual(["Ruvox Blueprint", "Ruvox Glove Blueprint"]);
   });
 });
 

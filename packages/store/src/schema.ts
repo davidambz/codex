@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
