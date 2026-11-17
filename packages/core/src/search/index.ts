@@ -24,7 +24,8 @@ export interface SearchHit extends SearchEntry {
 }
 
 export interface SearchIndex {
-  search(query: string, limit?: number): SearchHit[];
+  /** Best matches first; `kinds` keeps only items of those kinds. */
+  search(query: string, limit?: number, kinds?: readonly ItemKind[]): SearchHit[];
 }
 
 interface Indexed {
@@ -40,11 +41,13 @@ const TYPO = 0.6;
 export function buildSearchIndex(entries: readonly SearchEntry[]): SearchIndex {
   const indexed: Indexed[] = entries.map((entry) => ({ entry, tokens: tokenize(entry.name) }));
   return {
-    search(query, limit = 10) {
+    search(query, limit = 10, kinds) {
       const words = tokenize(query);
       if (words.length === 0) return [];
+      const wanted = kinds?.length ? new Set(kinds) : undefined;
       const hits: SearchHit[] = [];
       for (const item of indexed) {
+        if (wanted && !wanted.has(item.entry.kind)) continue;
         const score = scoreItem(words, item.tokens);
         if (score > 0) hits.push({ ...item.entry, score });
       }

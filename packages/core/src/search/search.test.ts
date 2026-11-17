@@ -46,6 +46,14 @@ describe("editDistance", () => {
 });
 
 describe("search", () => {
+  it("keeps only the kinds asked for", () => {
+    expect(index.search("khora", 10, ["relic"])).toEqual([]);
+    expect(index.search("g1", 10, ["relic"]).map((h) => h.name)).toEqual(["Lith G1 Relic", "Axi G13 Relic"]);
+    expect(index.search("g1", 10, ["mod"])).toEqual([]);
+    expect(index.search("khora prime", 2, ["prime_part"]).every((h) => h.kind === "prime_part")).toBe(true);
+    expect(index.search("khora", 20, [])).toHaveLength(7);
+  });
+
   it("finds shorthand with Portuguese part names", () => {
     expect(top("khora p chassi")[0]).toBe("Khora Prime Chassis Blueprint");
     expect(top("khora prime neuroptica")[0]).toBe("Khora Prime Neuroptics Blueprint");

@@ -2,17 +2,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** What a thing is, guessed from its name and the table it came from. */
-export type ItemKind =
-  | "warframe"
-  | "relic"
-  | "prime_part"
-  | "blueprint"
-  | "mod"
-  | "arcane"
-  | "ayatan"
-  | "credits"
-  | "endo"
-  | "other";
+export const ITEM_KINDS = [
+  "warframe",
+  "relic",
+  "prime_part",
+  "blueprint",
+  "mod",
+  "arcane",
+  "ayatan",
+  "credits",
+  "endo",
+  "other",
+] as const;
+export type ItemKind = (typeof ITEM_KINDS)[number];
 
 /** Where a drop happens. */
 export type SourceKind =

@@ -15,6 +15,7 @@ import {
   listItems,
   type DataStatus,
   type DeepDrops,
+  type ItemKind,
   type ItemDetails,
   type SearchHit,
   type SearchIndex,
@@ -32,7 +33,7 @@ export interface DataServiceOptions {
 }
 
 export interface DataService {
-  search(query: string, limit?: number): SearchHit[];
+  search(query: string, limit?: number, kinds?: readonly ItemKind[]): SearchHit[];
   getItem(name: string): ItemDetails | undefined;
   getDropsDeep(name: string): DeepDrops;
   getSource(key: string): SourceDetails | undefined;
@@ -97,7 +98,7 @@ export function createDataService(options: DataServiceOptions): DataService {
   };
 
   return {
-    search: (query, limit) => index?.search(query, limit) ?? [],
+    search: (query, limit, kinds) => index?.search(query, limit, kinds) ?? [],
     getItem: (name) => (store ? getItem(store, name) : undefined),
     getDropsDeep: (name) => (store ? getDropsDeep(store, name) : { direct: [], relics: [] }),
     getSource(key) {

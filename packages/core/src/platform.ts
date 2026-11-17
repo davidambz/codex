@@ -6,7 +6,7 @@
 
 import type { DataInfo, DeepDrops, ItemDetails, SourceItemRow } from "./queries.ts";
 import type { SearchHit } from "./search/index.ts";
-import type { Source } from "./types.ts";
+import type { ItemKind, Source } from "./types.ts";
 
 export type Theme = "dark" | "light";
 
@@ -31,7 +31,7 @@ export interface DataStatus {
 export interface Platform {
   kind: "desktop" | "web";
   appVersion: string;
-  search(query: string, limit?: number): Promise<SearchHit[]>;
+  search(query: string, limit?: number, kinds?: readonly ItemKind[]): Promise<SearchHit[]>;
   getItem(name: string): Promise<ItemDetails | undefined>;
   getDropsDeep(name: string): Promise<DeepDrops>;
   getSource(key: string): Promise<SourceDetails | undefined>;
