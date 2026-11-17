@@ -3,6 +3,7 @@
 
 /** What a thing is, guessed from its name and the table it came from. */
 export type ItemKind =
+  | "warframe"
   | "relic"
   | "prime_part"
   | "blueprint"

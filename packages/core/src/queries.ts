@@ -8,6 +8,7 @@ import type { Db } from "./db.ts";
 import type { ItemKind, Refinement, RelicTier, Rotation, Source, SourceKind } from "./types.ts";
 import { REFINEMENTS } from "./types.ts";
 import type { SearchEntry } from "./search/index.ts";
+import { warframeParts } from "./catalog/warframes.ts";
 
 export interface RelicInfo {
   tier: RelicTier;
@@ -25,6 +26,40 @@ export interface ItemDetails {
    * (undefined) for items that don't come from relics.
    */
   vaulted?: boolean;
+  /** When the item is a Warframe. */
+  warframe?: WarframeSheet;
+}
+
+/**
+ * Where a part can be had right now:
+ * - "drops": from a mission, enemy, bounty... (and maybe relics too);
+ * - "relics": only from relics, and at least one of them is obtainable;
+ * - "vaulted": only from relics, none obtainable;
+ * - "none": in no drop table (bought, researched, quest reward...).
+ */
+export type PartStatus = "drops" | "relics" | "vaulted" | "none";
+
+export interface WarframePart {
+  /** "Nezha Prime Chassis Blueprint". */
+  name: string;
+  /** Which of the four it is. */
+  slot: "blueprint" | "chassis" | "neuroptics" | "systems";
+  status: PartStatus;
+  /** Best chance per attempt among its direct drops, for "drops". */
+  bestChance?: number;
+  /** For "relics" / "vaulted": how many relics hold it, and how many can be had. */
+  relics?: number;
+  openRelics?: number;
+}
+
+export interface WarframeSheet {
+  prime: boolean;
+  /** "Nezha Prime" for "Nezha" and the other way round, when both exist. */
+  counterpart?: string;
+  parts: WarframePart[];
+  wikiUrl?: string;
+  /** How to get it, from the Warframe Wiki (English, CC BY-SA). */
+  acquisition?: string[];
 }
 
 export interface DropRow {
@@ -145,7 +180,57 @@ export function getItem(db: Db, name: string): ItemDetails | undefined {
     name,
   );
   if (routes && routes.relics > 0) details.vaulted = routes.open === 0 && routes.direct === 0;
+  if (row.kind === "warframe") details.warframe = getWarframeSheet(db, row.name);
   return details;
+}
+
+const PART_SLOTS = ["blueprint", "chassis", "neuroptics", "systems"] as const;
+
+function getWarframeSheet(db: Db, name: string): WarframeSheet | undefined {
+  const row = db.get<{ prime: number; counterpart: string | null; wiki_url: string | null; acquisition: string | null }>(
+    `SELECT w.prime, w.counterpart, w.wiki_url, w.acquisition
+     FROM warframes w JOIN items i ON i.id = w.item_id WHERE i.name = ?`,
+    name,
+  );
+  if (!row) return undefined;
+  const sheet: WarframeSheet = {
+    prime: row.prime === 1,
+    parts: warframeParts(name).map((part, i) => partOf(db, part, PART_SLOTS[i])),
+  };
+  if (row.counterpart) sheet.counterpart = row.counterpart;
+  if (row.wiki_url) sheet.wikiUrl = row.wiki_url;
+  if (row.acquisition) sheet.acquisition = JSON.parse(row.acquisition) as string[];
+  return sheet;
+}
+
+function partOf(db: Db, name: string, slot: WarframePart["slot"]): WarframePart {
+  const r = db.get<{ relics: number; open: number; direct: number; best: number | null }>(
+    `SELECT
+       COUNT(DISTINCT CASE WHEN s.kind = 'relic' THEN s.id END) AS relics,
+       COUNT(DISTINCT CASE WHEN s.kind = 'relic' AND sr.vaulted = 0 THEN s.id END) AS open,
+       COUNT(CASE WHEN s.kind <> 'relic' THEN 1 END) AS direct,
+       MAX(CASE WHEN s.kind <> 'relic' AND d.conditional = 0 THEN d.chance END) AS best
+     FROM drops d
+     JOIN items i ON i.id = d.item_id
+     JOIN sources s ON s.id = d.source_id
+     LEFT JOIN items si ON s.kind = 'relic' AND si.name = s.name
+     LEFT JOIN relics sr ON sr.item_id = si.id
+     WHERE i.name = ?`,
+    name,
+  );
+  const part: WarframePart = { name, slot, status: "none" };
+  if (!r) return part;
+  if (r.direct > 0) {
+    part.status = "drops";
+    if (r.best !== null) part.bestChance = r.best;
+  } else if (r.relics > 0) {
+    part.status = r.open > 0 ? "relics" : "vaulted";
+  }
+  if (r.relics > 0) {
+    part.relics = r.relics;
+    part.openRelics = r.open;
+  }
+  return part;
 }
 
 /** Where an item drops, best chance first. */
