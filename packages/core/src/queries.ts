@@ -8,7 +8,7 @@ import type { Db } from "./db.ts";
 import type { ItemKind, Refinement, RelicTier, Rotation, Source, SourceKind } from "./types.ts";
 import { REFINEMENTS, RELIC_TIERS } from "./types.ts";
 import type { SearchEntry } from "./search/index.ts";
-import { partImage, partLabel, warframeParts, type EquipmentCategory } from "./catalog/equipment.ts";
+import { equipmentPartLabel, partImage, type EquipmentCategory } from "./catalog/equipment.ts";
 import type { ItemLanguage } from "./catalog/names.ts";
 
 export interface RelicInfo {
@@ -211,7 +211,6 @@ export function getItem(db: Db, name: string): ItemDetails | undefined {
   return details;
 }
 
-const WARFRAME_LABELS = ["Blueprint", "Chassis", "Neuroptics", "Systems"];
 
 /** One card of the Foundry grid. */
 export interface EquipmentCard {
@@ -220,6 +219,15 @@ export interface EquipmentCard {
   prime: boolean;
   imageName?: string;
   parts: Pick<EquipmentPart, "name" | "label" | "status">[];
+  /** The first sentence of how to get it, from the wiki, for a hint on the card. */
+  howTo?: string;
+}
+
+/** The first sentence of a paragraph, at most `max` characters. */
+export function firstSentence(paragraph: string, max = 200): string {
+  const end = paragraph.search(/[.!?](\s|$)/);
+  const sentence = end >= 0 ? paragraph.slice(0, end + 1) : paragraph;
+  return sentence.length > max ? `${sentence.slice(0, max - 1).trimEnd()}…` : sentence;
 }
 
 interface PartStats {
@@ -240,14 +248,14 @@ export function listEquipment(db: Db): EquipmentCard[] {
     owned.set(owner, [...(owned.get(owner) ?? []), part]);
   }
   return db
-    .all<{ name: string; category: EquipmentCategory; prime: number; image_name: string | null }>(
-      `SELECT i.name, e.category, e.prime, e.image_name FROM equipment e JOIN items i ON i.id = e.item_id ORDER BY i.name`,
+    .all<{ name: string; category: EquipmentCategory; prime: number; image_name: string | null; acquisition: string | null }>(
+      `SELECT i.name, e.category, e.prime, e.image_name, e.acquisition
+       FROM equipment e JOIN items i ON i.id = e.item_id ORDER BY i.name`,
     )
     .map((row) => {
-      const names =
-        row.category === "warframe"
-          ? warframeParts(row.name).map((name, i) => [name, WARFRAME_LABELS[i]] as const)
-          : (owned.get(row.name) ?? []).map((name) => [name, partLabel(row.name, name) ?? name] as const);
+      const names = (owned.get(row.name) ?? []).map(
+        (name) => [name, equipmentPartLabel(row.category, row.name, name) ?? name] as const,
+      );
       const card: EquipmentCard = {
         name: row.name,
         category: row.category,
@@ -255,6 +263,8 @@ export function listEquipment(db: Db): EquipmentCard[] {
         parts: names.map(([name, label]) => ({ name, label, status: partStatus(stats.get(name)).status })),
       };
       if (row.image_name) card.imageName = row.image_name;
+      const first = row.acquisition ? (JSON.parse(row.acquisition) as string[])[0] : undefined;
+      if (first) card.howTo = firstSentence(first);
       return card;
     });
 }
@@ -275,12 +285,13 @@ interface PictureRow {
   image: string | null;
   owner: string | null;
   owner_prime: number | null;
+  owner_category: EquipmentCategory | null;
   owner_image: string | null;
   bare_image: string | null;
 }
 
 /** Columns for `picture`, over items `i`. */
-const PICTURE_COLUMNS = `i.image_name AS image, o.name AS owner, e.prime AS owner_prime, o.image_name AS owner_image,
+const PICTURE_COLUMNS = `i.image_name AS image, o.name AS owner, e.prime AS owner_prime, e.category AS owner_category, o.image_name AS owner_image,
        bare.image_name AS bare_image`;
 const PICTURE_JOINS = `LEFT JOIN parts p ON p.part = i.name
      LEFT JOIN items o ON o.id = p.owner_id
@@ -295,7 +306,8 @@ const PICTURE_JOINS = `LEFT JOIN parts p ON p.part = i.name
 function picture(row: PictureRow): ItemPicture {
   if (row.image) return { imageName: row.image };
   if (row.owner) {
-    const generic = partImage(partLabel(row.owner, row.item) ?? "", row.owner_prime === 1);
+    const label = row.owner_category ? equipmentPartLabel(row.owner_category, row.owner, row.item) : undefined;
+    const generic = partImage(label ?? "", row.owner_prime === 1);
     if (generic) return { imageName: generic };
     if (row.owner_image) return { imageName: row.owner_image, blueprint: true };
   }
@@ -368,15 +380,12 @@ function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
     name,
   );
   if (!row) return undefined;
-  const parts =
-    row.category === "warframe"
-      ? warframeParts(name).map((part, i) => partOf(db, part, WARFRAME_LABELS[i]))
-      : db
-          .all<{ part: string }>(
-            `SELECT p.part FROM parts p JOIN items i ON i.id = p.owner_id WHERE i.name = ? ORDER BY p.position`,
-            name,
-          )
-          .map(({ part }) => partOf(db, part, partLabel(name, part) ?? part));
+  const parts = db
+    .all<{ part: string }>(
+      `SELECT p.part FROM parts p JOIN items i ON i.id = p.owner_id WHERE i.name = ? ORDER BY p.position`,
+      name,
+    )
+    .map(({ part }) => partOf(db, part, equipmentPartLabel(row.category, name, part) ?? part));
   const sheet: EquipmentSheet = { category: row.category, prime: row.prime === 1, parts };
   if (row.counterpart) sheet.counterpart = row.counterpart;
   if (row.wiki_url) sheet.wikiUrl = row.wiki_url;

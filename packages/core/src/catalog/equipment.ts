@@ -108,6 +108,13 @@ export function partImage(label: string, prime: boolean): string | undefined {
       return `GenericWeapon${p}Hilt.png`;
     case "Guard":
       return `GenericWeapon${p}Guard.png`;
+    case "Day Chassis":
+    case "Night Chassis":
+    case "Day Neuroptics":
+    case "Night Neuroptics":
+    case "Day Systems":
+    case "Night Systems":
+      return partImage(label.split(" ")[1], prime);
     case "String":
     case "Upper Limb":
     case "Lower Limb":
@@ -173,6 +180,21 @@ export function joinCatalog(lists: readonly CatalogEntry[][]): CatalogEntry[] {
 export function wikiPage(entry: CatalogEntry): string {
   const page = entry.wikiUrl ? decodeURIComponent(entry.wikiUrl.slice(WIKI.length)).replace(/_/g, " ") : entry.name;
   return entry.category === "warframe" || entry.category === "companion" ? `${page}/Main` : page;
+}
+
+/**
+ * A Warframe part's piece: "Nezha Chassis Blueprint" -> "Chassis",
+ * "Equinox Day Chassis Blueprint" -> "Day Chassis", the main one -> "Blueprint".
+ */
+export function warframePartLabel(frame: string, part: string): string | undefined {
+  if (!part.startsWith(`${frame} `)) return undefined;
+  const rest = part.slice(frame.length + 1);
+  return rest === "Blueprint" ? rest : rest.replace(/ Blueprint$/, "");
+}
+
+/** The piece a part is, by the kind of thing it belongs to. */
+export function equipmentPartLabel(category: EquipmentCategory, owner: string, part: string): string | undefined {
+  return category === "warframe" ? warframePartLabel(owner, part) : partLabel(owner, part);
 }
 
 /** The four blueprints a Warframe is built from, as the drop tables name them. */
@@ -251,12 +273,29 @@ export function partLabel(weapon: string, part: string): string | undefined {
   return PART_WORDS.has(base) ? base : undefined;
 }
 
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * A Warframe's parts are its four blueprints, unless the drop tables name
+ * variants of them: Equinox has Day and Night Chassis, Neuroptics,
+ * Systems and Aspect blueprints instead.
+ */
+function assignWarframeParts(entries: readonly CatalogEntry[], items: readonly string[]): void {
+  for (const frame of entries) {
+    if (frame.category !== "warframe") continue;
+    const variant = new RegExp(`^${escapeRegExp(frame.name)} (?!Prime )\\S+ (Chassis|Neuroptics|Systems|Aspect) Blueprint$`);
+    const variants = items.filter((item) => variant.test(item)).sort((a, b) => a.localeCompare(b));
+    frame.parts = variants.length > 0 ? [`${frame.name} Blueprint`, ...variants] : warframeParts(frame.name);
+  }
+}
+
 /**
  * Gives each weapon and companion the drop-table items that are its parts. An item goes
  * to the longest weapon name it starts with, so "Lex Prime Barrel" is Lex
  * Prime's, not Lex's. Main blueprint first, then by name.
  */
 export function assignWeaponParts(entries: readonly CatalogEntry[], items: Iterable<string>): void {
+  assignWarframeParts(entries, [...items]);
   const weapons = new Map(entries.filter((e) => e.category !== "warframe").map((e) => [e.name, e]));
   const parts = new Map<string, string[]>();
   for (const item of items) {

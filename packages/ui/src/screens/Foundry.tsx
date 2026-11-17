@@ -142,7 +142,7 @@ function Card({ card, selected, openItem }: { card: EquipmentCard; selected: boo
         </ul>
       )}
       {availability !== "mixed" && (
-        <span className={styles.summary} data-availability={availability}>
+        <span className={styles.summary} data-availability={availability} title={card.howTo}>
           {t.foundry.summary[availability]}
         </span>
       )}
