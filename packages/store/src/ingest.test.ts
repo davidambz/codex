@@ -56,7 +56,7 @@ describe("ingest", () => {
       ingested_at: "2026-11-17T12:00:00.000Z",
       source_modified: "2026-11-17T00:00:00.000Z",
       schema_version: String(SCHEMA_VERSION),
-      equipment: "7",
+      equipment: "8",
     });
     expect(existsSync(`${dbPath}.tmp`)).toBe(false);
   });
@@ -114,9 +114,17 @@ describe("ingest", () => {
 
   it("stores the Warframe list with the wiki's acquisition text", async () => {
     const result = await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
-    expect(result).toMatchObject({ status: "updated", equipment: 7 });
+    expect(result).toMatchObject({ status: "updated", equipment: 8 });
     expect(result).not.toHaveProperty("catalogError");
     expect(readWarframes(dbPath)).toEqual([
+      {
+        name: "Excalibur Umbra",
+        category: "warframe",
+        prime: false,
+        wikiUrl: "https://wiki.warframe.com/w/Excalibur%2FUmbra",
+        // Found on the page itself, there being no "/Main" subpage.
+        acquisition: ["The blueprint for Excalibur Umbra is given to players upon completing The Sacrifice quest."],
+      },
       {
         name: "Khora",
         category: "warframe",
@@ -178,9 +186,9 @@ describe("ingest", () => {
     const down = wfcd("h2");
     down.catalogUp = false;
     const result = await ingest({ dbPath, fetchJson: down.fetchJson, now });
-    expect(result).toMatchObject({ status: "updated", hash: "h2", equipment: 7 });
+    expect(result).toMatchObject({ status: "updated", hash: "h2", equipment: 8 });
     expect(result).toHaveProperty("catalogError");
-    expect(readWarframes(dbPath).map((w) => w.name)).toEqual(["Khora", "Khora Prime", "Nezha"]);
+    expect(readWarframes(dbPath).map((w) => w.name)).toEqual(["Excalibur Umbra", "Khora", "Khora Prime", "Nezha"]);
 
     // Same drop hash, but the catalog is retried until it comes through.
     expect((await ingest({ dbPath, fetchJson: down.fetchJson, now })).status).toBe("updated");

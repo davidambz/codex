@@ -160,3 +160,22 @@ function nextHeading(text: string): number {
   const match = /^=+[^=\n].*=+[ \t]*$/m.exec(text);
   return match ? match.index : text.length;
 }
+
+/**
+ * What the acquisition text says about getting it at all:
+ * - "unobtainable": it was only ever handed out once (Founders, old events);
+ * - "quest": a quest gives it, once (Excalibur Umbra).
+ * Only clear wordings count; anything else says nothing.
+ */
+export function acquisitionNote(paragraphs: readonly string[]): "unobtainable" | "quest" | undefined {
+  const text = paragraphs.join(" ");
+  if (
+    /\b(?:was|were) only (?:obtainable|available)\b|\bno longer (?:obtainable|available)\b|\bcan no longer be (?:obtained|acquired)\b/i.test(
+      text,
+    )
+  ) {
+    return "unobtainable";
+  }
+  if (/\b(?:is|are) (?:given|awarded|rewarded)\b[^.]*\bquest\b/i.test(paragraphs[0] ?? "")) return "quest";
+  return undefined;
+}

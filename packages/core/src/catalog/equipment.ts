@@ -139,7 +139,7 @@ export function parseEquipment(category: EquipmentCategory, raw: unknown): Catal
     const entry: CatalogEntry = { name, category, prime: item.isPrime === true || / Prime$/.test(name) };
     if (typeof item.imageName === "string" && SAFE_IMAGE.test(item.imageName)) entry.imageName = item.imageName;
     if (typeof item.wikiaUrl === "string" && item.wikiaUrl.startsWith(WIKI)) entry.wikiUrl = item.wikiaUrl;
-    if (category !== "warframe" && Array.isArray(item.components)) {
+    if (Array.isArray(item.components)) {
       const recipe = [
         ...new Set(
           item.components.flatMap((c: { uniqueName?: unknown }) =>
@@ -276,16 +276,28 @@ export function partLabel(weapon: string, part: string): string | undefined {
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
- * A Warframe's parts are its four blueprints, unless the drop tables name
- * variants of them: Equinox has Day and Night Chassis, Neuroptics,
- * Systems and Aspect blueprints instead.
+ * A Warframe's parts are the blueprints its recipe calls for, usually the
+ * four standard ones; Excalibur Umbra is built from its main blueprint
+ * alone, and Excalibur Prime, a Founders reward, from nothing. When the
+ * drop tables name variants, those win: Equinox is built from Day and
+ * Night Chassis, Neuroptics, Systems and Aspect blueprints.
  */
 function assignWarframeParts(entries: readonly CatalogEntry[], items: readonly string[]): void {
   for (const frame of entries) {
     if (frame.category !== "warframe") continue;
     const variant = new RegExp(`^${escapeRegExp(frame.name)} (?!Prime )\\S+ (Chassis|Neuroptics|Systems|Aspect) Blueprint$`);
     const variants = items.filter((item) => variant.test(item)).sort((a, b) => a.localeCompare(b));
-    frame.parts = variants.length > 0 ? [`${frame.name} Blueprint`, ...variants] : warframeParts(frame.name);
+    if (variants.length > 0) {
+      frame.parts = [`${frame.name} Blueprint`, ...variants];
+    } else if (frame.recipe) {
+      const wanted = new Set(frame.recipe.map((piece) => (piece === "Blueprint" ? "" : ` ${piece}`)));
+      frame.parts = warframeParts(frame.name).filter((part) =>
+        wanted.has(part.slice(frame.name.length).replace(/ Blueprint$/, "")),
+      );
+    } else if (!frame.parts) {
+      // No recipe in the catalog: the usual four, unless it's a Prime (those always list theirs).
+      frame.parts = frame.prime ? [] : warframeParts(frame.name);
+    }
   }
 }
 

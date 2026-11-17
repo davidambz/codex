@@ -1,7 +1,7 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { extractAcquisition, toPlainText } from "./wikitext.ts";
+import { acquisitionNote, extractAcquisition, toPlainText } from "./wikitext.ts";
 
 describe("toPlainText", () => {
   it.each([
@@ -64,5 +64,18 @@ describe("extractAcquisition", () => {
   it("keeps at most a few paragraphs", () => {
     const page = `==Acquisition==\n${["One.", "Two.", "Three.", "Four."].join("\n\n")}\n==Notes==`;
     expect(extractAcquisition(page)).toEqual(["One.", "Two.", "Three."]);
+  });
+});
+
+describe("acquisitionNote", () => {
+  it("tells things no longer handed out, and quest-only ones", () => {
+    expect(acquisitionNote(["Excalibur Prime was only obtainable by upgrading to Founders, which is no longer available."])).toBe(
+      "unobtainable",
+    );
+    expect(acquisitionNote(["The blueprint for Excalibur Umbra is given to players upon completing The Sacrifice quest."])).toBe(
+      "quest",
+    );
+    expect(acquisitionNote(["Nezha's blueprints can be researched from the Tenno Lab."])).toBeUndefined();
+    expect(acquisitionNote([])).toBeUndefined();
   });
 });

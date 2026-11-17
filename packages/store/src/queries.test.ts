@@ -37,7 +37,13 @@ beforeAll(() => {
   const catalog: CatalogEntry[] = [
     { name: "Gara", category: "warframe", prime: false, acquisition: ["Gara's main blueprint is awarded by Saya's Vigil."] },
     { name: "Khora", category: "warframe", prime: false, counterpart: "Khora Prime", wikiUrl: "https://wiki.warframe.com/w/Khora" },
-    { name: "Khora Prime", category: "warframe", prime: true, counterpart: "Khora" },
+    {
+      name: "Khora Prime",
+      category: "warframe",
+      prime: true,
+      counterpart: "Khora",
+      recipe: ["Blueprint", "Chassis", "Neuroptics", "Systems"],
+    },
     { name: "Lex Prime", category: "secondary", prime: true },
     { name: "War Prime", category: "melee", prime: true, acquisition: ["Crafted from Hunhow's Trinket."] },
   ];
