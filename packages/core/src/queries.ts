@@ -9,6 +9,7 @@ import type { ItemKind, Refinement, RelicTier, Rotation, Source, SourceKind } fr
 import { REFINEMENTS, RELIC_TIERS } from "./types.ts";
 import type { SearchEntry } from "./search/index.ts";
 import { equipmentPartLabel, partImage, type EquipmentCategory } from "./catalog/equipment.ts";
+import { acquisitionNote } from "./wiki/wikitext.ts";
 import type { ItemLanguage } from "./catalog/names.ts";
 
 export interface RelicInfo {
@@ -64,6 +65,7 @@ export interface EquipmentSheet {
   wikiUrl?: string;
   /** How to get it, from the Warframe Wiki (English, CC BY-SA). */
   acquisition?: string[];
+  note?: AcquisitionNote;
 }
 
 export interface DropRow {
@@ -221,6 +223,22 @@ export interface EquipmentCard {
   parts: Pick<EquipmentPart, "name" | "label" | "status">[];
   /** The first sentence of how to get it, from the wiki, for a hint on the card. */
   howTo?: string;
+  note?: AcquisitionNote;
+}
+
+/** What the wiki says about getting it at all: no longer, or once from a quest. */
+export type AcquisitionNote = "unobtainable" | "quest";
+
+/**
+ * The note that applies: "quest" only for things that are a single
+ * blueprint no drop table names (Excalibur Umbra, Paracesis); a frame
+ * whose main blueprint is a quest reward but whose parts drop (Gara) is
+ * just farmed.
+ */
+function noteFor(acquisition: readonly string[], parts: readonly { status: PartStatus }[]): AcquisitionNote | undefined {
+  const note = acquisitionNote(acquisition);
+  if (note === "quest" && (parts.length > 1 || parts.some((part) => part.status !== "none"))) return undefined;
+  return note;
 }
 
 /** The first sentence of a paragraph, at most `max` characters. */
@@ -263,8 +281,10 @@ export function listEquipment(db: Db): EquipmentCard[] {
         parts: names.map(([name, label]) => ({ name, label, status: partStatus(stats.get(name)).status })),
       };
       if (row.image_name) card.imageName = row.image_name;
-      const first = row.acquisition ? (JSON.parse(row.acquisition) as string[])[0] : undefined;
-      if (first) card.howTo = firstSentence(first);
+      const acquisition = row.acquisition ? (JSON.parse(row.acquisition) as string[]) : [];
+      if (acquisition[0]) card.howTo = firstSentence(acquisition[0]);
+      const note = noteFor(acquisition, card.parts);
+      if (note) card.note = note;
       return card;
     });
 }
@@ -389,7 +409,11 @@ function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
   const sheet: EquipmentSheet = { category: row.category, prime: row.prime === 1, parts };
   if (row.counterpart) sheet.counterpart = row.counterpart;
   if (row.wiki_url) sheet.wikiUrl = row.wiki_url;
-  if (row.acquisition) sheet.acquisition = JSON.parse(row.acquisition) as string[];
+  if (row.acquisition) {
+    sheet.acquisition = JSON.parse(row.acquisition) as string[];
+    const note = noteFor(sheet.acquisition, sheet.parts);
+    if (note) sheet.note = note;
+  }
   return sheet;
 }
 

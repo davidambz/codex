@@ -30,7 +30,7 @@ export {
   type CatalogEntry,
   type EquipmentCategory,
 } from "./catalog/equipment.ts";
-export { extractAcquisition, toPlainText } from "./wiki/wikitext.ts";
+export { acquisitionNote, extractAcquisition, toPlainText } from "./wiki/wikitext.ts";
 export {
   bestBet,
   dropFacets,

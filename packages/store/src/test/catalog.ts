@@ -14,12 +14,36 @@ export const WARFRAMES = [
     productCategory: "Suits",
     wikiaUrl: "https://wiki.warframe.com/w/Khora",
   },
-  { name: "Khora Prime", isPrime: true, productCategory: "Suits", wikiaUrl: "https://wiki.warframe.com/w/Khora%2FPrime" },
+  {
+    name: "Khora Prime",
+    isPrime: true,
+    productCategory: "Suits",
+    wikiaUrl: "https://wiki.warframe.com/w/Khora%2FPrime",
+    components: [
+      { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeBlueprint" },
+      { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeChassisComponent" },
+      { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeHelmetComponent" },
+      { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/KhoraPrimeSystemsComponent" },
+    ],
+  },
   { name: "Nezha", isPrime: false, productCategory: "Suits", wikiaUrl: "https://wiki.warframe.com/w/Nezha" },
+  {
+    name: "Excalibur Umbra",
+    isPrime: false,
+    productCategory: "Suits",
+    wikiaUrl: "https://wiki.warframe.com/w/Excalibur%2FUmbra",
+    components: [
+      { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/ExcaliburUmbraBlueprint" },
+      { uniqueName: "/Lotus/Types/Items/MiscItems/OrokinCell" },
+    ],
+  },
   { name: "Bonewidow", isPrime: false, productCategory: "MechSuits" },
 ];
 
 export const WIKI_PAGES: Record<string, string> = {
+  // No "/Main" subpage: the text is on the page itself.
+  "Excalibur/Umbra":
+    "==Acquisition==\nThe blueprint for Excalibur Umbra is given to players upon completing [[The Sacrifice]] quest.\n",
   "War/Prime": "==Acquisition==\nWar Prime is acquired by crafting [[Hunhow's Trinket]].\n\n==Notes==\n",
   "Helios/Main": "==Acquisition==\nHelios is [[research]]ed in the [[Tenno Lab]].\n",
   "Khora/Main":

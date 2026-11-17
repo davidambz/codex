@@ -19,7 +19,7 @@ export type FoundryTab = keyof typeof FOUNDRY_TABS;
 export const PRIME_FILTERS = ["all", "prime", "regular"] as const;
 export type PrimeFilter = (typeof PRIME_FILTERS)[number];
 
-export const AVAILABILITY = ["all", "farmable", "vaulted", "none"] as const;
+export const AVAILABILITY = ["all", "farmable", "vaulted", "quest", "none", "unavailable"] as const;
 export type Availability = (typeof AVAILABILITY)[number];
 
 /**
@@ -30,11 +30,15 @@ export type Availability = (typeof AVAILABILITY)[number];
  * - "vaulted": at least one part only comes from vaulted relics;
  * - "none": a Prime none of whose parts are in the drop tables (War Prime,
  *   Excalibur Prime);
- * - "mixed": a Prime with some parts dropping and others not.
+ * - "mixed": a Prime with some parts dropping and others not;
+ * - "quest": given once by a quest (Excalibur Umbra);
+ * - "unavailable": no longer handed out at all (Founders' Excalibur Prime).
  */
 export function cardAvailability(card: EquipmentCard): Exclude<Availability, "all"> | "mixed" {
   const statuses = card.parts.map((part) => part.status);
+  if (card.note === "unobtainable") return "unavailable";
   if (statuses.includes("vaulted")) return "vaulted";
+  if (card.note === "quest") return "quest";
   if (!card.prime) return "farmable";
   if (statuses.every((status) => status === "none")) return "none";
   if (statuses.every((status) => status === "drops" || status === "relics")) return "farmable";

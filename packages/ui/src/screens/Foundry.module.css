@@ -154,7 +154,12 @@ button.part:hover {
   border-style: dashed;
 }
 
-.part[data-status="none"] /* Many parts (Equinox has nine): smaller icons, so the card keeps its size. */
+.part[data-status="none"] .partIcon {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+/* Many parts (Equinox has nine): smaller icons, so the card keeps its size. */
 .parts[data-dense] {
   gap: var(--space-1);
 }
@@ -165,19 +170,16 @@ button.part:hover {
 }
 
 .parts[data-dense] .partIcon {
-  width: 20px;
-  height: 20px;
-}
-
-.partIcon {
-  opacity: 0.35;
-  filter: grayscale(1);
-}
-
-.partIcon {
   width: 24px;
   height: 24px;
+}
+
+/* The pictures nearly fill their circle, with a soft shadow to lift them off the paper. */
+.partIcon {
+  width: 30px;
+  height: 30px;
   object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
 }
 
 .partIcon[data-empty] {
@@ -202,7 +204,8 @@ button.part:hover {
   color: var(--color-accent);
 }
 
-.summary[data-availability="vaulted"] {
+.summary[data-availability="vaulted"],
+.summary[data-availability="unavailable"] {
   color: var(--color-danger);
 }
 

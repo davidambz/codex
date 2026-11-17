@@ -101,7 +101,7 @@ describe("Warframe parts", () => {
     const frames: CatalogEntry[] = [
       { name: "Nezha", category: "warframe", prime: false },
       { name: "Equinox", category: "warframe", prime: false },
-      { name: "Equinox Prime", category: "warframe", prime: true },
+      { name: "Equinox Prime", category: "warframe", prime: true, recipe: ["Blueprint", "Chassis", "Neuroptics", "Systems"] },
     ];
     assignWeaponParts(frames, [
       "Equinox Night Chassis Blueprint",
@@ -118,6 +118,16 @@ describe("Warframe parts", () => {
       "Equinox Night Chassis Blueprint",
     ]);
     expect(frames[2].parts).toEqual(warframeParts("Equinox Prime"));
+  });
+
+  it("follow the recipe: Umbra is its blueprint alone, a Prime with no recipe has none", () => {
+    const frames: CatalogEntry[] = [
+      { name: "Excalibur Umbra", category: "warframe", prime: false, recipe: ["Blueprint"] },
+      { name: "Excalibur Prime", category: "warframe", prime: true },
+      { name: "Chroma", category: "warframe", prime: false, recipe: ["Blueprint", "Chassis", "Neuroptics", "Systems"] },
+    ];
+    assignWeaponParts(frames, []);
+    expect(frames.map((f) => f.parts)).toEqual([["Excalibur Umbra Blueprint"], [], warframeParts("Chroma")]);
   });
 
   it("names each piece", () => {

@@ -59,25 +59,44 @@ export async function fetchCatalog(fetchJson: FetchJson, items: readonly string[
   );
   const entries = joinCatalog(lists);
   assignWeaponParts(entries, items);
-  await addAcquisition(fetchJson, entries.filter(needsAcquisition));
+  const drops = new Set(items);
+  await addAcquisition(
+    fetchJson,
+    entries.filter((entry) => needsAcquisition(entry, drops)),
+  );
   return entries;
 }
 
-/** Regular things, and Primes whose parts aren't in the drop tables (War Prime, from Hunhow). */
-export function needsAcquisition(entry: CatalogEntry): boolean {
-  return !entry.prime || (entry.category !== "warframe" && !entry.parts?.length);
+/**
+ * Regular things, and Primes none of whose parts are in the drop tables
+ * (War Prime, from Hunhow; Excalibur Prime, a Founders reward).
+ */
+export function needsAcquisition(entry: CatalogEntry, drops: ReadonlySet<string>): boolean {
+  return !entry.prime || !(entry.parts ?? []).some((part) => drops.has(part));
 }
 
 async function addAcquisition(fetchJson: FetchJson, entries: CatalogEntry[]): Promise<void> {
-  for (let i = 0; i < entries.length; i += PAGES_PER_REQUEST) {
-    const batch = entries.slice(i, i + PAGES_PER_REQUEST);
-    const titles = batch.map(wikiPage);
-    const content = pageContents((await fetchJson(wikiPagesUrl(titles))) as WikiQuery);
-    batch.forEach((entry, j) => {
-      const text = content.get(titles[j]);
-      const paragraphs = text ? extractAcquisition(text) : [];
-      if (paragraphs.length > 0) entry.acquisition = paragraphs;
-    });
+  // Each entry's article page, then the page itself: a few Warframes
+  // (Excalibur Prime, Excalibur Umbra) keep their text there, not in "/Main".
+  const pagesOf = (entry: CatalogEntry) => {
+    const page = wikiPage(entry);
+    const bare = page.replace(/\/Main$/, "");
+    return bare === page ? [page] : [page, bare];
+  };
+  const perRequest = Math.floor(PAGES_PER_REQUEST / 2);
+  for (let i = 0; i < entries.length; i += perRequest) {
+    const batch = entries.slice(i, i + perRequest);
+    const content = pageContents((await fetchJson(wikiPagesUrl(batch.flatMap(pagesOf)))) as WikiQuery);
+    for (const entry of batch) {
+      for (const title of pagesOf(entry)) {
+        const text = content.get(title);
+        const paragraphs = text ? extractAcquisition(text) : [];
+        if (paragraphs.length > 0) {
+          entry.acquisition = paragraphs;
+          break;
+        }
+      }
+    }
   }
 }
 

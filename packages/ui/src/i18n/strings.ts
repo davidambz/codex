@@ -135,6 +135,7 @@ export interface Strings {
     vaulted: (total: number) => string;
     none: string;
     noneHint: string;
+    notes: Record<"unobtainable" | "quest", string>;
     howLabel: string;
     wikiCredit: string;
     openWiki: string;
