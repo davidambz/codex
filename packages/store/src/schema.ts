@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -50,5 +50,15 @@ CREATE TABLE relics (
   tier    TEXT NOT NULL,
   code    TEXT NOT NULL,
   vaulted INTEGER NOT NULL
+);
+
+-- Warframes from WFCD's item catalog; their parts are items named after them.
+CREATE TABLE warframes (
+  item_id     INTEGER PRIMARY KEY REFERENCES items(id),
+  prime       INTEGER NOT NULL,
+  counterpart TEXT,
+  wiki_url    TEXT,
+  -- JSON array of plain-text paragraphs from the wiki.
+  acquisition TEXT
 );
 `;

@@ -3,11 +3,16 @@
 
 import { rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
-import type { DropData } from "@iaframe/core";
+import type { DropData, WarframeEntry } from "@iaframe/core";
 import { SCHEMA, SCHEMA_VERSION } from "./schema.ts";
 
 /** Writes `data` into a brand new database file at `path`, replacing whatever was there. */
-export function buildDatabase(path: string, data: DropData, meta: Record<string, string>): void {
+export function buildDatabase(
+  path: string,
+  data: DropData,
+  meta: Record<string, string>,
+  warframes: WarframeEntry[] = [],
+): void {
   rmSync(path, { force: true });
   const db = new DatabaseSync(path);
   try {
@@ -55,11 +60,33 @@ export function buildDatabase(path: string, data: DropData, meta: Record<string,
     const insertRelic = db.prepare("INSERT INTO relics (item_id, tier, code, vaulted) VALUES (?, ?, ?, ?)");
     for (const r of data.relics) insertRelic.run(idOf(itemIds, r.item), r.tier, r.code, r.vaulted ? 1 : 0);
 
+    const insertWarframe = db.prepare(
+      "INSERT INTO warframes (item_id, prime, counterpart, wiki_url, acquisition) VALUES (?, ?, ?, ?, ?)",
+    );
+    const setKind = db.prepare("UPDATE items SET kind = 'warframe' WHERE id = ?");
+    for (const w of warframes) {
+      let id = itemIds.get(w.name);
+      if (id === undefined) {
+        id = Number(insertItem.run(w.name, "warframe").lastInsertRowid);
+        itemIds.set(w.name, id);
+      } else {
+        setKind.run(id);
+      }
+      insertWarframe.run(
+        id,
+        w.prime ? 1 : 0,
+        w.counterpart ?? null,
+        w.wikiUrl ?? null,
+        w.acquisition?.length ? JSON.stringify(w.acquisition) : null,
+      );
+    }
+
     const insertMeta = db.prepare("INSERT INTO meta (key, value) VALUES (?, ?)");
     const allMeta = {
       ...meta,
       schema_version: String(SCHEMA_VERSION),
-      items: String(data.items.length),
+      items: String(itemIds.size),
+      warframes: String(warframes.length),
       drops: String(data.drops.length),
       skipped: String(data.skipped),
     };

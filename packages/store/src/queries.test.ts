@@ -28,7 +28,11 @@ let store: Store;
 beforeAll(() => {
   dir = mkdtempSync(join(tmpdir(), "iaframe-queries-"));
   const path = join(dir, "iaframe.db");
-  buildDatabase(path, parseDropData(sample), { drops_hash: "abc", ingested_at: "2026-11-17T12:00:00.000Z" });
+  buildDatabase(path, parseDropData(sample), { drops_hash: "abc", ingested_at: "2026-11-17T12:00:00.000Z" }, [
+    { name: "Gara", prime: false, acquisition: ["Gara's main blueprint is awarded by Saya's Vigil."] },
+    { name: "Khora", prime: false, counterpart: "Khora Prime", wikiUrl: "https://wiki.warframe.com/w/Khora" },
+    { name: "Khora Prime", prime: true, counterpart: "Khora" },
+  ]);
   store = openStore(path);
 });
 afterAll(() => {
@@ -40,6 +44,37 @@ describe("queries", () => {
   it("lists every item for the search index", () => {
     const index = buildSearchIndex(listItems(store));
     expect(index.search("khora p chassi", 1)[0]).toMatchObject({ name: "Khora Prime Chassis Blueprint", kind: "prime_part" });
+  });
+
+  it("finds Warframes by name, even ones with no drops", () => {
+    const index = buildSearchIndex(listItems(store));
+    expect(index.search("khora", 2).map((h) => [h.name, h.kind])).toEqual([
+      ["Khora", "warframe"],
+      ["Khora Prime", "warframe"],
+    ]);
+  });
+
+  it("sums up where each of a Warframe's blueprints comes from", () => {
+    const gara = getItem(store, "Gara")?.warframe;
+    expect(gara).toMatchObject({ prime: false, acquisition: ["Gara's main blueprint is awarded by Saya's Vigil."] });
+    expect(gara?.parts.map((p) => [p.slot, p.status])).toEqual([
+      ["blueprint", "none"],
+      ["chassis", "drops"],
+      ["neuroptics", "none"],
+      ["systems", "none"],
+    ]);
+    expect(gara?.parts[1].bestChance).toBeGreaterThan(0);
+
+    const khoraPrime = getItem(store, "Khora Prime")?.warframe;
+    expect(khoraPrime).toMatchObject({ prime: true, counterpart: "Khora" });
+    expect(khoraPrime?.parts[1]).toEqual({
+      name: "Khora Prime Chassis Blueprint",
+      slot: "chassis",
+      status: "vaulted",
+      relics: 1,
+      openRelics: 0,
+    });
+    expect(getItem(store, "Serration")?.warframe).toBeUndefined();
   });
 
   it("describes a relic item", () => {

@@ -98,6 +98,25 @@ describe("App", () => {
     expect(await screen.findByText(/No drop table lists this item/)).toBeInTheDocument();
   });
 
+  it("shows a Warframe's blueprints, how to get it, and its Prime", async () => {
+    renderApp();
+    await open("nezha", /^Nezha(?! Prime)/);
+    expect(await screen.findByRole("heading", { level: 1, name: "Nezha" })).toBeInTheDocument();
+    expect(screen.getAllByText("Not in the drop tables")).toHaveLength(4);
+    expect(screen.getByText(/researched from the Tenno Lab/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open on the wiki" })).toHaveAttribute("href", "https://wiki.warframe.com/w/Nezha");
+
+    await userEvent.click(screen.getByRole("button", { name: "See Nezha Prime" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Nezha Prime" })).toBeInTheDocument();
+    expect(screen.getByText("Vaulted · 8 relics, none farmable")).toBeInTheDocument();
+    expect(screen.getByText("Relics · 2 of 5 farmable")).toBeInTheDocument();
+    expect(screen.getByText("Drops · up to 12.5%")).toBeInTheDocument();
+    expect(screen.queryByText("How to get it")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Nezha Prime Chassis Blueprint" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Nezha Prime Chassis Blueprint" })).toBeInTheDocument();
+  });
+
   it("speaks Portuguese when the system does", async () => {
     renderApp(fakePlatform({ getSystemLocale: async () => "pt-BR" }));
     expect(await screen.findByText("Onde dropa?")).toBeInTheDocument();

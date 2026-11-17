@@ -4,7 +4,7 @@
 import { useI18n } from "../i18n/I18nContext";
 import styles from "./Home.module.css";
 
-const EXAMPLES = ["khora p chassi", "serration", "axi a21", "vitus essence"];
+const EXAMPLES = ["khora p chassi", "nezha", "serration", "axi a21", "vitus essence"];
 
 /** The empty detail pane: what to type, with a few examples to click. */
 export function Home({ onExample }: { onExample: (query: string) => void }) {

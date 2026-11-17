@@ -7,6 +7,7 @@ import { join } from "node:path";
 import type { DataStatus } from "@iaframe/core";
 import { createDataService } from "./service.ts";
 import { WFCD_DATA_URL, WFCD_INFO_URL, type FetchJson } from "./ingest.ts";
+import { fakeCatalog } from "./test/catalog.ts";
 import sample from "../../core/src/wfcd/fixtures/sample.json" with { type: "json" };
 
 let dir: string;
@@ -23,6 +24,8 @@ const wfcd =
   async (url) => {
     if (url === WFCD_INFO_URL) return { hash, modified: 0 };
     if (url === WFCD_DATA_URL) return data;
+    const catalog = fakeCatalog(url);
+    if (catalog) return catalog;
     throw new Error(url);
   };
 

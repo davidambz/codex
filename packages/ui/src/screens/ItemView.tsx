@@ -2,7 +2,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useMemo, useState } from "react";
-import { REFINEMENTS, type DropRow, type RelicRoute, type SourceKind } from "@iaframe/core";
+import {
+  REFINEMENTS,
+  type DropRow,
+  type RelicRoute,
+  type SourceKind,
+  type WarframePart,
+  type WarframeSheet,
+} from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
 import { usePlatform } from "../platform/PlatformContext";
 import { useQuery } from "../hooks/useQuery";
@@ -10,6 +17,7 @@ import { DropTable } from "../components/DropTable";
 import { Chance } from "../components/Chance";
 import { Segmented } from "../components/Segmented";
 import { Tag } from "../components/Tag";
+import { formatChance } from "../format";
 import type { Navigate } from "../navigation";
 import styles from "./Detail.module.css";
 
@@ -55,6 +63,13 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
           {vaultedTag !== undefined && <Tag lamp={!vaultedTag}>{vaultedTag ? t.item.vaulted : t.item.obtainable}</Tag>}
         </div>
         <h1 className={styles.title}>{item.name}</h1>
+        {item.warframe?.counterpart && (
+          <div className={styles.headActions}>
+            <button type="button" className={styles.link} onClick={() => openItem(item.warframe!.counterpart!)}>
+              {t.warframe.counterpart(item.warframe.counterpart)}
+            </button>
+          </div>
+        )}
         {item.relic && (
           <div className={styles.headActions}>
             {item.relic.vaulted && <p className={styles.note}>{t.item.relicVaultedNote}</p>}
@@ -68,6 +83,8 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
           </div>
         )}
       </header>
+
+      {item.warframe && <WarframeSections sheet={item.warframe} openItem={openItem} />}
 
       {deep.relics.length > 0 && (
         <section className={styles.section}>
@@ -111,7 +128,7 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
         </section>
       )}
 
-      {deep.relics.length === 0 && deep.direct.length === 0 && <p className={styles.note}>{t.item.noDrops}</p>}
+      {!item.warframe && deep.relics.length === 0 && deep.direct.length === 0 && <p className={styles.note}>{t.item.noDrops}</p>}
     </article>
   );
 }
@@ -144,5 +161,75 @@ function RelicCard({ route, openItem, openSource }: { route: RelicRoute } & Navi
         </div>
       )}
     </div>
+  );
+}
+
+function WarframeSections({ sheet, openItem }: { sheet: WarframeSheet; openItem: (name: string) => void }) {
+  const { t } = useI18n();
+  const anyMissing = sheet.parts.some((part) => part.status === "none");
+  return (
+    <>
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <div>
+            <h2 className="label">{t.warframe.partsLabel}</h2>
+            {anyMissing && sheet.acquisition && <p className={styles.hint}>{t.warframe.noneHint}</p>}
+          </div>
+        </div>
+        <ul className={`${styles.panel} ${styles.parts}`}>
+          {sheet.parts.map((part) => (
+            <PartRow key={part.name} part={part} openItem={openItem} />
+          ))}
+        </ul>
+      </section>
+
+      {sheet.acquisition && (
+        <section className={styles.section}>
+          <h2 className="label">{t.warframe.howLabel}</h2>
+          <div className={styles.prose}>
+            {sheet.acquisition.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
+          </div>
+          <p className={styles.hint}>
+            {t.warframe.wikiCredit}{" "}
+            {sheet.wikiUrl && (
+              <a href={sheet.wikiUrl} target="_blank" rel="noreferrer">
+                {t.warframe.openWiki}
+              </a>
+            )}
+          </p>
+        </section>
+      )}
+    </>
+  );
+}
+
+function PartRow({ part, openItem }: { part: WarframePart; openItem: (name: string) => void }) {
+  const { t, locale } = useI18n();
+  const status =
+    part.status === "drops"
+      ? t.warframe.drops(part.bestChance !== undefined ? formatChance(part.bestChance, locale) : "?")
+      : part.status === "relics"
+        ? t.warframe.relics(part.openRelics ?? 0, part.relics ?? 0)
+        : part.status === "vaulted"
+          ? t.warframe.vaulted(part.relics ?? 0)
+          : t.warframe.none;
+  const lit = part.status === "drops" || part.status === "relics";
+  return (
+    <li className={styles.part}>
+      <span className="label">{t.warframe.slots[part.slot]}</span>
+      {part.status === "none" ? (
+        <span className={styles.partName}>{part.name}</span>
+      ) : (
+        <button type="button" className={`${styles.partName} ${styles.partLink}`} onClick={() => openItem(part.name)}>
+          {part.name}
+        </button>
+      )}
+      <span className={styles.partStatus}>
+        <span className="lamp" data-lit={lit} />
+        {status}
+      </span>
+    </li>
   );
 }
