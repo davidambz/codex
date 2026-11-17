@@ -10,7 +10,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "oxlint",
     "test": "vitest run",
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "ingest": "npm run ingest -w @iaframe/store --"
   },
   "engines": {
     "node": ">=24"
