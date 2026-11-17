@@ -136,7 +136,7 @@ export const en: Strings = {
     english: (name) => `In English: ${name}`,
   },
   equipment: {
-    partsLabel: "Blueprints",
+    partsLabel: "Parts",
     parts: {
       Blueprint: "Main blueprint",
       Chassis: "Chassis",

@@ -138,7 +138,7 @@ export const ptBR: Strings = {
     english: (name) => `Em inglês: ${name}`,
   },
   equipment: {
-    partsLabel: "Blueprints",
+    partsLabel: "Peças",
     parts: {
       Blueprint: "Blueprint principal",
       Chassis: "Chassis",
