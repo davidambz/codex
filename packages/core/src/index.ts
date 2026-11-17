@@ -16,7 +16,10 @@ export { resolveSupportedLocale } from "./locale.ts";
 export {
   EQUIPMENT_CATEGORIES,
   EQUIPMENT_FILES,
+  IMAGE_BASE_URL,
+  SAFE_IMAGE,
   WEAPON_CATEGORIES,
+  partImage,
   assignWeaponParts,
   joinCatalog,
   parseEquipment,

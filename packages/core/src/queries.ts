@@ -6,7 +6,7 @@
 
 import type { Db } from "./db.ts";
 import type { ItemKind, Refinement, RelicTier, Rotation, Source, SourceKind } from "./types.ts";
-import { REFINEMENTS } from "./types.ts";
+import { REFINEMENTS, RELIC_TIERS } from "./types.ts";
 import type { SearchEntry } from "./search/index.ts";
 import { partLabel, warframeParts, type EquipmentCategory } from "./catalog/equipment.ts";
 import type { ItemLanguage } from "./catalog/names.ts";
@@ -213,6 +213,96 @@ export function getItem(db: Db, name: string): ItemDetails | undefined {
 
 const WARFRAME_LABELS = ["Blueprint", "Chassis", "Neuroptics", "Systems"];
 
+/** One card of the Foundry grid. */
+export interface EquipmentCard {
+  name: string;
+  category: EquipmentCategory;
+  prime: boolean;
+  imageName?: string;
+  parts: Pick<EquipmentPart, "name" | "label" | "status">[];
+}
+
+interface PartStats {
+  relics: number;
+  open: number;
+  direct: number;
+  best: number | null;
+}
+
+/** Every Warframe, weapon and companion with where each part can be had, in a few queries. */
+export function listEquipment(db: Db): EquipmentCard[] {
+  const stats = new Map<string, PartStats>();
+  for (const row of db.all<PartStats & { name: string }>(`${PART_STATS} GROUP BY i.id`)) stats.set(row.name, row);
+  const owned = new Map<string, string[]>();
+  for (const { owner, part } of db.all<{ owner: string; part: string }>(
+    `SELECT i.name AS owner, p.part FROM parts p JOIN items i ON i.id = p.owner_id ORDER BY i.name, p.position`,
+  )) {
+    owned.set(owner, [...(owned.get(owner) ?? []), part]);
+  }
+  return db
+    .all<{ name: string; category: EquipmentCategory; prime: number; image_name: string | null }>(
+      `SELECT i.name, e.category, e.prime, e.image_name FROM equipment e JOIN items i ON i.id = e.item_id ORDER BY i.name`,
+    )
+    .map((row) => {
+      const names =
+        row.category === "warframe"
+          ? warframeParts(row.name).map((name, i) => [name, WARFRAME_LABELS[i]] as const)
+          : (owned.get(row.name) ?? []).map((name) => [name, partLabel(row.name, name) ?? name] as const);
+      const card: EquipmentCard = {
+        name: row.name,
+        category: row.category,
+        prime: row.prime === 1,
+        parts: names.map(([name, label]) => ({ name, label, status: partStatus(stats.get(name)).status })),
+      };
+      if (row.image_name) card.imageName = row.image_name;
+      return card;
+    });
+}
+
+/** A relic, for the relic list. */
+export interface RelicListEntry {
+  name: string;
+  tier: RelicInfo["tier"];
+  code: string;
+  vaulted: boolean;
+  /** What it holds, rarest last. */
+  rewards: { item: string; rarity: RelicRarity }[];
+}
+
+export type RelicRarity = "common" | "uncommon" | "rare";
+
+/**
+ * A relic reward's rarity from its Intact chance (25.33%, 11% or 2%): the
+ * drop data's own rarity labels lump commons in with uncommons.
+ */
+export function relicRarity(intactChance: number): RelicRarity {
+  return intactChance >= 20 ? "common" : intactChance >= 5 ? "uncommon" : "rare";
+}
+
+export function listRelics(db: Db): RelicListEntry[] {
+  const rewards = new Map<string, RelicListEntry["rewards"]>();
+  for (const row of db.all<{ relic: string; item: string; chance: number }>(
+    `SELECT s.name AS relic, i.name AS item, d.chance
+     FROM drops d JOIN sources s ON s.id = d.source_id JOIN items i ON i.id = d.item_id
+     WHERE s.kind = 'relic' AND d.refinement = 'Intact'
+     ORDER BY s.name, d.chance DESC, i.name`,
+  )) {
+    rewards.set(row.relic, [...(rewards.get(row.relic) ?? []), { item: row.item, rarity: relicRarity(row.chance) }]);
+  }
+  return db
+    .all<{ name: string; tier: RelicInfo["tier"]; code: string; vaulted: number }>(
+      `SELECT i.name, r.tier, r.code, r.vaulted FROM relics r JOIN items i ON i.id = r.item_id`,
+    )
+    .map((row) => ({
+      name: row.name,
+      tier: row.tier,
+      code: row.code,
+      vaulted: row.vaulted === 1,
+      rewards: rewards.get(row.name) ?? [],
+    }))
+    .sort((a, b) => RELIC_TIERS.indexOf(a.tier) - RELIC_TIERS.indexOf(b.tier) || a.code.localeCompare(b.code, undefined, { numeric: true }));
+}
+
 function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
   const row = db.get<{
     category: EquipmentCategory;
@@ -242,9 +332,8 @@ function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
   return sheet;
 }
 
-function partOf(db: Db, name: string, label: string): EquipmentPart {
-  const r = db.get<{ relics: number; open: number; direct: number; best: number | null }>(
-    `SELECT
+const PART_STATS = `SELECT
+       i.name,
        COUNT(DISTINCT CASE WHEN s.kind = 'relic' THEN s.id END) AS relics,
        COUNT(DISTINCT CASE WHEN s.kind = 'relic' AND sr.vaulted = 0 THEN s.id END) AS open,
        COUNT(CASE WHEN s.kind <> 'relic' THEN 1 END) AS direct,
@@ -253,16 +342,19 @@ function partOf(db: Db, name: string, label: string): EquipmentPart {
      JOIN items i ON i.id = d.item_id
      JOIN sources s ON s.id = d.source_id
      LEFT JOIN items si ON s.kind = 'relic' AND si.name = s.name
-     LEFT JOIN relics sr ON sr.item_id = si.id
-     WHERE i.name = ?`,
-    name,
-  );
-  const part: EquipmentPart = { name, label, status: "none" };
-  if (!r) return part;
+     LEFT JOIN relics sr ON sr.item_id = si.id`;
+
+function partOf(db: Db, name: string, label: string): EquipmentPart {
+  return { name, label, ...partStatus(db.get<PartStats & { name: string }>(`${PART_STATS} WHERE i.name = ?`, name)) };
+}
+
+function partStatus(r: PartStats | undefined): Omit<EquipmentPart, "name" | "label"> {
+  const part: Omit<EquipmentPart, "name" | "label"> = { status: "none" };
+  if (!r || r.relics + r.direct === 0) return part;
   if (r.direct > 0) {
     part.status = "drops";
     if (r.best !== null) part.bestChance = r.best;
-  } else if (r.relics > 0) {
+  } else {
     part.status = r.open > 0 ? "relics" : "vaulted";
   }
   if (r.relics > 0) {

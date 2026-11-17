@@ -3,23 +3,28 @@
 
 import { useCallback, useRef, useState } from "react";
 import { Header } from "./components/Header";
-import { BackIcon } from "./components/icons";
+import { Sidebar } from "./components/Sidebar";
+import { BackIcon, CloseIcon } from "./components/icons";
 import { useDataStatus } from "./hooks/useDataStatus";
+import { usePreference } from "./hooks/usePreference";
 import { useSystemTheme } from "./hooks/useSystemTheme";
 import { useI18n } from "./i18n/I18nContext";
 import { ItemNamesProvider } from "./names/ItemNamesProvider";
 import { useItemNames } from "./names/ItemNamesContext";
-import type { View } from "./navigation";
+import { isPage, type Page, type View } from "./navigation";
+import { Foundry } from "./screens/Foundry";
 import { Home } from "./screens/Home";
 import { ItemView } from "./screens/ItemView";
 import { NoData } from "./screens/NoData";
+import { RelicsPage } from "./screens/RelicsPage";
 import { SearchPane } from "./screens/SearchPane";
+import { SettingsPage } from "./screens/SettingsPage";
 import { SourceView } from "./screens/SourceView";
 import styles from "./App.module.css";
 
 /**
- * Search on the left, details on the right. On a narrow window only one
- * shows at a time: the details, with a back button, once something is open.
+ * Sections on the left, the chosen one in the middle, and whatever was
+ * opened from it (an item, a source) in a panel on the right.
  */
 export function App() {
   useSystemTheme();
@@ -36,6 +41,7 @@ export function App() {
 function Screens({ status, update }: ReturnType<typeof useDataStatus>) {
   const { t } = useI18n();
   const { version: dataVersion } = useItemNames();
+  const [page, setPage] = usePreference<Page>("page", "foundry", isPage);
   const [query, setQuery] = useState("");
   const [stack, setStack] = useState<View[]>([]);
   const detailRef = useRef<HTMLElement>(null);
@@ -47,7 +53,11 @@ function Screens({ status, update }: ReturnType<typeof useDataStatus>) {
   }, []);
   const openItem = useCallback((name: string) => go({ kind: "item", name }), [go]);
   const openSource = useCallback((key: string) => go({ kind: "source", key }), [go]);
+  // From a page, a fresh start; from inside the panel, one more step back.
+  const showItem = useCallback((name: string) => go({ kind: "item", name }, true), [go]);
   const back = () => setStack((current) => current.slice(0, -1));
+  const close = () => setStack([]);
+  const selected = view?.kind === "item" ? view.name : undefined;
 
   if (!status.info) {
     return (
@@ -63,46 +73,61 @@ function Screens({ status, update }: ReturnType<typeof useDataStatus>) {
   return (
     <div className={styles.app}>
       <Header status={status} onUpdate={update} />
-      <main className={styles.split} data-detail={view ? "open" : "closed"}>
-        <aside className={styles.search}>
-          <SearchPane
-            query={query}
-            onQueryChange={setQuery}
-            selected={view?.kind === "item" ? view.name : undefined}
-            onSelect={(name) => go({ kind: "item", name }, true)}
-            dataVersion={dataVersion}
-          />
-        </aside>
-        <section className={styles.detail} ref={detailRef}>
-          {view && (
+      <div className={styles.shell} data-detail={view ? "open" : "closed"}>
+        <Sidebar page={page} onPage={setPage} />
+        <main className={styles.main}>
+          {page === "foundry" && <Foundry dataVersion={dataVersion} selected={selected} openItem={showItem} />}
+          {page === "search" && (
+            <div className={styles.searchPage}>
+              <SearchPane
+                query={query}
+                onQueryChange={setQuery}
+                selected={selected}
+                onSelect={showItem}
+                dataVersion={dataVersion}
+              />
+              {!query && <Home onExample={setQuery} />}
+            </div>
+          )}
+          {page === "relics" && <RelicsPage dataVersion={dataVersion} selected={selected} openItem={showItem} />}
+          {page === "settings" && <SettingsPage status={status} onUpdate={update} />}
+        </main>
+        {view && (
+          <aside className={styles.detail} ref={detailRef} aria-label={t.nav.detail}>
             <nav className={styles.crumbs}>
-              <button type="button" className={styles.back} onClick={back}>
-                <BackIcon />
-                {t.app.back}
+              {stack.length > 1 ? (
+                <button type="button" className={styles.back} onClick={back}>
+                  <BackIcon />
+                  {t.app.back}
+                </button>
+              ) : (
+                <span />
+              )}
+              <button type="button" className={styles.close} onClick={close} aria-label={t.nav.close} title={t.nav.close}>
+                <CloseIcon />
               </button>
             </nav>
-          )}
-          {!view && <Home onExample={setQuery} />}
-          {view?.kind === "item" && (
-            <ItemView
-              key={view.name}
-              name={view.name}
-              dataVersion={dataVersion}
-              openItem={openItem}
-              openSource={openSource}
-            />
-          )}
-          {view?.kind === "source" && (
-            <SourceView
-              key={view.key}
-              sourceKey={view.key}
-              dataVersion={dataVersion}
-              openItem={openItem}
-              openSource={openSource}
-            />
-          )}
-        </section>
-      </main>
+            {view.kind === "item" && (
+              <ItemView
+                key={view.name}
+                name={view.name}
+                dataVersion={dataVersion}
+                openItem={openItem}
+                openSource={openSource}
+              />
+            )}
+            {view.kind === "source" && (
+              <SourceView
+                key={view.key}
+                sourceKey={view.key}
+                dataVersion={dataVersion}
+                openItem={openItem}
+                openSource={openSource}
+              />
+            )}
+          </aside>
+        )}
+      </div>
     </div>
   );
 }

@@ -27,7 +27,11 @@ async function open(query: string, name: RegExp) {
   await userEvent.keyboard("{Enter}");
 }
 
-beforeEach(() => localStorage.clear());
+// Most tests are about the drop search; the sections have their own.
+beforeEach(() => {
+  localStorage.clear();
+  localStorage.setItem("iaframe:page", JSON.stringify("search"));
+});
 
 describe("App", () => {
   it("explains the first download while there is no data", async () => {
@@ -190,15 +194,13 @@ describe("App", () => {
 
   it("shows item names in the chosen language and searches them", async () => {
     const platform = renderApp();
-    await userEvent.click(await screen.findByRole("button", { name: "Item languages" }));
-    const panel = screen.getByRole("dialog", { name: "Item languages" });
-    await userEvent.selectOptions(within(panel).getByRole("combobox", { name: "Show item names in" }), "pt");
-    expect(within(panel).getByRole("checkbox", { name: "Português" })).toBeDisabled();
-    await userEvent.click(within(panel).getByRole("checkbox", { name: "Español" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Settings" }));
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Show item names in" }), "pt");
+    expect(screen.getByRole("checkbox", { name: "Português" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("checkbox", { name: "Español" }));
     expect(await platform.getSettings()).toEqual({ itemLanguage: "pt", searchLanguages: ["es"] });
-    await userEvent.keyboard("{Escape}");
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
+    await userEvent.click(screen.getByRole("button", { name: "Drop search" }));
     await open("impulso", /Impulso Arcano/);
     expect(await screen.findByRole("heading", { level: 1, name: "Impulso Arcano" })).toBeInTheDocument();
     expect(screen.getByText("In English: Arcane Momentum")).toBeInTheDocument();
@@ -234,6 +236,75 @@ describe("App", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Nezha Prime Chassis Blueprint" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Nezha Prime Chassis Blueprint" })).toBeInTheDocument();
+  });
+
+  it("starts on the Foundry and remembers the section", async () => {
+    localStorage.clear();
+    renderApp();
+    expect(await screen.findByRole("heading", { level: 1, name: "Foundry" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Foundry" })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(screen.getByRole("button", { name: "Relics" }));
+    expect(localStorage.getItem("iaframe:page")).toBe(JSON.stringify("relics"));
+  });
+
+  it("shows equipment as cards with their parts, by category and availability", async () => {
+    localStorage.setItem("iaframe:page", JSON.stringify("foundry"));
+    renderApp();
+    expect(await screen.findByRole("button", { name: "Nezha Prime" })).toBeInTheDocument();
+    expect(screen.getByText("4 items")).toBeInTheDocument();
+    // Nezha Prime: neuroptics drop, chassis from farmable relics, the rest vaulted.
+    expect(screen.getByRole("button", { name: "Nezha Prime Chassis Blueprint · farmable relics" })).toBeInTheDocument();
+    expect(screen.getAllByRole("img", { name: /not in the drop tables/ })).toHaveLength(4);
+
+    await userEvent.click(screen.getByRole("radio", { name: "Melee" }));
+    expect(screen.getByText("1 of 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "War Prime" })).toBeInTheDocument();
+    expect(screen.getByText("Not in drop tables", { selector: "span" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("radio", { name: "All" }));
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Availability" }), "vaulted");
+    expect(screen.getByRole("button", { name: "Nezha Prime" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Nezha" })).not.toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Availability" }), "all");
+    await userEvent.type(screen.getByRole("searchbox", { name: "Filter by name" }), "lex");
+    expect(await screen.findByText("1 of 4")).toBeInTheDocument();
+  });
+
+  it("opens a card in the side panel and closes it", async () => {
+    localStorage.setItem("iaframe:page", JSON.stringify("foundry"));
+    renderApp();
+    await userEvent.click(await screen.findByRole("button", { name: "Nezha Prime" }));
+    const panel = screen.getByRole("complementary", { name: "Details" });
+    expect(await within(panel).findByRole("heading", { level: 1, name: "Nezha Prime" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Nezha Prime", pressed: true })).toBeInTheDocument();
+
+    await userEvent.click(within(panel).getByRole("button", { name: "Nezha Prime Chassis Blueprint" }));
+    expect(await within(panel).findByRole("heading", { level: 1, name: "Nezha Prime Chassis Blueprint" })).toBeInTheDocument();
+    await userEvent.click(within(panel).getByRole("button", { name: "Back" }));
+    expect(await within(panel).findByRole("heading", { level: 1, name: "Nezha Prime" })).toBeInTheDocument();
+
+    await userEvent.click(within(panel).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+  });
+
+  it("lists relics, farmable first by default, filtered by tier and reward", async () => {
+    localStorage.setItem("iaframe:page", JSON.stringify("relics"));
+    renderApp();
+    expect(await screen.findByRole("button", { name: "Axi A21 Relic" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Meso A9 Relic" })).not.toBeInTheDocument();
+    expect(screen.getByText("2 of 3")).toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Vaulted" }), "all");
+    expect(screen.getByRole("button", { name: "Meso A9 Relic" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "Lith" }));
+    expect(screen.getByText("1 of 3")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "All" }));
+    await userEvent.type(screen.getByRole("searchbox", { name: "Filter by relic or reward" }), "alternox");
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Lith N3 Relic" })).not.toBeInTheDocument());
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Alternox Prime Stock" })[0]);
+    const panel = screen.getByRole("complementary", { name: "Details" });
+    expect(await within(panel).findByRole("heading", { level: 1, name: "Alternox Prime Stock" })).toBeInTheDocument();
   });
 
   it("speaks Portuguese when the system does", async () => {

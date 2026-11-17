@@ -10,7 +10,7 @@ function dataApi(): Plugin {
     name: "iaframe-data-api",
     apply: "serve",
     async configureServer(server) {
-      const { createDataService } = await import("@iaframe/store");
+      const { createDataService, createImageCache } = await import("@iaframe/store");
       const { ITEM_KINDS, isItemLanguage, itemLanguageForLocale } = await import("@iaframe/core");
       const kinds = (value: string) =>
         value ? ITEM_KINDS.filter((kind) => value.split(",").includes(kind)) : undefined;
@@ -21,6 +21,18 @@ function dataApi(): Plugin {
       });
       void data.update();
       server.httpServer?.on("close", () => data.close());
+      const images = createImageCache(fileURLToPath(new URL("../../data/images", import.meta.url)));
+      server.middlewares.use("/img", async (req, res) => {
+        const bytes = await images.get(decodeURIComponent((req.url ?? "").replace(/^\//, "")));
+        if (!bytes) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+        res.setHeader("Content-Type", "image/png");
+        res.setHeader("Cache-Control", "max-age=86400");
+        res.end(bytes);
+      });
       server.middlewares.use("/api", async (req, res) => {
         const url = new URL(req.url ?? "/", "http://localhost");
         const p = (name: string) => url.searchParams.get(name) ?? "";
@@ -37,6 +49,8 @@ function dataApi(): Plugin {
             return isItemLanguage(lang) ? data.getItemNames(lang) : {};
           },
           "/update": () => data.update(true),
+          "/equipment": () => data.listEquipment(),
+          "/relics": () => data.listRelics(),
         };
         const route = routes[url.pathname];
         if (!route) {

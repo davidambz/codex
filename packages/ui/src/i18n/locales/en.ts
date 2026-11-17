@@ -4,6 +4,53 @@
 import type { Strings } from "../strings";
 
 export const en: Strings = {
+  nav: {
+    label: "Sections",
+    pages: { foundry: "Foundry", search: "Drop search", relics: "Relics", settings: "Settings" },
+    close: "Close",
+    detail: "Details",
+  },
+  foundry: {
+    title: "Foundry",
+    tabsLabel: "Category",
+    tabs: {
+      all: "All",
+      warframe: "Warframes",
+      primary: "Primary",
+      secondary: "Secondary",
+      melee: "Melee",
+      arch: "Arch",
+      companion: "Companions",
+    },
+    filter: "Filter by name",
+    primeLabel: "Prime",
+    prime: { all: "All", prime: "Prime", regular: "Regular" },
+    availabilityLabel: "Availability",
+    availability: { all: "Any", farmable: "Farmable", vaulted: "Vaulted", none: "Not in drop tables" },
+    summary: { farmable: "Farmable", vaulted: "Vaulted", none: "Not in drop tables" },
+    partStatus: { drops: "drops", relics: "farmable relics", vaulted: "vaulted", none: "not in the drop tables" },
+    count: (shown, total) => (shown === total ? `${total} items` : `${shown} of ${total}`),
+    empty: "Nothing matches these filters.",
+    more: "Show more",
+  },
+  relics: {
+    title: "Relics",
+    tierLabel: "Tier",
+    vaultedLabel: "Vaulted",
+    vaulted: { all: "All", open: "Farmable", vaulted: "Vaulted" },
+    filter: "Filter by relic or reward",
+    vaultedTag: "Vaulted",
+    count: (shown, total) => (shown === total ? `${total} relics` : `${shown} of ${total}`),
+    empty: "No relic matches these filters.",
+    more: "Show more",
+    rarity: { common: "Common", uncommon: "Uncommon", rare: "Rare" },
+  },
+  settings: {
+    title: "Settings",
+    languagesTitle: "Item names",
+    dataTitle: "Drop data",
+    dataBody: "Drop tables come from WFCD and are checked when the app opens and every 24 hours.",
+  },
   app: {
     search: "Search items",
     searchPlaceholder: "Item, relic or mod: khora p chassis, serration, axi a21",
@@ -126,8 +173,6 @@ export const en: Strings = {
     tierAll: "All",
   },
   languages: {
-    open: "Item languages",
-    title: "Item languages",
     itemLanguage: "Show item names in",
     searchLanguages: "Search also in",
     searchHint: "Search finds an item by its name in any of these.",

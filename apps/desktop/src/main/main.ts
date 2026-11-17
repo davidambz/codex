@@ -3,7 +3,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { app, BrowserWindow, ipcMain, nativeTheme, screen, session, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, protocol, screen, session, shell } from "electron";
 import {
   ITEM_KINDS,
   isItemLanguage,
@@ -13,8 +13,22 @@ import {
   type Settings,
   type Theme,
 } from "@iaframe/core";
-import { createDataService, type DataService } from "@iaframe/store";
-import { IPC } from "../shared/api";
+import { createDataService, createImageCache, type DataService } from "@iaframe/store";
+import { IMAGE_SCHEME, IPC } from "../shared/api";
+
+protocol.registerSchemesAsPrivileged([{ scheme: IMAGE_SCHEME, privileges: { standard: true, secure: true } }]);
+
+/** Serves iaframe-img://img/<name> from the picture cache in userData. */
+function serveImages() {
+  const images = createImageCache(path.join(app.getPath("userData"), "images"));
+  protocol.handle(IMAGE_SCHEME, async (request) => {
+    const url = new URL(request.url);
+    const bytes = url.host === "img" ? await images.get(decodeURIComponent(url.pathname.slice(1))) : undefined;
+    return bytes
+      ? new Response(bytes as Uint8Array<ArrayBuffer>, { headers: { "Content-Type": "image/png", "Cache-Control": "max-age=86400" } })
+      : new Response(null, { status: 404 });
+  });
+}
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL;
 // WFCD is asked on start and then this often; the check itself is ~100 bytes.
@@ -94,6 +108,8 @@ function registerIpc(service: DataService) {
     return service.getItemNames(language);
   });
   ipcMain.handle(IPC.updateData, () => service.update(true));
+  ipcMain.handle(IPC.listEquipment, () => service.listEquipment());
+  ipcMain.handle(IPC.listRelics, () => service.listRelics());
   ipcMain.handle(IPC.getTheme, () => currentTheme());
   ipcMain.handle(IPC.getLocale, () => app.getPreferredSystemLanguages()[0] ?? app.getLocale());
 
@@ -209,6 +225,7 @@ function scheduleDevCapture(window: BrowserWindow, pngPath: string, script?: str
 
 void app.whenReady().then(() => {
   denyPermissions();
+  serveImages();
   data = startData();
   registerIpc(data);
   createWindow();

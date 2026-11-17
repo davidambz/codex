@@ -4,7 +4,7 @@
 // What the UI needs from whatever hosts it (the Electron app, or a fake in
 // the browser for layout work). The UI only ever talks to this.
 
-import type { DataInfo, DeepDrops, ItemDetails, SourceItemRow } from "./queries.ts";
+import type { DataInfo, DeepDrops, EquipmentCard, ItemDetails, RelicListEntry, SourceItemRow } from "./queries.ts";
 import type { SearchHit } from "./search/index.ts";
 import type { ItemKind, Source } from "./types.ts";
 import { isItemLanguage, type ItemLanguage } from "./catalog/names.ts";
@@ -70,4 +70,9 @@ export interface Platform {
   updateSettings(patch: Partial<Settings>): Promise<Settings>;
   /** English name -> name in `language`, where they differ. */
   getItemNames(language: ItemLanguage): Promise<Record<string, string>>;
+  /** Every Warframe, weapon and companion, for the Foundry grid. */
+  listEquipment(): Promise<EquipmentCard[]>;
+  listRelics(): Promise<RelicListEntry[]>;
+  /** Where the page can load a warframe-items picture from ("SomaPrime.png"). */
+  imageUrl(imageName: string): string;
 }

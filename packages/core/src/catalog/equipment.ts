@@ -42,6 +42,8 @@ export interface CatalogEntry {
   prime: boolean;
   /** The other version of the same thing ("Soma" <-> "Soma Prime"), when there is one. */
   counterpart?: string;
+  /** Its picture's file name in warframe-items' data/img ("SomaPrime.png"). */
+  imageName?: string;
   /** Its page on the Warframe Wiki. */
   wikiUrl?: string;
   /** How to get it, as plain paragraphs from the wiki. */
@@ -56,9 +58,60 @@ interface RawItem {
   productCategory?: unknown;
   type?: unknown;
   wikiaUrl?: unknown;
+  imageName?: unknown;
 }
 
 const WIKI = "https://wiki.warframe.com/w/";
+
+/** A plain file name: it ends up in a URL and a file path. */
+export const SAFE_IMAGE = /^[\w.-]+\.(png|jpe?g|webp)$/i;
+
+/** Where warframe-items keeps its pictures. */
+export const IMAGE_BASE_URL = "https://raw.githubusercontent.com/WFCD/warframe-items/master/data/img/";
+
+/**
+ * The game's generic picture for a kind of part, so part icons look like
+ * the in-game Foundry. Unknown pieces fall back to the blueprint.
+ */
+export function partImage(label: string, prime: boolean): string {
+  const p = prime ? "Prime" : "";
+  switch (label) {
+    case "Chassis":
+    case "Carapace":
+      return `GenericWarframe${p}Chassis.png`;
+    case "Neuroptics":
+    case "Cerebrum":
+      return `GenericWarframe${p}Helmet.png`;
+    case "Systems":
+      return `GenericWarframe${p}System.png`;
+    case "Barrel":
+      return `GenericGun${p}Barrel.png`;
+    case "Receiver":
+      return `GenericGun${p}Receiver.png`;
+    case "Stock":
+      return `GenericGun${p}Stock.png`;
+    case "Blade":
+    case "Blades":
+    case "Head":
+    case "Disc":
+    case "Stars":
+      return `GenericWeapon${p}Blade.png`;
+    case "Hilt":
+    case "Handle":
+    case "Grip":
+    case "Link":
+    case "Chain":
+      return `GenericWeapon${p}Hilt.png`;
+    case "Guard":
+      return `GenericWeapon${p}Guard.png`;
+    case "String":
+    case "Upper Limb":
+    case "Lower Limb":
+      return `GenericComponent${p}Latch.png`;
+    default:
+      return "blueprint.png";
+  }
+}
 
 /**
  * The entries of one category file: playable Warframes (no Necramechs or
@@ -73,6 +126,7 @@ export function parseEquipment(category: EquipmentCategory, raw: unknown): Catal
     const name = item.name.trim();
     if (!name || entries.has(name)) continue;
     const entry: CatalogEntry = { name, category, prime: item.isPrime === true || / Prime$/.test(name) };
+    if (typeof item.imageName === "string" && SAFE_IMAGE.test(item.imageName)) entry.imageName = item.imageName;
     if (typeof item.wikiaUrl === "string" && item.wikiaUrl.startsWith(WIKI)) entry.wikiUrl = item.wikiaUrl;
     entries.set(name, entry);
   }

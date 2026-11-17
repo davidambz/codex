@@ -1,10 +1,52 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { ItemKind, RelicSortKey, SourceKind } from "@iaframe/core";
+import type { ItemKind, RelicRarity, RelicSortKey, SourceKind } from "@iaframe/core";
 import type { KindGroup, WeaponGroup } from "../kindGroups";
+import type { Availability, FoundryTab, PrimeFilter } from "../foundry";
+import type { Page } from "../navigation";
 
 export interface Strings {
+  nav: {
+    label: string;
+    pages: Record<Page, string>;
+    close: string;
+    detail: string;
+  };
+  foundry: {
+    title: string;
+    tabsLabel: string;
+    tabs: Record<FoundryTab, string>;
+    filter: string;
+    primeLabel: string;
+    prime: Record<PrimeFilter, string>;
+    availabilityLabel: string;
+    availability: Record<Availability, string>;
+    /** Card footers. */
+    summary: Record<Exclude<Availability, "all">, string>;
+    partStatus: Record<"drops" | "relics" | "vaulted" | "none", string>;
+    count: (shown: number, total: number) => string;
+    empty: string;
+    more: string;
+  };
+  relics: {
+    title: string;
+    tierLabel: string;
+    vaultedLabel: string;
+    vaulted: Record<"all" | "open" | "vaulted", string>;
+    filter: string;
+    vaultedTag: string;
+    count: (shown: number, total: number) => string;
+    empty: string;
+    more: string;
+    rarity: Record<RelicRarity, string>;
+  };
+  settings: {
+    title: string;
+    languagesTitle: string;
+    dataTitle: string;
+    dataBody: string;
+  };
   app: {
     search: string;
     searchPlaceholder: string;
@@ -76,8 +118,6 @@ export interface Strings {
     tierAll: string;
   };
   languages: {
-    open: string;
-    title: string;
     itemLanguage: string;
     searchLanguages: string;
     searchHint: string;

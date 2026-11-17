@@ -7,3 +7,4 @@ export { fetchCatalog, needsAcquisition, wikiPagesUrl, WARFRAMES_URL, WIKI_API_U
 export { buildDatabase } from "./build.ts";
 export { SCHEMA_VERSION } from "./schema.ts";
 export { createDataService, type DataService, type DataServiceOptions } from "./service.ts";
+export { createImageCache, type ImageCache, type FetchBytes } from "./images.ts";

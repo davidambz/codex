@@ -6,6 +6,53 @@ import type { Strings } from "../strings";
 // Item, relic, mission and refinement names stay in English, as the game
 // shows them; only the interface is translated.
 export const ptBR: Strings = {
+  nav: {
+    label: "Seções",
+    pages: { foundry: "Fundição", search: "Busca de drops", relics: "Relíquias", settings: "Configurações" },
+    close: "Fechar",
+    detail: "Detalhes",
+  },
+  foundry: {
+    title: "Fundição",
+    tabsLabel: "Categoria",
+    tabs: {
+      all: "Tudo",
+      warframe: "Warframes",
+      primary: "Primárias",
+      secondary: "Secundárias",
+      melee: "Corpo a corpo",
+      arch: "Arch",
+      companion: "Companheiros",
+    },
+    filter: "Filtrar por nome",
+    primeLabel: "Prime",
+    prime: { all: "Todos", prime: "Prime", regular: "Normais" },
+    availabilityLabel: "Disponibilidade",
+    availability: { all: "Qualquer", farmable: "Farmável", vaulted: "Vaultado", none: "Fora das tabelas" },
+    summary: { farmable: "Farmável", vaulted: "Vaultado", none: "Fora das tabelas" },
+    partStatus: { drops: "dropa", relics: "relíquias farmáveis", vaulted: "vaultada", none: "fora das tabelas de drop" },
+    count: (shown, total) => (shown === total ? `${total} itens` : `${shown} de ${total}`),
+    empty: "Nada com esses filtros.",
+    more: "Mostrar mais",
+  },
+  relics: {
+    title: "Relíquias",
+    tierLabel: "Era",
+    vaultedLabel: "Vaultadas",
+    vaulted: { all: "Todas", open: "Farmáveis", vaulted: "Vaultadas" },
+    filter: "Filtrar por relíquia ou recompensa",
+    vaultedTag: "Vaultada",
+    count: (shown, total) => (shown === total ? `${total} relíquias` : `${shown} de ${total}`),
+    empty: "Nenhuma relíquia com esses filtros.",
+    more: "Mostrar mais",
+    rarity: { common: "Comum", uncommon: "Incomum", rare: "Rara" },
+  },
+  settings: {
+    title: "Configurações",
+    languagesTitle: "Nomes dos itens",
+    dataTitle: "Dados de drop",
+    dataBody: "As tabelas de drop vêm do WFCD e são conferidas ao abrir o app e a cada 24 horas.",
+  },
   app: {
     search: "Buscar itens",
     searchPlaceholder: "Item, relíquia ou mod: khora p chassi, serration, axi a21",
@@ -128,8 +175,6 @@ export const ptBR: Strings = {
     tierAll: "Todos",
   },
   languages: {
-    open: "Idiomas dos itens",
-    title: "Idiomas dos itens",
     itemLanguage: "Mostrar nomes dos itens em",
     searchLanguages: "Buscar também em",
     searchHint: "A busca acha o item pelo nome em qualquer um destes.",

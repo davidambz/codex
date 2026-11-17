@@ -46,5 +46,8 @@ export function createWebPlatform(): Platform {
     getSettings: () => api("settings"),
     updateSettings: (patch) => api("settings", { patch: JSON.stringify(patch) }, "POST"),
     getItemNames: (language) => api("names", { lang: language }),
+    listEquipment: () => api("equipment"),
+    listRelics: () => api("relics"),
+    imageUrl: (imageName) => `/img/${encodeURIComponent(imageName)}`,
   };
 }
