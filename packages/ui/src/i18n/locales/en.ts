@@ -188,7 +188,7 @@ export const en: Strings = {
       Neuroptics: "Neuroptics",
       Systems: "Systems",
     },
-    noParts: "None of its parts are in the drop tables.",
+    noParts: "It isn't built from parts, or the catalog doesn't list them.",
     drops: (chance) => `Drops · up to ${chance}`,
     relics: (open, total) => `Relics · ${open} of ${total} farmable`,
     vaulted: (total) => `Vaulted · ${total} relics, none farmable`,

@@ -48,8 +48,10 @@ export interface CatalogEntry {
   wikiUrl?: string;
   /** How to get it, as plain paragraphs from the wiki. */
   acquisition?: string[];
-  /** For weapons: its parts as the drop tables name them ("Soma Prime Barrel"). */
+  /** For weapons and companions: its parts as the drop tables name them ("Soma Prime Barrel"). */
   parts?: string[];
+  /** The pieces its recipe calls for ("Blueprint", "Barrel"), from the catalog, whether they drop or not. */
+  recipe?: string[];
 }
 
 interface RawItem {
@@ -59,6 +61,7 @@ interface RawItem {
   type?: unknown;
   wikiaUrl?: unknown;
   imageName?: unknown;
+  components?: unknown;
 }
 
 const WIKI = "https://wiki.warframe.com/w/";
@@ -128,6 +131,16 @@ export function parseEquipment(category: EquipmentCategory, raw: unknown): Catal
     const entry: CatalogEntry = { name, category, prime: item.isPrime === true || / Prime$/.test(name) };
     if (typeof item.imageName === "string" && SAFE_IMAGE.test(item.imageName)) entry.imageName = item.imageName;
     if (typeof item.wikiaUrl === "string" && item.wikiaUrl.startsWith(WIKI)) entry.wikiUrl = item.wikiaUrl;
+    if (category !== "warframe" && Array.isArray(item.components)) {
+      const recipe = [
+        ...new Set(
+          item.components.flatMap((c: { uniqueName?: unknown }) =>
+            typeof c?.uniqueName === "string" ? (recipePiece(c.uniqueName) ?? []) : [],
+          ),
+        ),
+      ];
+      if (recipe.length > 0) entry.recipe = recipe;
+    }
     entries.set(name, entry);
   }
   return [...entries.values()];
@@ -203,6 +216,30 @@ const PART_WORDS = new Set([
   "Systems",
 ]);
 
+/** "UpperLimb" -> "Upper Limb", longest first so "LeftGauntlet" isn't read as "Gauntlet". */
+const COMPACT_WORDS = [...PART_WORDS]
+  .map((word) => [word.replace(/ /g, ""), word] as const)
+  .sort((a, b) => b[0].length - a[0].length);
+
+/**
+ * Which piece a recipe component is, from its internal name, since the
+ * catalog leaves component names out: ".../WeaponParts/SomaPrimeBarrel"
+ * -> "Barrel", ".../Weapons/SomaPrimeBlueprint" -> "Blueprint". Only
+ * blueprints and parts count, not resources ("/MiscItems/OrokinCell")
+ * nor weapons a recipe consumes. Dojo research keeps its blueprints with
+ * the weapons (".../ClanTech/Energy/ChainLightningRifleBlueprint").
+ */
+export function recipePiece(uniqueName: string): string | undefined {
+  if (!uniqueName.includes("/Recipes/")) return /^\/Lotus\/Weapons\/.*Blueprint$/.test(uniqueName) ? "Blueprint" : undefined;
+  let rest = uniqueName.slice(uniqueName.lastIndexOf("/") + 1).replace(/Component$/, "");
+  const blueprint = rest.endsWith("Blueprint");
+  if (blueprint) rest = rest.slice(0, -"Blueprint".length);
+  if (rest.endsWith("Helmet")) return "Neuroptics";
+  const word = COMPACT_WORDS.find(([compact]) => rest.endsWith(compact));
+  if (word) return word[1];
+  return blueprint ? "Blueprint" : undefined;
+}
+
 /** The part's kind of piece: "Soma Prime Barrel" of "Soma Prime" -> "Barrel"; main blueprint -> "Blueprint". */
 export function partLabel(weapon: string, part: string): string | undefined {
   if (!part.startsWith(`${weapon} `)) return undefined;
@@ -229,8 +266,18 @@ export function assignWeaponParts(entries: readonly CatalogEntry[], items: Itera
     if (!owner || !partLabel(owner, item)) continue;
     parts.set(owner, [...(parts.get(owner) ?? []), item]);
   }
-  for (const [name, list] of parts) {
-    const main = `${name} Blueprint`;
-    weapons.get(name)!.parts = list.sort((a, b) => Number(b === main) - Number(a === main) || a.localeCompare(b));
+  // Pieces the recipe calls for that no drop table names still belong on the sheet.
+  const known = new Set(items);
+  for (const weapon of weapons.values()) {
+    const list = new Set([...(weapon.parts ?? []), ...(parts.get(weapon.name) ?? [])]);
+    for (const piece of weapon.recipe ?? []) {
+      const plain = `${weapon.name} ${piece}`;
+      const withBlueprint = `${plain} Blueprint`;
+      if (piece !== "Blueprint" && (list.has(withBlueprint) || known.has(withBlueprint))) list.add(withBlueprint);
+      else list.add(plain);
+    }
+    if (list.size === 0) continue;
+    const main = `${weapon.name} Blueprint`;
+    weapon.parts = [...list].sort((a, b) => Number(b === main) - Number(a === main) || a.localeCompare(b));
   }
 }

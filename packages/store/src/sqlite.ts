@@ -66,6 +66,12 @@ export function readCatalog(path: string): CatalogEntry[] {
       wiki_url: string | null;
       acquisition: string | null;
     }[];
+    const parts = new Map<string, string[]>();
+    for (const { owner, part } of db
+      .prepare("SELECT i.name AS owner, p.part FROM parts p JOIN items i ON i.id = p.owner_id ORDER BY p.position")
+      .all() as { owner: string; part: string }[]) {
+      parts.set(owner, [...(parts.get(owner) ?? []), part]);
+    }
     return rows.flatMap((r) => {
       const category = EQUIPMENT_CATEGORIES.find((c) => c === r.category);
       if (!category) return [];
@@ -74,6 +80,8 @@ export function readCatalog(path: string): CatalogEntry[] {
       if (r.image_name) entry.imageName = r.image_name;
       if (r.wiki_url) entry.wikiUrl = r.wiki_url;
       if (r.acquisition) entry.acquisition = JSON.parse(r.acquisition) as string[];
+      const owned = parts.get(r.name);
+      if (owned) entry.parts = owned;
       return [entry];
     });
   } catch {
