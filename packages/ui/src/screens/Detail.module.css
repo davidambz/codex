@@ -377,6 +377,16 @@
   color: var(--color-accent);
 }
 
+/* In the side panel: piece and name on one line, status under them. */
+@container detail (max-width: 640px) {
+  .part {
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+  }
+  .partStatus {
+    grid-column: 2;
+  }
+}
+
 @media (max-width: 560px) {
   .part {
     grid-template-columns: minmax(0, 1fr);

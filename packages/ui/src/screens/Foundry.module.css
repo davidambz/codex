@@ -1,0 +1,179 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Name across the top, picture left, parts right, availability along the bottom. */
+.card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  grid-template-areas:
+    "name name"
+    "picture parts"
+    "summary summary";
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-height: 168px;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+
+.card[data-prime] {
+  background: linear-gradient(160deg, var(--color-accent-subtle), var(--color-surface) 60%);
+}
+
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.card[data-selected] {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+}
+
+/* The name is the card's button; its ::after stretches over the whole card. */
+.open {
+  grid-area: name;
+  min-width: 0;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.open:focus-visible {
+  outline: none;
+}
+
+.open:focus-visible::after {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.name {
+  display: block;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 650;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.picture {
+  grid-area: picture;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.picture[data-empty] {
+  display: block;
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.parts {
+  grid-area: parts;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A part: the game's picture of it, ringed by where it can be had. */
+.part {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  /* Lighter than the card: the game's blueprint picture is dark blue. */
+  background: radial-gradient(circle, #5b6878, #2c333d 75%);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-inset);
+}
+
+button.part {
+  cursor: pointer;
+}
+
+button.part:hover {
+  transform: translateY(-1px);
+}
+
+.part[data-status="drops"],
+.part[data-status="relics"] {
+  border-color: var(--color-accent);
+}
+
+.part[data-status="vaulted"] {
+  border-color: var(--color-danger);
+  border-style: dashed;
+}
+
+.part[data-status="none"] .partIcon {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.partIcon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.partIcon[data-empty] {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  opacity: 0.4;
+}
+
+.summary {
+  grid-area: summary;
+  justify-self: start;
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.summary[data-availability="farmable"] {
+  color: var(--color-accent);
+}
+
+.summary[data-availability="vaulted"] {
+  color: var(--color-danger);
+}
+

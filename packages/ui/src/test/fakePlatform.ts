@@ -1,7 +1,16 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { DataStatus, DeepDrops, ItemDetails, ItemLanguage, Platform, Settings, SourceDetails } from "@iaframe/core";
+import type {
+  DataStatus,
+  DeepDrops,
+  ItemDetails,
+  ItemLanguage,
+  Platform,
+  RelicListEntry,
+  Settings,
+  SourceDetails,
+} from "@iaframe/core";
 
 /** Names the fake knows in Portuguese, as the real data would have them. */
 export const names: Partial<Record<ItemLanguage, Record<string, string>>> = {
@@ -82,7 +91,7 @@ export const deep: Record<string, DeepDrops> = {
       {
         relic: "Axi A21 Relic",
         info: { tier: "Axi", code: "A21", vaulted: false },
-        rarity: "Rare",
+        rarity: "rare",
         chances: { Intact: 2, Exceptional: 4, Flawless: 6, Radiant: 10 },
         sources: [{ source: hydron, rotation: "C", chance: 12.5, slots: 1, conditional: false }],
       },
@@ -125,19 +134,34 @@ export const deep: Record<string, DeepDrops> = {
 export const sources: Record<string, SourceDetails> = {
   "relic:Axi A21": {
     source: { key: "relic:Axi A21", kind: "relic", name: "Axi A21 Relic" },
-    drops: [{ item: "Alternox Prime Stock", kind: "prime_part", refinement: "Intact", rarity: "Rare", chance: 2, conditional: false }],
+    drops: [{ item: "Alternox Prime Stock", kind: "prime_part", refinement: "Intact", rarity: "rare", chance: 2, conditional: false }],
   },
   [hydron.key]: {
     source: hydron,
     drops: [
-      { item: "Serration", kind: "mod", rotation: "B", rarity: "Rare", chance: 8.6, conditional: false },
-      { item: "400 Endo", kind: "endo", rotation: "A", rarity: "Common", chance: 20, conditional: false },
+      { item: "Serration", kind: "mod", rotation: "B", rarity: "rare", chance: 8.6, conditional: false },
+      { item: "400 Endo", kind: "endo", rotation: "A", rarity: "common", chance: 20, conditional: false },
       ...["Oxium", "Polymer Bundle", "Rubedo", "Plastids", "Ferrite", "Salvage", "Circuits", "Alloy Plate", "Nano Spores", "Morphics"].map(
-        (item) => ({ item, kind: "other" as const, rotation: "A" as const, rarity: "Common", chance: 8, conditional: false }),
+        (item) => ({ item, kind: "other" as const, rotation: "A" as const, rarity: "common", chance: 8, conditional: false }),
       ),
     ],
   },
 };
+
+export const relicList: RelicListEntry[] = [
+  {
+    name: "Axi A21 Relic",
+    tier: "Axi",
+    code: "A21",
+    vaulted: false,
+    rewards: [
+      { item: "Forma Blueprint", rarity: "common" },
+      { item: "Alternox Prime Stock", rarity: "rare" },
+    ],
+  },
+  { name: "Meso A9 Relic", tier: "Meso", code: "A9", vaulted: true, rewards: [{ item: "Alternox Prime Stock", rarity: "rare" }] },
+  { name: "Lith N3 Relic", tier: "Lith", code: "N3", vaulted: false, rewards: [{ item: "Nezha Prime Chassis Blueprint", rarity: "uncommon" }] },
+];
 
 export function fakePlatform(
   overrides: Partial<Platform> & { status?: DataStatus; settings?: Settings } = {},
@@ -164,6 +188,22 @@ export function fakePlatform(
         .filter((item) => !kinds?.length || kinds.includes(item.kind))
         .map((item) => ({ name: item.name, kind: item.kind, score: 1 })),
     getItem: async (name) => items[name],
+    listEquipment: async () =>
+      Object.values(items).flatMap((item) =>
+        item.equipment
+          ? [
+              {
+                name: item.name,
+                category: item.equipment.category,
+                prime: item.equipment.prime,
+                imageName: `${item.name.replace(/ /g, "")}.png`,
+                parts: item.equipment.parts.map(({ name, label, status }) => ({ name, label, status })),
+              },
+            ]
+          : [],
+      ),
+    listRelics: async () => relicList,
+    imageUrl: (imageName) => `/img/${imageName}`,
     getDropsDeep: async (name) => deep[name] ?? { direct: [], relics: [] },
     getSource: async (key) => sources[key],
     getDataStatus: async () => status,

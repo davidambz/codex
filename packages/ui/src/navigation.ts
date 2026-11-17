@@ -8,3 +8,11 @@ export interface Navigate {
   openItem(name: string): void;
   openSource(key: string): void;
 }
+
+/** The sidebar's sections. */
+export const PAGES = ["foundry", "search", "relics", "settings"] as const;
+export type Page = (typeof PAGES)[number];
+
+export function isPage(value: unknown): value is Page {
+  return typeof value === "string" && (PAGES as readonly string[]).includes(value);
+}
