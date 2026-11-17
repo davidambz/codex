@@ -4,3 +4,5 @@
 export * from "./types.ts";
 export { parseDropData, type RawDropData } from "./wfcd/parse.ts";
 export { kindFromName, parseRelicName, splitQuantity } from "./wfcd/names.ts";
+export { validateDropData, ANCHORS, type PreviousCounts } from "./wfcd/validate.ts";
+export type { Db, SqlValue } from "./db.ts";
