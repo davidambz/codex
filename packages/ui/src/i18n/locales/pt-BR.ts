@@ -1,0 +1,102 @@
+// IAFrame — Copyright (C) 2026 David Ambrozio
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+import type { Strings } from "../strings";
+
+// Item, relic, mission and refinement names stay in English, as the game
+// shows them; only the interface is translated.
+export const ptBR: Strings = {
+  app: {
+    search: "Buscar itens",
+    searchPlaceholder: "Item, relíquia ou mod: khora p chassi, serration, axi a21",
+    noResults: (query) => `Nada encontrado para “${query}”.`,
+    back: "Voltar",
+  },
+  data: {
+    label: "Dados de drop",
+    downloading: "Baixando",
+    checking: "Verificando",
+    updatedOn: (date) => `Tabelas de ${date}`,
+    failed: "Não deu para verificar dados novos",
+    rejected: "Os dados novos vieram estranhos; mantive os anteriores",
+    update: "Procurar dados novos",
+    noDataTitle: "Baixando as tabelas de drop",
+    noDataBody: "O IAFrame baixa os dados de drop do Warframe uma vez (uns 7 MB) e depois funciona offline.",
+    noDataFailed: (error) => `O download falhou: ${error}`,
+    retry: "Tentar de novo",
+    credit: "Dados: WFCD drop data, a partir das tabelas oficiais da Digital Extremes.",
+  },
+  home: {
+    title: "Onde dropa?",
+    body: "Digite um item, mesmo com erro ou abreviado. Peças Prime mostram as relíquias, a chance em cada refinamento e onde cada relíquia dropa.",
+    examplesLabel: "Experimente",
+  },
+  kinds: {
+    relic: "Relíquia",
+    prime_part: "Peça Prime",
+    blueprint: "Blueprint",
+    mod: "Mod",
+    arcane: "Arcano",
+    ayatan: "Ayatan",
+    credits: "Créditos",
+    endo: "Endo",
+    other: "Item",
+  },
+  sourceKinds: {
+    mission: "Missão",
+    relic: "Relíquia",
+    enemy: "Inimigo",
+    bounty: "Bounty",
+    key: "Chave",
+    transient: "Especial",
+    sortie: "Sortie",
+  },
+  attempts: {
+    mission: "runs",
+    relic: "relíquias",
+    enemy: "abates",
+    bounty: "bounties",
+    key: "runs",
+    transient: "runs",
+    sortie: "sorties",
+  },
+  item: {
+    vaulted: "Vaultado",
+    obtainable: "Farmável",
+    relicsLabel: "Relíquias",
+    relicsHint: "Chance por relíquia aberta, em cada refinamento.",
+    whereLabel: "Onde a relíquia dropa",
+    directLabel: "Drops",
+    noDrops: "Nenhuma tabela de drop lista este item. Ele pode vir do mercado, de um vendedor ou de um sindicato.",
+    relicVaultedNote: "Vaultada: nenhuma missão dropa agora.",
+    relicSourcesLabel: "Onde dropa",
+    contents: "Ver conteúdo",
+    showMore: (count) => `Mostrar mais ${count}`,
+    filterLabel: "Tipo de fonte",
+    filterAll: "Todas",
+    hideVaulted: "Esconder relíquias vaultadas",
+  },
+  table: {
+    source: "Fonte",
+    detail: "Quando",
+    chance: "Chance",
+    runs: "Tentativas",
+    rotation: (r) => `Rotação ${r}`,
+    conditionalNote: "Parte desta tabela quando ela dropa algo, não por abate",
+    enemyChance: (enemy, table) => `O inimigo dropa desta tabela em ${enemy} das vezes; este item é ${table} dela`,
+    average: (count, unit) => `~${count} ${unit}`,
+    forNinety: (count) => `90%: ${count}`,
+    event: "Evento",
+  },
+  source: {
+    rewardsLabel: "Recompensas",
+    rotationGroup: (r) => `Rotação ${r}`,
+    noRotation: "Recompensas",
+  },
+  refinements: {
+    Intact: "Intact",
+    Exceptional: "Exceptional",
+    Flawless: "Flawless",
+    Radiant: "Radiant",
+  },
+};
