@@ -14,9 +14,9 @@
   /* The game draws blueprints as the item on blue grid paper, in any theme. */
   --paper-blueprint: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 6px),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 6px),
-    radial-gradient(circle, #2f6a99, #173653 80%);
+    radial-gradient(circle, #3f86bd, #1f4a70 85%);
   /* Behind generic part pictures, which are drawn for a mid-grey backdrop. */
-  --paper-part: radial-gradient(circle, #5b6878, #2c333d 75%);
+  --paper-part: radial-gradient(circle, #7a8899, #3a4452 85%);
 
   --font-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
   --font-display: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI", system-ui,
