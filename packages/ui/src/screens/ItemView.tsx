@@ -370,13 +370,18 @@ function RelicCard({ route, openItem, openSource }: { route: RelicRoute } & Navi
 function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openItem: (name: string) => void }) {
   const { t } = useI18n();
   const anyMissing = sheet.parts.some((part) => part.status === "none");
+  const note = sheet.note && t.equipment.notes[sheet.note];
   return (
     <>
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <div>
             <h2 className="label">{t.equipment.partsLabel}</h2>
-            {anyMissing && sheet.acquisition && <p className={styles.hint}>{t.equipment.noneHint}</p>}
+            {note ? (
+              <p className={styles.hint}>{note}</p>
+            ) : (
+              anyMissing && sheet.acquisition && <p className={styles.hint}>{t.equipment.noneHint}</p>
+            )}
           </div>
         </div>
         {sheet.parts.length > 0 ? (
@@ -386,7 +391,7 @@ function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openIte
             ))}
           </ul>
         ) : (
-          <p className={styles.note}>{t.equipment.noParts}</p>
+          !note && <p className={styles.note}>{t.equipment.noParts}</p>
         )}
       </section>
 
