@@ -106,6 +106,16 @@ export const en: Strings = {
     tierLabel: "Tier",
     tierAll: "All",
   },
+  languages: {
+    open: "Item languages",
+    title: "Item languages",
+    itemLanguage: "Show item names in",
+    searchLanguages: "Search also in",
+    searchHint: "Search finds an item by its name in any of these.",
+    note: "Only names the game itself translates: most Prime parts and blueprints keep their English name. Each new language downloads about 5 MB.",
+    fetching: "Getting the names…",
+    english: (name) => `In English: ${name}`,
+  },
   warframe: {
     partsLabel: "Blueprints",
     slots: { blueprint: "Main blueprint", chassis: "Chassis", neuroptics: "Neuroptics", systems: "Systems" },

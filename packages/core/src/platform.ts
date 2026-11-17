@@ -7,6 +7,7 @@
 import type { DataInfo, DeepDrops, ItemDetails, SourceItemRow } from "./queries.ts";
 import type { SearchHit } from "./search/index.ts";
 import type { ItemKind, Source } from "./types.ts";
+import { isItemLanguage, type ItemLanguage } from "./catalog/names.ts";
 
 export type Theme = "dark" | "light";
 
@@ -28,6 +29,28 @@ export interface DataStatus {
   error?: string;
 }
 
+export interface Settings {
+  /** The language item names are shown in. */
+  itemLanguage: ItemLanguage;
+  /** Other languages search also matches names in (English and the item language always do). */
+  searchLanguages: ItemLanguage[];
+}
+
+/** Settings read from disk or IPC, with anything unknown dropped. */
+export function sanitizeSettings(value: unknown, fallback: Settings): Settings {
+  const raw = (value && typeof value === "object" ? value : {}) as Partial<Record<keyof Settings, unknown>>;
+  const itemLanguage = isItemLanguage(raw.itemLanguage) ? raw.itemLanguage : fallback.itemLanguage;
+  const searchLanguages = Array.isArray(raw.searchLanguages)
+    ? [...new Set(raw.searchLanguages.filter(isItemLanguage))]
+    : fallback.searchLanguages;
+  return { itemLanguage, searchLanguages };
+}
+
+/** Every language whose names the data needs for these settings. */
+export function settingsLanguages(settings: Settings): ItemLanguage[] {
+  return [...new Set([settings.itemLanguage, ...settings.searchLanguages])].filter((l) => l !== "en");
+}
+
 export interface Platform {
   kind: "desktop" | "web";
   appVersion: string;
@@ -42,4 +65,9 @@ export interface Platform {
   getSystemTheme(): Promise<Theme>;
   onSystemThemeChange(listener: (theme: Theme) => void): () => void;
   getSystemLocale(): Promise<string>;
+  getSettings(): Promise<Settings>;
+  /** Saves the change; fetches names for any new language (watch the data status). */
+  updateSettings(patch: Partial<Settings>): Promise<Settings>;
+  /** English name -> name in `language`, where they differ. */
+  getItemNames(language: ItemLanguage): Promise<Record<string, string>>;
 }

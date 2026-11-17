@@ -4,11 +4,15 @@
 // Everything the app does with its data, minus Electron: owns the open
 // database and the search index, and keeps both current with WFCD.
 
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import {
   buildSearchIndex,
   getDataInfo,
   getDropsDeep,
+  getItemNames,
+  sanitizeSettings,
+  settingsLanguages,
   getItem,
   getSource,
   getSourceDrops,
@@ -16,6 +20,8 @@ import {
   type DataStatus,
   type DeepDrops,
   type ItemKind,
+  type ItemLanguage,
+  type Settings,
   type ItemDetails,
   type SearchHit,
   type SearchIndex,
@@ -27,6 +33,10 @@ import { openStore, readMeta, type Store } from "./sqlite.ts";
 
 export interface DataServiceOptions {
   dbPath: string;
+  /** Where settings are saved; without it they live only in memory. */
+  settingsPath?: string;
+  /** Settings before any are saved (e.g. names in the system's language). */
+  defaultSettings?: Partial<Settings>;
   fetchJson?: FetchJson;
   now?: () => Date;
   onStatus?: (status: DataStatus) => void;
@@ -37,6 +47,10 @@ export interface DataService {
   getItem(name: string): ItemDetails | undefined;
   getDropsDeep(name: string): DeepDrops;
   getSource(key: string): SourceDetails | undefined;
+  getItemNames(language: ItemLanguage): Record<string, string>;
+  settings(): Settings;
+  /** Saves the change, re-indexes search, and fetches names for a new language. */
+  updateSettings(patch: Partial<Settings>): Settings;
   status(): DataStatus;
   /** Asks WFCD for news and swaps the database in if there are any. Concurrent calls share one run. */
   update(force?: boolean): Promise<DataStatus>;
@@ -49,6 +63,8 @@ export function createDataService(options: DataServiceOptions): DataService {
   let index: SearchIndex | undefined;
   let status: DataStatus = { busy: false };
   let running: Promise<DataStatus> | undefined;
+  const fallback: Settings = { itemLanguage: "en", searchLanguages: [], ...options.defaultSettings };
+  let settings = loadSettings(options.settingsPath, fallback);
 
   const emit = (next: DataStatus) => {
     status = next;
@@ -58,7 +74,7 @@ export function createDataService(options: DataServiceOptions): DataService {
   const open = () => {
     if (!existsSync(options.dbPath) || readMeta(options.dbPath)?.schema_version !== String(SCHEMA_VERSION)) return;
     store = openStore(options.dbPath);
-    index = buildSearchIndex(listItems(store));
+    index = buildSearchIndex(listItems(store, settingsLanguages(settings)));
     status = { ...status, info: getDataInfo(store) };
   };
 
@@ -79,10 +95,13 @@ export function createDataService(options: DataServiceOptions): DataService {
         now,
         force,
         beforeSwap: close,
+        languages: settingsLanguages(settings),
       });
       if (result.status === "updated") open();
       emit({ busy: false, info: status.info, checkedAt: now().toISOString(), outcome: result.status });
       if (result.status === "rejected") console.warn("WFCD data rejected:", result.problems);
+      if (result.status === "updated" && result.catalogError) console.warn("Warframe list kept:", result.catalogError);
+      if (result.status === "updated" && result.namesError) console.warn("Item names kept:", result.namesError);
     } catch (error) {
       // A failed swap may have closed the database; whatever is on disk is still good.
       if (!store) open();
@@ -97,6 +116,13 @@ export function createDataService(options: DataServiceOptions): DataService {
     return status;
   };
 
+  const update = (force = false): Promise<DataStatus> => {
+    running ??= run(force).finally(() => {
+      running = undefined;
+    });
+    return running;
+  };
+
   return {
     search: (query, limit, kinds) => index?.search(query, limit, kinds) ?? [],
     getItem: (name) => (store ? getItem(store, name) : undefined),
@@ -106,13 +132,38 @@ export function createDataService(options: DataServiceOptions): DataService {
       const source = getSource(store, key);
       return source ? { source, drops: getSourceDrops(store, key) } : undefined;
     },
-    status: () => status,
-    update(force = false) {
-      running ??= run(force).finally(() => {
-        running = undefined;
-      });
-      return running;
+    getItemNames: (language) => (store ? getItemNames(store, language) : {}),
+    settings: () => settings,
+    updateSettings(patch) {
+      const before = settingsLanguages(settings);
+      settings = sanitizeSettings({ ...settings, ...patch }, settings);
+      saveSettings(options.settingsPath, settings);
+      if (store) index = buildSearchIndex(listItems(store, settingsLanguages(settings)));
+      // A language not in the database yet: the next check sees it missing and fetches it.
+      if (settingsLanguages(settings).some((language) => !before.includes(language))) void update();
+      return settings;
     },
+    status: () => status,
+    update,
     close,
   };
+}
+
+function loadSettings(path: string | undefined, fallback: Settings): Settings {
+  if (!path) return fallback;
+  try {
+    return sanitizeSettings(JSON.parse(readFileSync(path, "utf8")), fallback);
+  } catch {
+    return fallback;
+  }
+}
+
+function saveSettings(path: string | undefined, settings: Settings): void {
+  if (!path) return;
+  try {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify(settings, null, 2));
+  } catch (error) {
+    console.warn("Couldn't save settings:", error);
+  }
 }

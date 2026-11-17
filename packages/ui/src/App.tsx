@@ -7,6 +7,8 @@ import { BackIcon } from "./components/icons";
 import { useDataStatus } from "./hooks/useDataStatus";
 import { useSystemTheme } from "./hooks/useSystemTheme";
 import { useI18n } from "./i18n/I18nContext";
+import { ItemNamesProvider } from "./names/ItemNamesProvider";
+import { useItemNames } from "./names/ItemNamesContext";
 import type { View } from "./navigation";
 import { Home } from "./screens/Home";
 import { ItemView } from "./screens/ItemView";
@@ -21,13 +23,23 @@ import styles from "./App.module.css";
  */
 export function App() {
   useSystemTheme();
-  const { t } = useI18n();
   const { status, update } = useDataStatus();
+  // Any rebuild (new drops, or names in a new language) is new data.
+  const dataVersion = status.info ? `${status.info.hash}@${status.info.ingestedAt}` : undefined;
+  return (
+    <ItemNamesProvider dataVersion={dataVersion}>
+      <Screens status={status} update={update} />
+    </ItemNamesProvider>
+  );
+}
+
+function Screens({ status, update }: ReturnType<typeof useDataStatus>) {
+  const { t } = useI18n();
+  const { version: dataVersion } = useItemNames();
   const [query, setQuery] = useState("");
   const [stack, setStack] = useState<View[]>([]);
   const detailRef = useRef<HTMLElement>(null);
   const view = stack.at(-1);
-  const dataVersion = status.info?.hash;
 
   const go = useCallback((next: View, reset = false) => {
     setStack((current) => (reset ? [next] : [...current, next]));

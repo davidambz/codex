@@ -25,6 +25,7 @@ import {
   type WarframeSheet,
 } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
+import { useItemNames } from "../names/ItemNamesContext";
 import { usePlatform } from "../platform/PlatformContext";
 import { useQuery } from "../hooks/useQuery";
 import { DropTable, Runs } from "../components/DropTable";
@@ -61,6 +62,7 @@ const isSort = (value: unknown): value is DropSort =>
 
 export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewProps) {
   const { t } = useI18n();
+  const { itemName } = useItemNames();
   const platform = usePlatform();
   const data = useQuery(
     async () => {
@@ -129,11 +131,12 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
           <Tag>{t.kinds[item.kind]}</Tag>
           {vaultedTag !== undefined && <Tag lamp={!vaultedTag}>{vaultedTag ? t.item.vaulted : t.item.obtainable}</Tag>}
         </div>
-        <h1 className={styles.title}>{item.name}</h1>
+        <h1 className={styles.title}>{itemName(item.name)}</h1>
+        {itemName(item.name) !== item.name && <p className={styles.subtitle}>{t.languages.english(item.name)}</p>}
         {item.warframe?.counterpart && (
           <div className={styles.headActions}>
             <button type="button" className={styles.link} onClick={() => openItem(item.warframe!.counterpart!)}>
-              {t.warframe.counterpart(item.warframe.counterpart)}
+              {t.warframe.counterpart(itemName(item.warframe.counterpart))}
             </button>
           </div>
         )}
@@ -281,6 +284,7 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
 
 function BestBetPanel({ bet, openItem, openSource }: { bet: BestBet } & Navigate) {
   const { t, locale } = useI18n();
+  const { itemName } = useItemNames();
   const where = (row: DropRow) =>
     [row.source.location, row.rotation && t.table.rotation(row.rotation), row.stage].filter(Boolean).join(" · ");
   return (
@@ -306,7 +310,7 @@ function BestBetPanel({ bet, openItem, openSource }: { bet: BestBet } & Navigate
           <div className={styles.bet}>
             <span className="label">{t.item.bestRelic}</span>
             <button type="button" className={styles.betName} onClick={() => openItem(bet.relic!.route.relic)}>
-              {bet.relic.route.relic}
+              {itemName(bet.relic.route.relic)}
             </button>
             <span className={styles.betWhere}>
               {t.item.bestRelicChances(
@@ -333,13 +337,14 @@ function BestBetPanel({ bet, openItem, openSource }: { bet: BestBet } & Navigate
 
 function RelicCard({ route, openItem, openSource }: { route: RelicRoute } & Navigate) {
   const { t } = useI18n();
+  const { itemName } = useItemNames();
   const sources: DropRow[] = route.sources;
   return (
     <div className={styles.relic} data-vaulted={route.info.vaulted}>
       <div className={styles.relicHead}>
         <span className="lamp" data-lit={!route.info.vaulted} />
         <button type="button" className={styles.relicName} onClick={() => openItem(route.relic)}>
-          {route.relic}
+          {itemName(route.relic)}
         </button>
         <Tag>{route.info.vaulted ? t.item.vaulted : t.item.obtainable}</Tag>
         {route.rarity && <span className={styles.rarity}>{route.rarity}</span>}
@@ -405,6 +410,7 @@ function WarframeSections({ sheet, openItem }: { sheet: WarframeSheet; openItem:
 
 function PartRow({ part, openItem }: { part: WarframePart; openItem: (name: string) => void }) {
   const { t, locale } = useI18n();
+  const { itemName } = useItemNames();
   const status =
     part.status === "drops"
       ? t.warframe.drops(part.bestChance !== undefined ? formatChance(part.bestChance, locale) : "?")
@@ -418,10 +424,10 @@ function PartRow({ part, openItem }: { part: WarframePart; openItem: (name: stri
     <li className={styles.part}>
       <span className="label">{t.warframe.slots[part.slot]}</span>
       {part.status === "none" ? (
-        <span className={styles.partName}>{part.name}</span>
+        <span className={styles.partName}>{itemName(part.name)}</span>
       ) : (
         <button type="button" className={`${styles.partName} ${styles.partLink}`} onClick={() => openItem(part.name)}>
-          {part.name}
+          {itemName(part.name)}
         </button>
       )}
       <span className={styles.partStatus}>

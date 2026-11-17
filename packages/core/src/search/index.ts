@@ -17,9 +17,14 @@ import { SYNONYMS } from "./synonyms.ts";
 export interface SearchEntry {
   name: string;
   kind: ItemKind;
+  /** The item's names in other languages: a match on any of them finds it. */
+  aliases?: readonly string[];
 }
 
-export interface SearchHit extends SearchEntry {
+export interface SearchHit {
+  /** The item's English name, which identifies it. */
+  name: string;
+  kind: ItemKind;
   score: number;
 }
 
@@ -30,7 +35,8 @@ export interface SearchIndex {
 
 interface Indexed {
   entry: SearchEntry;
-  tokens: string[];
+  /** The name's words, then each alias's. */
+  names: string[][];
 }
 
 const EXACT = 1;
@@ -39,7 +45,10 @@ const PREFIX = 0.75;
 const TYPO = 0.6;
 
 export function buildSearchIndex(entries: readonly SearchEntry[]): SearchIndex {
-  const indexed: Indexed[] = entries.map((entry) => ({ entry, tokens: tokenize(entry.name) }));
+  const indexed: Indexed[] = entries.map((entry) => ({
+    entry,
+    names: [entry.name, ...(entry.aliases ?? [])].map(tokenize).filter((tokens) => tokens.length > 0),
+  }));
   return {
     search(query, limit = 10, kinds) {
       const words = tokenize(query);
@@ -48,8 +57,9 @@ export function buildSearchIndex(entries: readonly SearchEntry[]): SearchIndex {
       const hits: SearchHit[] = [];
       for (const item of indexed) {
         if (wanted && !wanted.has(item.entry.kind)) continue;
-        const score = scoreItem(words, item.tokens);
-        if (score > 0) hits.push({ ...item.entry, score });
+        let score = 0;
+        for (const tokens of item.names) score = Math.max(score, scoreItem(words, tokens));
+        if (score > 0) hits.push({ name: item.entry.name, kind: item.entry.kind, score });
       }
       hits.sort((a, b) => b.score - a.score || a.name.length - b.name.length || a.name.localeCompare(b.name));
       return hits.slice(0, limit);

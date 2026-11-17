@@ -10,7 +10,8 @@ export { buildSearchIndex, tokenize, type SearchEntry, type SearchHit, type Sear
 export { SYNONYMS } from "./search/synonyms.ts";
 export { expectedRuns, runsForConfidence } from "./odds.ts";
 export * from "./queries.ts";
-export type { Platform, Theme, DataStatus, SourceDetails } from "./platform.ts";
+export type { Platform, Theme, DataStatus, SourceDetails, Settings } from "./platform.ts";
+export { sanitizeSettings, settingsLanguages } from "./platform.ts";
 export { resolveSupportedLocale } from "./locale.ts";
 export { parseWarframeList, warframeParts, wikiMainPage, type WarframeEntry } from "./catalog/warframes.ts";
 export { extractAcquisition, toPlainText } from "./wiki/wikitext.ts";
@@ -29,3 +30,13 @@ export {
   type RelicSortKey,
   type SortDirection,
 } from "./filters.ts";
+export {
+  CATALOG_FILES,
+  ITEM_LANGUAGES,
+  LANGUAGE_NAMES,
+  englishIds,
+  isItemLanguage,
+  itemLanguageForLocale,
+  translateNames,
+  type ItemLanguage,
+} from "./catalog/names.ts";

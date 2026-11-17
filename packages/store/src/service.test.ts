@@ -75,6 +75,31 @@ describe("createDataService", () => {
     service.close();
   });
 
+  it("saves settings, fetches a new language and searches its names", async () => {
+    const settingsPath = join(dir, "settings.json");
+    const service = createDataService({ dbPath, settingsPath, fetchJson: wfcd("h1"), now, defaultSettings: { itemLanguage: "en" } });
+    await service.update();
+    expect(service.settings()).toEqual({ itemLanguage: "en", searchLanguages: [] });
+    expect(service.search("serrilhado", 1)).toEqual([]);
+
+    const busy = new Promise<DataStatus>((resolve) => {
+      const check = () => (service.status().busy ? setTimeout(check, 5) : resolve(service.status()));
+      setTimeout(check, 0);
+    });
+    expect(service.updateSettings({ itemLanguage: "pt" })).toEqual({ itemLanguage: "pt", searchLanguages: [] });
+    await service.update(); // joins the fetch the new language started
+    await busy;
+
+    expect(service.getItemNames("pt")).toMatchObject({ Oxium: "Óxio" });
+    expect(service.search("serrilhado", 1)[0]?.name).toBe("Serration");
+    service.close();
+
+    const again = createDataService({ dbPath, settingsPath, fetchJson: wfcd("h1"), now });
+    expect(again.settings().itemLanguage).toBe("pt");
+    expect(again.search("serrilhado", 1)[0]?.name).toBe("Serration");
+    again.close();
+  });
+
   it("shares one run between concurrent update calls", async () => {
     let downloads = 0;
     const fetchJson: FetchJson = async (url) => {

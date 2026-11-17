@@ -166,6 +166,29 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: "Serration" })).not.toBeInTheDocument();
   });
 
+  it("shows item names in the chosen language and searches them", async () => {
+    const platform = renderApp();
+    await userEvent.click(await screen.findByRole("button", { name: "Item languages" }));
+    const panel = screen.getByRole("dialog", { name: "Item languages" });
+    await userEvent.selectOptions(within(panel).getByRole("combobox", { name: "Show item names in" }), "pt");
+    expect(within(panel).getByRole("checkbox", { name: "Português" })).toBeDisabled();
+    await userEvent.click(within(panel).getByRole("checkbox", { name: "Español" }));
+    expect(await platform.getSettings()).toEqual({ itemLanguage: "pt", searchLanguages: ["es"] });
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await open("impulso", /Impulso Arcano/);
+    expect(await screen.findByRole("heading", { level: 1, name: "Impulso Arcano" })).toBeInTheDocument();
+    expect(screen.getByText("In English: Arcane Momentum")).toBeInTheDocument();
+  });
+
+  it("shows relic names translated where they appear", async () => {
+    renderApp(fakePlatform({ settings: { itemLanguage: "pt", searchLanguages: [] } }));
+    await open("alternox", /^Alternox/i);
+    const relics = (await screen.findByRole("heading", { name: "Relics" })).closest("section")!;
+    expect(within(relics).getByRole("button", { name: "Relíquia Axi A21" })).toBeInTheDocument();
+  });
+
   it("says when nothing drops an item", async () => {
     renderApp();
     await open("mystery", /^Mystery/i);
