@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -63,7 +63,9 @@ CREATE TABLE equipment (
   image_name  TEXT,
   wiki_url    TEXT,
   -- JSON array of plain-text paragraphs from the wiki.
-  acquisition TEXT
+  acquisition TEXT,
+  -- Credits the Foundry charges to build it.
+  credits     INTEGER
 );
 
 -- Weapon and companion parts, by name (a Warframe's are always its four blueprints).
@@ -72,6 +74,15 @@ CREATE TABLE parts (
   part     TEXT NOT NULL,
   position INTEGER NOT NULL,
   PRIMARY KEY (owner_id, part)
+);
+
+-- What a recipe consumes besides its parts: resources, and whole weapons for some.
+CREATE TABLE materials (
+  owner_id INTEGER NOT NULL REFERENCES items(id),
+  item_id  INTEGER NOT NULL REFERENCES items(id),
+  count    INTEGER NOT NULL,
+  position INTEGER NOT NULL,
+  PRIMARY KEY (owner_id, item_id)
 );
 
 -- Item names in other languages, only where they differ from English.

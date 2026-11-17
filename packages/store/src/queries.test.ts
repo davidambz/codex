@@ -43,6 +43,11 @@ beforeAll(() => {
       prime: true,
       counterpart: "Khora",
       recipe: ["Blueprint", "Chassis", "Neuroptics", "Systems"],
+      materials: [
+        { name: "Neurodes", count: 2 },
+        { name: "Orokin Cell", count: 1 },
+      ],
+      credits: 25000,
     },
     { name: "Lex Prime", category: "secondary", prime: true },
     { name: "War Prime", category: "melee", prime: true, acquisition: ["Crafted from Hunhow's Trinket."] },
@@ -102,10 +107,22 @@ describe("queries", () => {
       category: "melee",
       prime: true,
       parts: [],
+      materials: [],
       acquisition: ["Crafted from Hunhow's Trinket."],
     });
     const index = buildSearchIndex(listItems(store));
     expect(index.search("war prime", 1, ["melee"])[0]).toMatchObject({ name: "War Prime", kind: "melee" });
+  });
+
+  it("lists the resources and credits a recipe consumes", () => {
+    // Orokin Cell isn't in these drop tables: the database learns about it from the recipe.
+    expect(getItem(store, "Khora Prime")?.equipment).toMatchObject({
+      materials: [
+        { name: "Neurodes", count: 2, linked: true },
+        { name: "Orokin Cell", count: 1, linked: false },
+      ],
+      credits: 25000,
+    });
   });
 
   it("lists every piece of equipment with its parts' status for the grid", () => {

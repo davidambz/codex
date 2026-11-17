@@ -201,6 +201,8 @@ export const en: Strings = {
       quest: "Given once by a quest: see below.",
     },
     noParts: "It isn't built from parts, or the catalog doesn't list them.",
+    resourcesLabel: "Resources",
+    credits: "Credits",
     drops: (chance) => `Drops · up to ${chance}`,
     relics: (open, total) => `Relics · ${open} of ${total} farmable`,
     vaulted: (total) => `Vaulted · ${total} relics, none farmable`,

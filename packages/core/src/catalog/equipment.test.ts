@@ -49,6 +49,36 @@ describe("parseEquipment", () => {
     expect(list.map((e) => e.name)).toEqual(["Helios", "Smeeta Kavat", "Lambeo Moa", "Venari"]);
   });
 
+  it("reads what else the recipe consumes and its price, adding up repeated components", () => {
+    const names = new Map([
+      ["/Lotus/Types/Items/MiscItems/OrokinCell", "Orokin Cell"],
+      ["/Lotus/Weapons/Tenno/Pistol/CrossBow", "Bolto"],
+    ]);
+    const [akbolto] = parseEquipment(
+      "secondary",
+      [
+        {
+          name: "Akbolto",
+          buildPrice: 25000,
+          components: [
+            { uniqueName: "/Lotus/Types/Recipes/Weapons/AkBoltoBlueprint", itemCount: 1 },
+            { uniqueName: "/Lotus/Weapons/Tenno/Pistol/CrossBow", itemCount: 1 },
+            { uniqueName: "/Lotus/Weapons/Tenno/Pistol/CrossBow", itemCount: 1 },
+            { uniqueName: "/Lotus/Types/Items/MiscItems/OrokinCell", itemCount: 1 },
+            { uniqueName: "/Lotus/Types/Items/Unknown", itemCount: 3 },
+          ],
+        },
+      ],
+      names,
+    );
+    expect(akbolto.recipe).toEqual(["Blueprint"]);
+    expect(akbolto.materials).toEqual([
+      { name: "Bolto", count: 2 },
+      { name: "Orokin Cell", count: 1 },
+    ]);
+    expect(akbolto.credits).toBe(25000);
+  });
+
   it("rejects anything that isn't a list", () => {
     expect(() => parseEquipment("warframe", {})).toThrow(/array/);
   });

@@ -8,9 +8,11 @@
 import {
   EQUIPMENT_CATEGORIES,
   EQUIPMENT_FILES,
+  MATERIAL_FILES,
   assignWeaponParts,
   extractAcquisition,
   joinCatalog,
+  namesById,
   parseEquipment,
   wikiPage,
   type CatalogEntry,
@@ -52,12 +54,14 @@ export function wikiPagesUrl(titles: string[]): string {
  * the wiki's text on how to get it.
  */
 export async function fetchCatalog(fetchJson: FetchJson, items: readonly string[]): Promise<CatalogEntry[]> {
-  const lists = await Promise.all(
-    EQUIPMENT_CATEGORIES.flatMap((category) =>
-      EQUIPMENT_FILES[category].map(async (file) => parseEquipment(category, await fetchJson(catalogFileUrl(file)))),
-    ),
-  );
-  const entries = joinCatalog(lists);
+  const files = EQUIPMENT_CATEGORIES.flatMap((category) => EQUIPMENT_FILES[category].map((file) => [category, file] as const));
+  const [equipment, materials] = await Promise.all([
+    Promise.all(files.map(([, file]) => fetchJson(catalogFileUrl(file)))),
+    Promise.all(MATERIAL_FILES.map((file) => fetchJson(catalogFileUrl(file)))),
+  ]);
+  // Recipes name what they consume by internal name: resources, and some whole weapons.
+  const names = namesById([...materials, ...equipment]);
+  const entries = joinCatalog(files.map(([category], i) => parseEquipment(category, equipment[i], names)));
   assignWeaponParts(entries, items);
   const drops = new Set(items);
   await addAcquisition(

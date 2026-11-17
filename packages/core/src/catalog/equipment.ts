@@ -52,6 +52,16 @@ export interface CatalogEntry {
   parts?: string[];
   /** The pieces its recipe calls for ("Blueprint", "Barrel"), from the catalog, whether they drop or not. */
   recipe?: string[];
+  /** Everything else the recipe consumes: resources, and whole weapons for some ("Bolto" for Akbolto). */
+  materials?: Material[];
+  /** Credits the Foundry charges to build it. */
+  credits?: number;
+}
+
+/** "15 Orokin Cell". */
+export interface Material {
+  name: string;
+  count: number;
 }
 
 interface RawItem {
@@ -62,6 +72,24 @@ interface RawItem {
   wikiaUrl?: unknown;
   imageName?: unknown;
   components?: unknown;
+  buildPrice?: unknown;
+}
+
+/** Warframe-items files whose entries a recipe may consume, besides the equipment itself. */
+export const MATERIAL_FILES = ["Resources", "Misc"] as const;
+
+/** Internal name -> English name, for every entry of the given warframe-items files. */
+export function namesById(files: readonly unknown[]): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const file of files) {
+    if (!Array.isArray(file)) continue;
+    for (const item of file as { name?: unknown; uniqueName?: unknown }[]) {
+      if (typeof item?.name === "string" && typeof item.uniqueName === "string" && !names.has(item.uniqueName)) {
+        names.set(item.uniqueName, item.name.trim());
+      }
+    }
+  }
+  return names;
 }
 
 const WIKI = "https://wiki.warframe.com/w/";
@@ -129,7 +157,11 @@ export function partImage(label: string, prime: boolean): string | undefined {
  * special suits like Excalibur Umbra), real weapons (no Zaw parts or amps),
  * and companions (no mutagens, antigens or other pet parts).
  */
-export function parseEquipment(category: EquipmentCategory, raw: unknown): CatalogEntry[] {
+export function parseEquipment(
+  category: EquipmentCategory,
+  raw: unknown,
+  names: ReadonlyMap<string, string> = new Map(),
+): CatalogEntry[] {
   if (!Array.isArray(raw)) throw new Error(`Not a WFCD ${EQUIPMENT_FILES[category].join("/")} file: expected an array`);
   const entries = new Map<string, CatalogEntry>();
   for (const item of raw as RawItem[]) {
@@ -140,18 +172,38 @@ export function parseEquipment(category: EquipmentCategory, raw: unknown): Catal
     if (typeof item.imageName === "string" && SAFE_IMAGE.test(item.imageName)) entry.imageName = item.imageName;
     if (typeof item.wikiaUrl === "string" && item.wikiaUrl.startsWith(WIKI)) entry.wikiUrl = item.wikiaUrl;
     if (Array.isArray(item.components)) {
+      const components = item.components as { uniqueName?: unknown; itemCount?: unknown }[];
       const recipe = [
-        ...new Set(
-          item.components.flatMap((c: { uniqueName?: unknown }) =>
-            typeof c?.uniqueName === "string" ? (recipePiece(c.uniqueName) ?? []) : [],
-          ),
-        ),
+        ...new Set(components.flatMap((c) => (typeof c?.uniqueName === "string" ? (recipePiece(c.uniqueName) ?? []) : []))),
       ];
       if (recipe.length > 0) entry.recipe = recipe;
+      const materials = recipeMaterials(components, names);
+      if (materials.length > 0) entry.materials = materials;
     }
+    if (typeof item.buildPrice === "number" && item.buildPrice > 0) entry.credits = item.buildPrice;
     entries.set(name, entry);
   }
   return [...entries.values()];
+}
+
+/**
+ * What a recipe consumes besides its blueprints and parts, in recipe order,
+ * counts of a repeated component added up (Akbolto lists Bolto twice).
+ * Components with no known name are left out.
+ */
+function recipeMaterials(
+  components: readonly { uniqueName?: unknown; itemCount?: unknown }[],
+  names: ReadonlyMap<string, string>,
+): Material[] {
+  const counts = new Map<string, number>();
+  for (const c of components) {
+    if (typeof c?.uniqueName !== "string" || c.uniqueName.includes("/Recipes/") || recipePiece(c.uniqueName)) continue;
+    const name = names.get(c.uniqueName);
+    if (!name) continue;
+    const count = typeof c.itemCount === "number" && c.itemCount > 0 ? c.itemCount : 1;
+    counts.set(name, (counts.get(name) ?? 0) + count);
+  }
+  return [...counts].map(([name, count]) => ({ name, count }));
 }
 
 function belongs(category: EquipmentCategory, item: RawItem): boolean {

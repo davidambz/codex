@@ -229,6 +229,8 @@ export const ptBR: Strings = {
       quest: "Dado uma vez por uma quest: veja abaixo.",
     },
     noParts: "Não é montado a partir de peças, ou o catálogo não as lista.",
+    resourcesLabel: "Recursos",
+    credits: "Créditos",
     drops: (chance) => `Dropa · até ${chance}`,
     relics: (open, total) => `Relíquias · ${open} de ${total} farmáveis`,
     vaulted: (total) => `Vaultada · ${total} relíquias, nenhuma farmável`,

@@ -17,18 +17,21 @@ export {
   EQUIPMENT_CATEGORIES,
   EQUIPMENT_FILES,
   IMAGE_BASE_URL,
+  MATERIAL_FILES,
   SAFE_IMAGE,
   WEAPON_CATEGORIES,
   partImage,
   assignWeaponParts,
   equipmentPartLabel,
   joinCatalog,
+  namesById,
   parseEquipment,
   partLabel,
   warframeParts,
   wikiPage,
   type CatalogEntry,
   type EquipmentCategory,
+  type Material,
 } from "./catalog/equipment.ts";
 export { acquisitionNote, extractAcquisition, toPlainText } from "./wiki/wikitext.ts";
 export {

@@ -226,6 +226,11 @@ describe("App", () => {
     expect(screen.getAllByText("Not in the drop tables")).toHaveLength(4);
     expect(screen.getByText(/researched from the Tenno Lab/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open on the wiki" })).toHaveAttribute("href", "https://wiki.warframe.com/w/Nezha");
+    // The resources the recipe consumes, and the Foundry's price.
+    expect(screen.getByRole("heading", { name: "Resources" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Orokin Cell" })).toBeInTheDocument();
+    expect(screen.getByText("25,000")).toBeInTheDocument();
+    expect(screen.getByText("Credits")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "See Nezha Prime" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Nezha Prime" })).toBeInTheDocument();

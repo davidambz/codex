@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DatabaseSync } from "node:sqlite";
-import { EQUIPMENT_CATEGORIES, isItemLanguage, type CatalogEntry, type Db, type SqlValue } from "@iaframe/core";
+import { EQUIPMENT_CATEGORIES, isItemLanguage, type CatalogEntry, type Db, type Material, type SqlValue } from "@iaframe/core";
 import type { ItemNames } from "./names.ts";
 
 /** A read-only connection to a built database, as the queries see it. */
@@ -54,7 +54,7 @@ export function readCatalog(path: string): CatalogEntry[] {
     db = new DatabaseSync(path, { readOnly: true });
     const rows = db
       .prepare(
-        `SELECT i.name, e.category, e.prime, e.counterpart, e.image_name, e.wiki_url, e.acquisition
+        `SELECT i.name, e.category, e.prime, e.counterpart, e.image_name, e.wiki_url, e.acquisition, e.credits
          FROM equipment e JOIN items i ON i.id = e.item_id ORDER BY i.name`,
       )
       .all() as {
@@ -65,12 +65,22 @@ export function readCatalog(path: string): CatalogEntry[] {
       image_name: string | null;
       wiki_url: string | null;
       acquisition: string | null;
+      credits: number | null;
     }[];
     const parts = new Map<string, string[]>();
     for (const { owner, part } of db
       .prepare("SELECT i.name AS owner, p.part FROM parts p JOIN items i ON i.id = p.owner_id ORDER BY p.position")
       .all() as { owner: string; part: string }[]) {
       parts.set(owner, [...(parts.get(owner) ?? []), part]);
+    }
+    const materials = new Map<string, Material[]>();
+    for (const { owner, name, count } of db
+      .prepare(
+        `SELECT o.name AS owner, i.name, m.count FROM materials m
+         JOIN items o ON o.id = m.owner_id JOIN items i ON i.id = m.item_id ORDER BY m.position`,
+      )
+      .all() as { owner: string; name: string; count: number }[]) {
+      materials.set(owner, [...(materials.get(owner) ?? []), { name, count }]);
     }
     return rows.flatMap((r) => {
       const category = EQUIPMENT_CATEGORIES.find((c) => c === r.category);
@@ -82,6 +92,9 @@ export function readCatalog(path: string): CatalogEntry[] {
       if (r.acquisition) entry.acquisition = JSON.parse(r.acquisition) as string[];
       const owned = parts.get(r.name);
       if (owned) entry.parts = owned;
+      const consumed = materials.get(r.name);
+      if (consumed) entry.materials = consumed;
+      if (r.credits !== null) entry.credits = r.credits;
       return [entry];
     });
   } catch {

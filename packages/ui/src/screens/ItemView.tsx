@@ -23,6 +23,7 @@ import {
   type SourceKind,
   type EquipmentPart,
   type EquipmentSheet,
+  type RecipeMaterial,
 } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
 import { useItemNames } from "../names/ItemNamesContext";
@@ -34,7 +35,8 @@ import { isBoolean, oneOf, usePreference } from "../hooks/usePreference";
 import { Chance } from "../components/Chance";
 import { Segmented } from "../components/Segmented";
 import { Tag } from "../components/Tag";
-import { formatChance } from "../format";
+import { ItemImage } from "../components/ItemImage";
+import { formatChance, formatCount } from "../format";
 import type { Navigate } from "../navigation";
 import styles from "./Detail.module.css";
 
@@ -368,7 +370,7 @@ function RelicCard({ route, openItem, openSource }: { route: RelicRoute } & Navi
 }
 
 function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openItem: (name: string) => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const anyMissing = sheet.parts.some((part) => part.status === "none");
   const note = sheet.note && t.equipment.notes[sheet.note];
   return (
@@ -395,6 +397,24 @@ function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openIte
         )}
       </section>
 
+      {(sheet.materials.length > 0 || sheet.credits !== undefined) && (
+        <section className={styles.section}>
+          <h2 className="label">{t.equipment.resourcesLabel}</h2>
+          <ul className={`${styles.panel} ${styles.materials}`}>
+            {sheet.materials.map((material) => (
+              <MaterialRow key={material.name} material={material} openItem={openItem} />
+            ))}
+            {sheet.credits !== undefined && (
+              <li className={styles.material}>
+                <span className={styles.materialIcon} data-empty="" aria-hidden />
+                <span className={styles.materialCount}>{formatCount(sheet.credits, locale)}</span>
+                <span className={styles.materialName}>{t.equipment.credits}</span>
+              </li>
+            )}
+          </ul>
+        </section>
+      )}
+
       {sheet.acquisition && (
         <section className={styles.section}>
           <h2 className="label">{t.equipment.howLabel}</h2>
@@ -414,6 +434,24 @@ function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openIte
         </section>
       )}
     </>
+  );
+}
+
+function MaterialRow({ material, openItem }: { material: RecipeMaterial; openItem: (name: string) => void }) {
+  const { locale } = useI18n();
+  const { itemName } = useItemNames();
+  return (
+    <li className={styles.material}>
+      <ItemImage className={styles.materialIcon} imageName={material.imageName} />
+      <span className={styles.materialCount}>{formatCount(material.count, locale)}×</span>
+      {material.linked ? (
+        <button type="button" className={`${styles.materialName} ${styles.partLink}`} onClick={() => openItem(material.name)}>
+          {itemName(material.name)}
+        </button>
+      ) : (
+        <span className={styles.materialName}>{itemName(material.name)}</span>
+      )}
+    </li>
   );
 }
 
