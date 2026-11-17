@@ -24,14 +24,18 @@ export type Availability = (typeof AVAILABILITY)[number];
 
 /**
  * How a card can be had, all parts together:
- * - "farmable": every part drops or comes from a farmable relic;
+ * - "farmable": every part drops or comes from a farmable relic; or it's
+ *   not a Prime, since regular gear can always be had in game, by drops,
+ *   the Market, Dojo research, quests or syndicates;
  * - "vaulted": at least one part only comes from vaulted relics;
- * - "none": no part is in the drop tables (bought, researched, quest...);
- * - "mixed": some parts drop, others don't.
+ * - "none": a Prime none of whose parts are in the drop tables (War Prime,
+ *   Excalibur Prime);
+ * - "mixed": a Prime with some parts dropping and others not.
  */
 export function cardAvailability(card: EquipmentCard): Exclude<Availability, "all"> | "mixed" {
   const statuses = card.parts.map((part) => part.status);
   if (statuses.includes("vaulted")) return "vaulted";
+  if (!card.prime) return "farmable";
   if (statuses.every((status) => status === "none")) return "none";
   if (statuses.every((status) => status === "drops" || status === "relics")) return "farmable";
   return "mixed";

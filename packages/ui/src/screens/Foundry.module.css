@@ -1,6 +1,8 @@
+/* Every card the same size, however many parts it has. */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  grid-auto-rows: 180px;
   gap: var(--space-3);
   margin: 0;
   padding: 0;
@@ -11,14 +13,16 @@
 .card {
   position: relative;
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
+  grid-template-columns: 76px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) 16px;
   grid-template-areas:
     "name name"
     "picture parts"
     "summary summary";
   align-items: center;
   gap: var(--space-2) var(--space-3);
-  min-height: 168px;
+  height: 100%;
+  min-height: 0;
   padding: var(--space-3);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -83,8 +87,8 @@
 
 .picture {
   grid-area: picture;
-  width: 84px;
-  height: 84px;
+  width: 76px;
+  height: 76px;
   object-fit: contain;
   pointer-events: none;
 }
@@ -100,7 +104,7 @@
   display: flex;
   flex-wrap: wrap;
   align-content: center;
-  gap: var(--space-2);
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -112,8 +116,8 @@
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   /* Lighter than the card: the game's blueprint picture is dark blue. */
   background: var(--paper-part);
@@ -140,19 +144,39 @@ button.part:hover {
   border-color: var(--color-accent);
 }
 
+/* Not a drop, but had in game some other way: lit, just not ringed in the accent. */
+.part[data-status="other"] {
+  border-color: var(--color-text-tertiary);
+}
+
 .part[data-status="vaulted"] {
   border-color: var(--color-danger);
   border-style: dashed;
 }
 
-.part[data-status="none"] .partIcon {
+.part[data-status="none"] /* Many parts (Equinox has nine): smaller icons, so the card keeps its size. */
+.parts[data-dense] {
+  gap: var(--space-1);
+}
+
+.parts[data-dense] .part {
+  width: 28px;
+  height: 28px;
+}
+
+.parts[data-dense] .partIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.partIcon {
   opacity: 0.35;
   filter: grayscale(1);
 }
 
 .partIcon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 

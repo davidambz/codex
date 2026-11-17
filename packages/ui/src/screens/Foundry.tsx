@@ -112,25 +112,27 @@ function Card({ card, selected, openItem }: { card: EquipmentCard; selected: boo
       </button>
       <ItemImage imageName={card.imageName} className={styles.picture} />
       {card.parts.length > 0 && (
-        <ul className={styles.parts}>
+        <ul className={styles.parts} data-dense={card.parts.length > 6 || undefined}>
           {card.parts.map((part) => {
-            const label = `${t.equipment.parts[part.label] ?? part.label}: ${t.foundry.partStatus[part.status]}`;
+            // Regular gear that isn't a drop is still had in game (Market, Dojo, quests...).
+            const status = part.status === "none" && !card.prime ? "other" : part.status;
+            const label = `${t.equipment.parts[part.label] ?? part.label}: ${t.foundry.partStatus[status]}`;
             const generic = partImage(part.label, card.prime);
             const icon = <ItemImage imageName={generic ?? card.imageName} className={styles.partIcon} />;
             return (
               <li key={part.name}>
-                {part.status === "none" ? (
-                  <span className={styles.part} data-status={part.status} data-blueprint={!generic || undefined} title={label} aria-label={label} role="img">
+                {status === "none" || status === "other" ? (
+                  <span className={styles.part} data-status={status} data-blueprint={!generic || undefined} title={label} aria-label={label} role="img">
                     {icon}
                   </span>
                 ) : (
                   <button
                     type="button"
                     className={styles.part}
-                    data-status={part.status}
+                    data-status={status}
                     data-blueprint={!generic || undefined}
                     title={label}
-                    aria-label={`${itemName(part.name)} · ${t.foundry.partStatus[part.status]}`}
+                    aria-label={`${itemName(part.name)} · ${t.foundry.partStatus[status]}`}
                     onClick={() => openItem(part.name)}
                   >
                     {icon}
