@@ -24,8 +24,8 @@ import {
 import { buildDatabase } from "./build.ts";
 import { fetchCatalog } from "./catalog.ts";
 import { SCHEMA_VERSION } from "./schema.ts";
-import { fetchItemNames, type ItemNames } from "./names.ts";
-import { readCatalog, readItemNames, readMeta } from "./sqlite.ts";
+import { fetchItemImages, fetchItemNames, type ItemNames } from "./names.ts";
+import { readCatalog, readItemImages, readItemNames, readMeta } from "./sqlite.ts";
 
 export const WFCD_INFO_URL = "https://drops.warframestat.us/data/info.json";
 export const WFCD_DATA_URL = "https://drops.warframestat.us/data/all.json";
@@ -101,13 +101,15 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
 
   const dropItems = data.items.map((item) => item.name);
   let catalog: CatalogEntry[];
+  let images: Map<string, string>;
   let catalogAt = now().toISOString();
   let catalogError: string | undefined;
   try {
-    catalog = await fetchCatalog(fetchJson, dropItems);
+    [catalog, images] = await Promise.all([fetchCatalog(fetchJson, dropItems), fetchItemImages(fetchJson)]);
   } catch (error) {
     catalogError = error instanceof Error ? error.message : String(error);
     catalog = sameSchema ? readCatalog(options.dbPath) : [];
+    images = sameSchema ? readItemImages(options.dbPath) : new Map();
     // Parts are matched against this run's drop tables, not the old ones.
     assignWeaponParts(catalog, dropItems);
     catalogAt = "";
@@ -135,7 +137,7 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
       ingested_at: now().toISOString(),
       catalog_at: catalogAt,
       names_at: namesAt,
-    }, catalog, names);
+    }, catalog, names, images);
     options.beforeSwap?.();
     renameSync(tmpPath, options.dbPath);
   } finally {

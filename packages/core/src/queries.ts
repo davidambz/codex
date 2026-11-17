@@ -8,7 +8,7 @@ import type { Db } from "./db.ts";
 import type { ItemKind, Refinement, RelicTier, Rotation, Source, SourceKind } from "./types.ts";
 import { REFINEMENTS, RELIC_TIERS } from "./types.ts";
 import type { SearchEntry } from "./search/index.ts";
-import { partLabel, warframeParts, type EquipmentCategory } from "./catalog/equipment.ts";
+import { partImage, partLabel, warframeParts, type EquipmentCategory } from "./catalog/equipment.ts";
 import type { ItemLanguage } from "./catalog/names.ts";
 
 export interface RelicInfo {
@@ -259,14 +259,59 @@ export function listEquipment(db: Db): EquipmentCard[] {
     });
 }
 
+/** How to draw an item: its picture, and whether it's a blueprint (the picture on blueprint paper). */
+export interface ItemPicture {
+  imageName?: string;
+  blueprint?: boolean;
+}
+
+export interface RelicReward extends ItemPicture {
+  item: string;
+  rarity: RelicRarity;
+}
+
+interface PictureRow {
+  item: string;
+  image: string | null;
+  owner: string | null;
+  owner_prime: number | null;
+  owner_image: string | null;
+  bare_image: string | null;
+}
+
+/** Columns for `picture`, over items `i`. */
+const PICTURE_COLUMNS = `i.image_name AS image, o.name AS owner, e.prime AS owner_prime, o.image_name AS owner_image,
+       bare.image_name AS bare_image`;
+const PICTURE_JOINS = `LEFT JOIN parts p ON p.part = i.name
+     LEFT JOIN items o ON o.id = p.owner_id
+     LEFT JOIN equipment e ON e.item_id = o.id
+     LEFT JOIN items bare ON i.name LIKE '% Blueprint' AND bare.name = substr(i.name, 1, length(i.name) - 10)`;
+
+/**
+ * An item's own picture when the catalog has one; for a part, the game's
+ * generic picture of that piece, or its owner on blueprint paper; for
+ * "X Blueprint", X on blueprint paper.
+ */
+function picture(row: PictureRow): ItemPicture {
+  if (row.image) return { imageName: row.image };
+  if (row.owner) {
+    const generic = partImage(partLabel(row.owner, row.item) ?? "", row.owner_prime === 1);
+    if (generic) return { imageName: generic };
+    if (row.owner_image) return { imageName: row.owner_image, blueprint: true };
+  }
+  if (row.bare_image) return { imageName: row.bare_image, blueprint: true };
+  return {};
+}
+
 /** A relic, for the relic list. */
 export interface RelicListEntry {
   name: string;
   tier: RelicInfo["tier"];
   code: string;
   vaulted: boolean;
+  imageName?: string;
   /** What it holds, rarest last. */
-  rewards: { item: string; rarity: RelicRarity }[];
+  rewards: RelicReward[];
 }
 
 export type RelicRarity = "common" | "uncommon" | "rare";
@@ -281,25 +326,32 @@ export function relicRarity(intactChance: number): RelicRarity {
 
 export function listRelics(db: Db): RelicListEntry[] {
   const rewards = new Map<string, RelicListEntry["rewards"]>();
-  for (const row of db.all<{ relic: string; item: string; chance: number }>(
-    `SELECT s.name AS relic, i.name AS item, d.chance
+  for (const row of db.all<PictureRow & { relic: string; chance: number }>(
+    `SELECT s.name AS relic, i.name AS item, d.chance, ${PICTURE_COLUMNS}
      FROM drops d JOIN sources s ON s.id = d.source_id JOIN items i ON i.id = d.item_id
+     ${PICTURE_JOINS}
      WHERE s.kind = 'relic' AND d.refinement = 'Intact'
+     GROUP BY s.id, i.id
      ORDER BY s.name, d.chance DESC, i.name`,
   )) {
-    rewards.set(row.relic, [...(rewards.get(row.relic) ?? []), { item: row.item, rarity: relicRarity(row.chance) }]);
+    const reward: RelicReward = { item: row.item, rarity: relicRarity(row.chance), ...picture(row) };
+    rewards.set(row.relic, [...(rewards.get(row.relic) ?? []), reward]);
   }
   return db
-    .all<{ name: string; tier: RelicInfo["tier"]; code: string; vaulted: number }>(
-      `SELECT i.name, r.tier, r.code, r.vaulted FROM relics r JOIN items i ON i.id = r.item_id`,
+    .all<{ name: string; tier: RelicInfo["tier"]; code: string; vaulted: number; image_name: string | null }>(
+      `SELECT i.name, r.tier, r.code, r.vaulted, i.image_name FROM relics r JOIN items i ON i.id = r.item_id`,
     )
-    .map((row) => ({
-      name: row.name,
-      tier: row.tier,
-      code: row.code,
-      vaulted: row.vaulted === 1,
-      rewards: rewards.get(row.name) ?? [],
-    }))
+    .map((row) => {
+      const entry: RelicListEntry = {
+        name: row.name,
+        tier: row.tier,
+        code: row.code,
+        vaulted: row.vaulted === 1,
+        rewards: rewards.get(row.name) ?? [],
+      };
+      if (row.image_name) entry.imageName = row.image_name;
+      return entry;
+    })
     .sort((a, b) => RELIC_TIERS.indexOf(a.tier) - RELIC_TIERS.indexOf(b.tier) || a.code.localeCompare(b.code, undefined, { numeric: true }));
 }
 

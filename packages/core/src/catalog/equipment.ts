@@ -210,6 +210,7 @@ const PART_WORDS = new Set([
   "Motor",
   "Core",
   "Chassis",
+  "Neuroptics",
   "Subcortex",
   // Sentinels
   "Cerebrum",

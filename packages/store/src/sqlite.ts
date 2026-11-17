@@ -91,6 +91,23 @@ export function readCatalog(path: string): CatalogEntry[] {
   }
 }
 
+/** The item pictures stored in the database at `path`, to carry over when the catalog can't be fetched. */
+export function readItemImages(path: string): Map<string, string> {
+  let db: DatabaseSync | undefined;
+  try {
+    db = new DatabaseSync(path, { readOnly: true });
+    const rows = db.prepare("SELECT name, image_name FROM items WHERE image_name IS NOT NULL").all() as {
+      name: string;
+      image_name: string;
+    }[];
+    return new Map(rows.map((r) => [r.name, r.image_name]));
+  } catch {
+    return new Map();
+  } finally {
+    db?.close();
+  }
+}
+
 /** The translated names stored in the database at `path`, to carry over when they can't be fetched. */
 export function readItemNames(path: string): ItemNames {
   const names: ItemNames = new Map();

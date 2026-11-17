@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -13,9 +13,11 @@ CREATE TABLE meta (
 );
 
 CREATE TABLE items (
-  id   INTEGER PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  kind TEXT NOT NULL
+  id         INTEGER PRIMARY KEY,
+  name       TEXT NOT NULL UNIQUE,
+  kind       TEXT NOT NULL,
+  -- Its picture in warframe-items' data/img, when the catalog has one.
+  image_name TEXT
 );
 
 CREATE TABLE sources (

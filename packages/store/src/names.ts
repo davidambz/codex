@@ -1,7 +1,7 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { CATALOG_FILES, englishIds, translateNames, type ItemLanguage } from "@iaframe/core";
+import { CATALOG_FILES, englishIds, englishImages, translateNames, type ItemLanguage } from "@iaframe/core";
 import type { FetchJson } from "./ingest.ts";
 
 const ITEMS_DATA = "https://raw.githubusercontent.com/WFCD/warframe-items/master/data/json";
@@ -24,4 +24,9 @@ export async function fetchItemNames(
   const ids = englishIds(await Promise.all(CATALOG_FILES.map((file) => fetchJson(catalogFileUrl(file)))));
   for (const language of wanted) names.set(language, translateNames(items, ids, await fetchJson(i18nUrl(language))));
   return names;
+}
+
+/** Item name -> picture file, for everything the catalog has a picture of. */
+export async function fetchItemImages(fetchJson: FetchJson): Promise<Map<string, string>> {
+  return englishImages(await Promise.all(CATALOG_FILES.map((file) => fetchJson(catalogFileUrl(file)))));
 }

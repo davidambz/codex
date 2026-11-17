@@ -116,7 +116,7 @@
   height: 40px;
   padding: 0;
   /* Lighter than the card: the game's blueprint picture is dark blue. */
-  background: radial-gradient(circle, #5b6878, #2c333d 75%);
+  background: var(--paper-part);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-inset);
@@ -132,10 +132,7 @@ button.part:hover {
 
 /* Blueprint paper: the item itself on blue, as the game draws blueprints. */
 .part[data-blueprint] {
-  background:
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 6px),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 6px),
-    radial-gradient(circle, #2f6a99, #173653 80%);
+  background: var(--paper-blueprint);
 }
 
 .part[data-status="drops"],
