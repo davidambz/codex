@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Platform } from "@iaframe/core";
-import type { IaframeDesktopApi } from "../shared/api";
+import { IMAGE_SCHEME, type IaframeDesktopApi } from "../shared/api";
 
 declare global {
   interface Window {
@@ -28,5 +28,8 @@ export function createDesktopPlatform(api: IaframeDesktopApi = window.iaframe): 
     getSettings: () => api.getSettings(),
     updateSettings: (patch) => api.updateSettings(patch),
     getItemNames: (language) => api.getItemNames(language),
+    listEquipment: () => api.listEquipment(),
+    listRelics: () => api.listRelics(),
+    imageUrl: (imageName) => `${IMAGE_SCHEME}://img/${encodeURIComponent(imageName)}`,
   };
 }

@@ -4,7 +4,9 @@
 import type {
   DataStatus,
   DeepDrops,
+  EquipmentCard,
   ItemDetails,
+  RelicListEntry,
   ItemKind,
   ItemLanguage,
   SearchHit,
@@ -27,7 +29,12 @@ export const IPC = {
   getSettings: "settings:get",
   updateSettings: "settings:update",
   getItemNames: "data:item-names",
+  listEquipment: "data:equipment",
+  listRelics: "data:relics",
 } as const;
+
+/** Pictures are served under this scheme: iaframe-img://img/SomaPrime.png. */
+export const IMAGE_SCHEME = "iaframe-img";
 
 /** What the preload exposes as window.iaframe. */
 export interface IaframeDesktopApi {
@@ -45,4 +52,6 @@ export interface IaframeDesktopApi {
   getSettings(): Promise<Settings>;
   updateSettings(patch: Partial<Settings>): Promise<Settings>;
   getItemNames(language: ItemLanguage): Promise<Record<string, string>>;
+  listEquipment(): Promise<EquipmentCard[]>;
+  listRelics(): Promise<RelicListEntry[]>;
 }

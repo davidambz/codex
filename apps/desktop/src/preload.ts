@@ -31,6 +31,8 @@ const api: IaframeDesktopApi = {
   getSettings: () => ipcRenderer.invoke(IPC.getSettings),
   updateSettings: (patch) => ipcRenderer.invoke(IPC.updateSettings, patch),
   getItemNames: (language) => ipcRenderer.invoke(IPC.getItemNames, language),
+  listEquipment: () => ipcRenderer.invoke(IPC.listEquipment),
+  listRelics: () => ipcRenderer.invoke(IPC.listRelics),
 };
 
 contextBridge.exposeInMainWorld("iaframe", api);
