@@ -16,7 +16,11 @@ import {
   getItem,
   getSource,
   getSourceDrops,
+  listEquipment,
   listItems,
+  listRelics,
+  type EquipmentCard,
+  type RelicListEntry,
   type DataStatus,
   type DeepDrops,
   type ItemKind,
@@ -48,6 +52,9 @@ export interface DataService {
   getDropsDeep(name: string): DeepDrops;
   getSource(key: string): SourceDetails | undefined;
   getItemNames(language: ItemLanguage): Record<string, string>;
+  /** Every Warframe, weapon and companion, for the Foundry grid. */
+  listEquipment(): EquipmentCard[];
+  listRelics(): RelicListEntry[];
   settings(): Settings;
   /** Saves the change, re-indexes search, and fetches names for a new language. */
   updateSettings(patch: Partial<Settings>): Settings;
@@ -60,6 +67,8 @@ export interface DataService {
 export function createDataService(options: DataServiceOptions): DataService {
   const now = options.now ?? (() => new Date());
   let store: Store | undefined;
+  // Built on first use and dropped whenever the database is swapped.
+  let lists: { equipment?: EquipmentCard[]; relics?: RelicListEntry[] } = {};
   let index: SearchIndex | undefined;
   let status: DataStatus = { busy: false };
   let running: Promise<DataStatus> | undefined;
@@ -74,6 +83,7 @@ export function createDataService(options: DataServiceOptions): DataService {
   const open = () => {
     if (!existsSync(options.dbPath) || readMeta(options.dbPath)?.schema_version !== String(SCHEMA_VERSION)) return;
     store = openStore(options.dbPath);
+    lists = {};
     index = buildSearchIndex(listItems(store, settingsLanguages(settings)));
     status = { ...status, info: getDataInfo(store) };
   };
@@ -133,6 +143,16 @@ export function createDataService(options: DataServiceOptions): DataService {
       return source ? { source, drops: getSourceDrops(store, key) } : undefined;
     },
     getItemNames: (language) => (store ? getItemNames(store, language) : {}),
+    listEquipment() {
+      if (!store) return [];
+      lists.equipment ??= listEquipment(store);
+      return lists.equipment;
+    },
+    listRelics() {
+      if (!store) return [];
+      lists.relics ??= listRelics(store);
+      return lists.relics;
+    },
     settings: () => settings,
     updateSettings(patch) {
       const before = settingsLanguages(settings);

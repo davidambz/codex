@@ -63,7 +63,7 @@ export function buildDatabase(
     for (const r of data.relics) insertRelic.run(idOf(itemIds, r.item), r.tier, r.code, r.vaulted ? 1 : 0);
 
     const insertEquipment = db.prepare(
-      "INSERT INTO equipment (item_id, category, prime, counterpart, wiki_url, acquisition) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO equipment (item_id, category, prime, counterpart, image_name, wiki_url, acquisition) VALUES (?, ?, ?, ?, ?, ?, ?)",
     );
     const setKind = db.prepare("UPDATE items SET kind = ? WHERE id = ?");
     const insertPart = db.prepare("INSERT INTO parts (owner_id, part, position) VALUES (?, ?, ?)");
@@ -81,6 +81,7 @@ export function buildDatabase(
         entry.category,
         entry.prime ? 1 : 0,
         entry.counterpart ?? null,
+        entry.imageName ?? null,
         entry.wikiUrl ?? null,
         entry.acquisition?.length ? JSON.stringify(entry.acquisition) : null,
       );

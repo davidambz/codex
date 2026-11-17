@@ -16,8 +16,11 @@ import {
   getItem,
   getSource,
   getSourceDrops,
+  listEquipment,
   listItems,
+  listRelics,
   parseDropData,
+  RELIC_TIERS,
 } from "@iaframe/core";
 import type { CatalogEntry } from "@iaframe/core";
 import { buildDatabase } from "./build.ts";
@@ -97,6 +100,33 @@ describe("queries", () => {
     });
     const index = buildSearchIndex(listItems(store));
     expect(index.search("war prime", 1, ["melee"])[0]).toMatchObject({ name: "War Prime", kind: "melee" });
+  });
+
+  it("lists every piece of equipment with its parts' status for the grid", () => {
+    const cards = listEquipment(store);
+    expect(cards.map((c) => c.name)).toEqual(["Gara", "Khora", "Khora Prime", "Lex Prime", "War Prime"]);
+    expect(cards.find((c) => c.name === "Gara")?.parts.map((p) => p.status)).toEqual(["none", "drops", "none", "none"]);
+    expect(cards.find((c) => c.name === "Khora Prime")?.parts[1]).toEqual({
+      name: "Khora Prime Chassis Blueprint",
+      label: "Chassis",
+      status: "vaulted",
+    });
+    expect(cards.find((c) => c.name === "Lex Prime")).toMatchObject({ category: "secondary", prime: true, parts: [{ label: "Barrel" }] });
+    // Same answers as the item page.
+    for (const card of cards) {
+      expect(card.parts.map((p) => p.status)).toEqual(getItem(store, card.name)?.equipment?.parts.map((p) => p.status));
+    }
+  });
+
+  it("lists relics by tier with what they hold", () => {
+    const relics = listRelics(store);
+    expect(relics.length).toBeGreaterThan(0);
+    const tiers = relics.map((r) => r.tier);
+    expect([...tiers].sort((a, b) => RELIC_TIERS.indexOf(a) - RELIC_TIERS.indexOf(b))).toEqual(tiers);
+    const s21 = relics.find((r) => r.name === "Axi S21 Relic");
+    expect(s21).toMatchObject({ tier: "Axi", code: "S21", vaulted: false });
+    expect(s21?.rewards.length).toBeGreaterThanOrEqual(6);
+    expect(s21?.rewards.map((r) => r.rarity)).toEqual(["common", "common", "common", "uncommon", "uncommon", "rare"]);
   });
 
   it("describes a relic item", () => {

@@ -54,7 +54,7 @@ export function readCatalog(path: string): CatalogEntry[] {
     db = new DatabaseSync(path, { readOnly: true });
     const rows = db
       .prepare(
-        `SELECT i.name, e.category, e.prime, e.counterpart, e.wiki_url, e.acquisition
+        `SELECT i.name, e.category, e.prime, e.counterpart, e.image_name, e.wiki_url, e.acquisition
          FROM equipment e JOIN items i ON i.id = e.item_id ORDER BY i.name`,
       )
       .all() as {
@@ -62,6 +62,7 @@ export function readCatalog(path: string): CatalogEntry[] {
       category: string;
       prime: number;
       counterpart: string | null;
+      image_name: string | null;
       wiki_url: string | null;
       acquisition: string | null;
     }[];
@@ -70,6 +71,7 @@ export function readCatalog(path: string): CatalogEntry[] {
       if (!category) return [];
       const entry: CatalogEntry = { name: r.name, category, prime: r.prime === 1 };
       if (r.counterpart) entry.counterpart = r.counterpart;
+      if (r.image_name) entry.imageName = r.image_name;
       if (r.wiki_url) entry.wikiUrl = r.wiki_url;
       if (r.acquisition) entry.acquisition = JSON.parse(r.acquisition) as string[];
       return [entry];

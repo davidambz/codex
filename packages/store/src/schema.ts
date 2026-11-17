@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -58,6 +58,7 @@ CREATE TABLE equipment (
   category    TEXT NOT NULL,
   prime       INTEGER NOT NULL,
   counterpart TEXT,
+  image_name  TEXT,
   wiki_url    TEXT,
   -- JSON array of plain-text paragraphs from the wiki.
   acquisition TEXT
