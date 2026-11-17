@@ -468,13 +468,18 @@ function PartRow({ part, openItem }: { part: EquipmentPart; openItem: (name: str
           ? t.equipment.vaulted(part.relics ?? 0)
           : t.equipment.none;
   const lit = part.status === "drops" || part.status === "relics";
+  const count = part.count && <span className={styles.partCount}>{formatCount(part.count, locale)}× </span>;
   return (
     <li className={styles.part}>
       <span className="label">{t.equipment.parts[part.label] ?? part.label}</span>
       {part.status === "none" ? (
-        <span className={styles.partName}>{itemName(part.name)}</span>
+        <span className={styles.partName}>
+          {count}
+          {itemName(part.name)}
+        </span>
       ) : (
         <button type="button" className={`${styles.partName} ${styles.partLink}`} onClick={() => openItem(part.name)}>
+          {count}
           {itemName(part.name)}
         </button>
       )}

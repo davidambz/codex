@@ -340,6 +340,11 @@
   overflow-wrap: anywhere;
 }
 
+.partCount {
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
 .partLink {
   padding: 0;
   border: none;

@@ -118,9 +118,15 @@ function Card({ card, selected, openItem }: { card: EquipmentCard; selected: boo
           {card.parts.map((part) => {
             // Regular gear that isn't a drop is still had in game (Market, Dojo, quests...).
             const status = part.status === "none" && !card.prime ? "other" : part.status;
-            const label = `${t.equipment.parts[part.label] ?? part.label}: ${t.foundry.partStatus[status]}`;
+            const times = part.count ? `${formatCount(part.count, locale)}× ` : "";
+            const label = `${times}${t.equipment.parts[part.label] ?? part.label}: ${t.foundry.partStatus[status]}`;
             const generic = partImage(part.label, card.prime);
-            const icon = <ItemImage imageName={generic ?? card.imageName} className={styles.partIcon} />;
+            const icon = (
+              <>
+                <ItemImage imageName={generic ?? card.imageName} className={styles.partIcon} />
+                {part.count && <span className={styles.partCount}>{formatCount(part.count, locale)}</span>}
+              </>
+            );
             return (
               <li key={part.name}>
                 {status === "none" || status === "other" ? (
@@ -134,7 +140,7 @@ function Card({ card, selected, openItem }: { card: EquipmentCard; selected: boo
                     data-status={status}
                     data-blueprint={!generic || undefined}
                     title={label}
-                    aria-label={`${itemName(part.name)} · ${t.foundry.partStatus[status]}`}
+                    aria-label={`${times}${itemName(part.name)} · ${t.foundry.partStatus[status]}`}
                     onClick={() => openItem(part.name)}
                   >
                     {icon}

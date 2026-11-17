@@ -230,6 +230,24 @@ button.part:hover {
   display: none;
 }
 
+/* "2" in a corner of a part needed twice. */
+.partCount {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  font-variant-numeric: tabular-nums;
+}
+
 .summary {
   grid-area: summary;
   justify-self: start;

@@ -85,7 +85,7 @@ export const items: Record<string, ItemDetails> = {
       prime: true,
       parts: [
         { name: "Lex Prime Blueprint", label: "Blueprint", status: "vaulted", relics: 2, openRelics: 0 },
-        { name: "Lex Prime Barrel", label: "Barrel", status: "relics", relics: 3, openRelics: 1 },
+        { name: "Lex Prime Barrel", label: "Barrel", count: 2, status: "relics", relics: 3, openRelics: 1 },
         { name: "Lex Prime Receiver", label: "Receiver", status: "none" },
       ],
       materials: [],
@@ -208,7 +208,7 @@ export function fakePlatform(
                 category: item.equipment.category,
                 prime: item.equipment.prime,
                 imageName: `${item.name.replace(/ /g, "")}.png`,
-                parts: item.equipment.parts.map(({ name, label, status }) => ({ name, label, status })),
+                parts: item.equipment.parts.map(({ name, label, count, status }) => ({ name, label, ...(count ? { count } : {}), status })),
                 materials: item.equipment.materials.map(({ name, count }) => ({ name, count })),
                 ...(item.equipment.credits !== undefined ? { credits: item.equipment.credits } : {}),
                 ...(item.equipment.acquisition ? { howTo: firstSentence(item.equipment.acquisition[0]) } : {}),

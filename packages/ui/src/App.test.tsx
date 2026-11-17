@@ -262,6 +262,8 @@ describe("App", () => {
     // A Prime's part no drop table names is greyed out; a regular frame's is had some other way.
     expect(screen.getByRole("img", { name: "Receiver: not a drop (bought, quest, research...)" })).toBeInTheDocument();
     expect(screen.getAllByRole("img", { name: /Market, Dojo, quest or vendor/ })).toHaveLength(4);
+    // A part needed twice says so.
+    expect(screen.getByRole("button", { name: "2× Lex Prime Barrel · farmable relics" })).toHaveTextContent("2");
     // What else the recipe eats, on the card itself.
     const nezhaResources = screen.getByRole("list", { name: "Resources" });
     expect(within(nezhaResources).getByLabelText("1× Orokin Cell")).toBeInTheDocument();
