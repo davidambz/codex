@@ -23,9 +23,10 @@ switch (result.status) {
     break;
   case "updated":
     console.log(
-      `Built ${dbPath} in ${seconds}s: ${result.items} items, ${result.drops} drops` +
+      `Built ${dbPath} in ${seconds}s: ${result.items} items, ${result.drops} drops, ${result.warframes} Warframes` +
         (result.skipped ? `, ${result.skipped} rows without a chance skipped` : ""),
     );
+    if (result.catalogError) console.warn(`Warframe list not refreshed (kept the previous one): ${result.catalogError}`);
     break;
   case "rejected":
     console.error(`WFCD data ${result.hash} rejected, database left as it was:`);

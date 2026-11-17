@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DatabaseSync } from "node:sqlite";
-import type { Db, SqlValue } from "@iaframe/core";
+import type { Db, SqlValue, WarframeEntry } from "@iaframe/core";
 
 /** A read-only connection to a built database, as the queries see it. */
 export interface Store extends Db {
@@ -41,6 +41,31 @@ export function readMeta(path: string): Record<string, string> | undefined {
     return Object.fromEntries(rows.map((r) => [r.key, r.value]));
   } catch {
     return undefined;
+  } finally {
+    db?.close();
+  }
+}
+
+/** The Warframe list stored in the database at `path`, to carry over when the catalog can't be fetched. */
+export function readWarframes(path: string): WarframeEntry[] {
+  let db: DatabaseSync | undefined;
+  try {
+    db = new DatabaseSync(path, { readOnly: true });
+    const rows = db
+      .prepare(
+        `SELECT i.name, w.prime, w.counterpart, w.wiki_url, w.acquisition
+         FROM warframes w JOIN items i ON i.id = w.item_id ORDER BY i.name`,
+      )
+      .all() as { name: string; prime: number; counterpart: string | null; wiki_url: string | null; acquisition: string | null }[];
+    return rows.map((r) => {
+      const entry: WarframeEntry = { name: r.name, prime: r.prime === 1 };
+      if (r.counterpart) entry.counterpart = r.counterpart;
+      if (r.wiki_url) entry.wikiUrl = r.wiki_url;
+      if (r.acquisition) entry.acquisition = JSON.parse(r.acquisition) as string[];
+      return entry;
+    });
+  } catch {
+    return [];
   } finally {
     db?.close();
   }
