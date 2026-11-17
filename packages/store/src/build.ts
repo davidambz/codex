@@ -4,6 +4,7 @@
 import { rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import type { DropData, WarframeEntry } from "@iaframe/core";
+import type { ItemNames } from "./names.ts";
 import { SCHEMA, SCHEMA_VERSION } from "./schema.ts";
 
 /** Writes `data` into a brand new database file at `path`, replacing whatever was there. */
@@ -12,6 +13,7 @@ export function buildDatabase(
   data: DropData,
   meta: Record<string, string>,
   warframes: WarframeEntry[] = [],
+  names: ItemNames = new Map(),
 ): void {
   rmSync(path, { force: true });
   const db = new DatabaseSync(path);
@@ -81,12 +83,21 @@ export function buildDatabase(
       );
     }
 
+    const insertName = db.prepare("INSERT INTO names (item_id, lang, name) VALUES (?, ?, ?)");
+    for (const [language, byItem] of names) {
+      for (const [item, name] of byItem) {
+        const id = itemIds.get(item);
+        if (id !== undefined) insertName.run(id, language, name);
+      }
+    }
+
     const insertMeta = db.prepare("INSERT INTO meta (key, value) VALUES (?, ?)");
     const allMeta = {
       ...meta,
       schema_version: String(SCHEMA_VERSION),
       items: String(itemIds.size),
       warframes: String(warframes.length),
+      languages: [...names.keys()].sort().join(","),
       drops: String(data.drops.length),
       skipped: String(data.skipped),
     };

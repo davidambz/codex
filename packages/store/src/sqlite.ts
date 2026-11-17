@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DatabaseSync } from "node:sqlite";
-import type { Db, SqlValue, WarframeEntry } from "@iaframe/core";
+import { isItemLanguage, type Db, type SqlValue, type WarframeEntry } from "@iaframe/core";
+import type { ItemNames } from "./names.ts";
 
 /** A read-only connection to a built database, as the queries see it. */
 export interface Store extends Db {
@@ -69,4 +70,27 @@ export function readWarframes(path: string): WarframeEntry[] {
   } finally {
     db?.close();
   }
+}
+
+/** The translated names stored in the database at `path`, to carry over when they can't be fetched. */
+export function readItemNames(path: string): ItemNames {
+  const names: ItemNames = new Map();
+  let db: DatabaseSync | undefined;
+  try {
+    db = new DatabaseSync(path, { readOnly: true });
+    const rows = db
+      .prepare("SELECT i.name AS item, n.lang, n.name FROM names n JOIN items i ON i.id = n.item_id")
+      .all() as { item: string; lang: string; name: string }[];
+    for (const row of rows) {
+      if (!isItemLanguage(row.lang)) continue;
+      let byItem = names.get(row.lang);
+      if (!byItem) names.set(row.lang, (byItem = new Map()));
+      byItem.set(row.item, row.name);
+    }
+  } catch {
+    // No database, or one without names: nothing to carry over.
+  } finally {
+    db?.close();
+  }
+  return names;
 }

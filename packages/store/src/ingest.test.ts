@@ -5,7 +5,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ingest, WFCD_DATA_URL, WFCD_INFO_URL, type FetchJson } from "./ingest.ts";
-import { openStore, readMeta, readWarframes } from "./sqlite.ts";
+import { openStore, readItemNames, readMeta, readWarframes } from "./sqlite.ts";
 import { fakeCatalog } from "./test/catalog.ts";
 import sample from "../../core/src/wfcd/fixtures/sample.json" with { type: "json" };
 
@@ -48,7 +48,7 @@ describe("ingest", () => {
       drops_hash: "h1",
       ingested_at: "2026-11-17T12:00:00.000Z",
       source_modified: "2026-11-17T00:00:00.000Z",
-      schema_version: "2",
+      schema_version: "3",
       warframes: "3",
     });
     expect(existsSync(`${dbPath}.tmp`)).toBe(false);
@@ -148,6 +148,47 @@ describe("ingest", () => {
     const down = wfcd("h1");
     down.catalogUp = false;
     expect(await ingest({ dbPath, fetchJson: down.fetchJson, now })).toMatchObject({ status: "updated", warframes: 0 });
+  });
+
+  it("stores item names in the languages asked for, only where they differ", async () => {
+    const result = await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now, languages: ["pt", "en"] });
+    expect(result).not.toHaveProperty("namesError");
+    expect(readMeta(dbPath)?.languages).toBe("pt");
+    expect(Object.fromEntries(readItemNames(dbPath).get("pt") ?? [])).toEqual({
+      "Axi G13 Relic": "Relíquia Axi G13",
+      Oxium: "Óxio",
+      Serration: "Serrilhado",
+    });
+  });
+
+  it("fetches no names without other languages", async () => {
+    const source = wfcd("h1");
+    const urls: string[] = [];
+    const fetchJson: FetchJson = (url) => (urls.push(url), source.fetchJson(url));
+    await ingest({ dbPath, fetchJson, now });
+    expect(urls.some((url) => url.includes("/i18n/") || url.endsWith("/Mods.json"))).toBe(false);
+    expect(readMeta(dbPath)?.languages).toBe("");
+  });
+
+  it("rebuilds when a new language is wanted, even with the same drop data", async () => {
+    await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
+    expect((await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now, languages: ["pt"] })).status).toBe("updated");
+    expect((await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now, languages: ["pt"] })).status).toBe("up-to-date");
+    // Dropping a language doesn't need a rebuild.
+    expect((await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now })).status).toBe("up-to-date");
+  });
+
+  it("keeps the previous names when they can't be fetched", async () => {
+    await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now, languages: ["pt"] });
+    const down = wfcd("h2");
+    const fetchJson: FetchJson = async (url) => {
+      if (url.includes("/i18n/")) throw new Error("offline");
+      return down.fetchJson(url);
+    };
+    const result = await ingest({ dbPath, fetchJson, now, languages: ["pt"] });
+    expect(result).toMatchObject({ status: "updated", namesError: "offline" });
+    expect(readItemNames(dbPath).get("pt")?.get("Oxium")).toBe("Óxio");
+    expect(readMeta(dbPath)?.names_at).toBe("");
   });
 
   it("refuses an info.json without a hash", async () => {

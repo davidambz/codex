@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -60,5 +60,13 @@ CREATE TABLE warframes (
   wiki_url    TEXT,
   -- JSON array of plain-text paragraphs from the wiki.
   acquisition TEXT
+);
+
+-- Item names in other languages, only where they differ from English.
+CREATE TABLE names (
+  item_id INTEGER NOT NULL REFERENCES items(id),
+  lang    TEXT NOT NULL,
+  name    TEXT NOT NULL,
+  PRIMARY KEY (item_id, lang)
 );
 `;
