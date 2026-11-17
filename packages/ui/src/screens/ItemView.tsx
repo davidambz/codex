@@ -21,8 +21,8 @@ import {
   type Rotation,
   type SortDirection,
   type SourceKind,
-  type WarframePart,
-  type WarframeSheet,
+  type EquipmentPart,
+  type EquipmentSheet,
 } from "@iaframe/core";
 import { useI18n } from "../i18n/I18nContext";
 import { useItemNames } from "../names/ItemNamesContext";
@@ -133,10 +133,10 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
         </div>
         <h1 className={styles.title}>{itemName(item.name)}</h1>
         {itemName(item.name) !== item.name && <p className={styles.subtitle}>{t.languages.english(item.name)}</p>}
-        {item.warframe?.counterpart && (
+        {item.equipment?.counterpart && (
           <div className={styles.headActions}>
-            <button type="button" className={styles.link} onClick={() => openItem(item.warframe!.counterpart!)}>
-              {t.warframe.counterpart(itemName(item.warframe.counterpart))}
+            <button type="button" className={styles.link} onClick={() => openItem(item.equipment!.counterpart!)}>
+              {t.equipment.counterpart(itemName(item.equipment.counterpart))}
             </button>
           </div>
         )}
@@ -158,7 +158,7 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
         <BestBetPanel bet={bet} openItem={openItem} openSource={openSource} />
       )}
 
-      {item.warframe && <WarframeSections sheet={item.warframe} openItem={openItem} />}
+      {item.equipment && <EquipmentSections sheet={item.equipment} openItem={openItem} />}
 
       {deep.relics.length > 0 && (
         <section className={styles.section}>
@@ -277,7 +277,7 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
         </section>
       )}
 
-      {!item.warframe && deep.relics.length === 0 && deep.direct.length === 0 && <p className={styles.note}>{t.item.noDrops}</p>}
+      {!item.equipment && deep.relics.length === 0 && deep.direct.length === 0 && <p className={styles.note}>{t.item.noDrops}</p>}
     </article>
   );
 }
@@ -367,7 +367,7 @@ function RelicCard({ route, openItem, openSource }: { route: RelicRoute } & Navi
   );
 }
 
-function WarframeSections({ sheet, openItem }: { sheet: WarframeSheet; openItem: (name: string) => void }) {
+function EquipmentSections({ sheet, openItem }: { sheet: EquipmentSheet; openItem: (name: string) => void }) {
   const { t } = useI18n();
   const anyMissing = sheet.parts.some((part) => part.status === "none");
   return (
@@ -375,30 +375,34 @@ function WarframeSections({ sheet, openItem }: { sheet: WarframeSheet; openItem:
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <div>
-            <h2 className="label">{t.warframe.partsLabel}</h2>
-            {anyMissing && sheet.acquisition && <p className={styles.hint}>{t.warframe.noneHint}</p>}
+            <h2 className="label">{t.equipment.partsLabel}</h2>
+            {anyMissing && sheet.acquisition && <p className={styles.hint}>{t.equipment.noneHint}</p>}
           </div>
         </div>
-        <ul className={`${styles.panel} ${styles.parts}`}>
-          {sheet.parts.map((part) => (
-            <PartRow key={part.name} part={part} openItem={openItem} />
-          ))}
-        </ul>
+        {sheet.parts.length > 0 ? (
+          <ul className={`${styles.panel} ${styles.parts}`}>
+            {sheet.parts.map((part) => (
+              <PartRow key={part.name} part={part} openItem={openItem} />
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.note}>{t.equipment.noParts}</p>
+        )}
       </section>
 
       {sheet.acquisition && (
         <section className={styles.section}>
-          <h2 className="label">{t.warframe.howLabel}</h2>
+          <h2 className="label">{t.equipment.howLabel}</h2>
           <div className={styles.prose}>
             {sheet.acquisition.map((paragraph, i) => (
               <p key={i}>{paragraph}</p>
             ))}
           </div>
           <p className={styles.hint}>
-            {t.warframe.wikiCredit}{" "}
+            {t.equipment.wikiCredit}{" "}
             {sheet.wikiUrl && (
               <a href={sheet.wikiUrl} target="_blank" rel="noreferrer">
-                {t.warframe.openWiki}
+                {t.equipment.openWiki}
               </a>
             )}
           </p>
@@ -408,21 +412,21 @@ function WarframeSections({ sheet, openItem }: { sheet: WarframeSheet; openItem:
   );
 }
 
-function PartRow({ part, openItem }: { part: WarframePart; openItem: (name: string) => void }) {
+function PartRow({ part, openItem }: { part: EquipmentPart; openItem: (name: string) => void }) {
   const { t, locale } = useI18n();
   const { itemName } = useItemNames();
   const status =
     part.status === "drops"
-      ? t.warframe.drops(part.bestChance !== undefined ? formatChance(part.bestChance, locale) : "?")
+      ? t.equipment.drops(part.bestChance !== undefined ? formatChance(part.bestChance, locale) : "?")
       : part.status === "relics"
-        ? t.warframe.relics(part.openRelics ?? 0, part.relics ?? 0)
+        ? t.equipment.relics(part.openRelics ?? 0, part.relics ?? 0)
         : part.status === "vaulted"
-          ? t.warframe.vaulted(part.relics ?? 0)
-          : t.warframe.none;
+          ? t.equipment.vaulted(part.relics ?? 0)
+          : t.equipment.none;
   const lit = part.status === "drops" || part.status === "relics";
   return (
     <li className={styles.part}>
-      <span className="label">{t.warframe.slots[part.slot]}</span>
+      <span className="label">{t.equipment.parts[part.label] ?? part.label}</span>
       {part.status === "none" ? (
         <span className={styles.partName}>{itemName(part.name)}</span>
       ) : (

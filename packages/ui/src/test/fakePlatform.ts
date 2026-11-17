@@ -23,31 +23,53 @@ export const items: Record<string, ItemDetails> = {
   Nezha: {
     name: "Nezha",
     kind: "warframe",
-    warframe: {
+    equipment: {
+      category: "warframe",
       prime: false,
       counterpart: "Nezha Prime",
       wikiUrl: "https://wiki.warframe.com/w/Nezha",
       acquisition: ["Nezha's blueprints can be researched from the Tenno Lab in the dojo."],
       parts: [
-        { name: "Nezha Blueprint", slot: "blueprint", status: "none" },
-        { name: "Nezha Chassis Blueprint", slot: "chassis", status: "none" },
-        { name: "Nezha Neuroptics Blueprint", slot: "neuroptics", status: "none" },
-        { name: "Nezha Systems Blueprint", slot: "systems", status: "none" },
+        { name: "Nezha Blueprint", label: "Blueprint", status: "none" },
+        { name: "Nezha Chassis Blueprint", label: "Chassis", status: "none" },
+        { name: "Nezha Neuroptics Blueprint", label: "Neuroptics", status: "none" },
+        { name: "Nezha Systems Blueprint", label: "Systems", status: "none" },
       ],
     },
   },
   "Nezha Prime": {
     name: "Nezha Prime",
     kind: "warframe",
-    warframe: {
+    equipment: {
+      category: "warframe",
       prime: true,
       counterpart: "Nezha",
       parts: [
-        { name: "Nezha Prime Blueprint", slot: "blueprint", status: "vaulted", relics: 8, openRelics: 0 },
-        { name: "Nezha Prime Chassis Blueprint", slot: "chassis", status: "relics", relics: 5, openRelics: 2 },
-        { name: "Nezha Prime Neuroptics Blueprint", slot: "neuroptics", status: "drops", bestChance: 12.5 },
-        { name: "Nezha Prime Systems Blueprint", slot: "systems", status: "vaulted", relics: 9, openRelics: 0 },
+        { name: "Nezha Prime Blueprint", label: "Blueprint", status: "vaulted", relics: 8, openRelics: 0 },
+        { name: "Nezha Prime Chassis Blueprint", label: "Chassis", status: "relics", relics: 5, openRelics: 2 },
+        { name: "Nezha Prime Neuroptics Blueprint", label: "Neuroptics", status: "drops", bestChance: 12.5 },
+        { name: "Nezha Prime Systems Blueprint", label: "Systems", status: "vaulted", relics: 9, openRelics: 0 },
       ],
+    },
+  },
+  "War Prime": {
+    name: "War Prime",
+    kind: "melee",
+    equipment: {
+      category: "melee",
+      prime: true,
+      counterpart: "War",
+      parts: [],
+      acquisition: ["War Prime is acquired upon crafting Hunhow's Trinket."],
+    },
+  },
+  "Lex Prime": {
+    name: "Lex Prime",
+    kind: "secondary",
+    equipment: {
+      category: "secondary",
+      prime: true,
+      parts: [{ name: "Lex Prime Barrel", label: "Barrel", status: "relics", relics: 3, openRelics: 1 }],
     },
   },
   "Nezha Prime Chassis Blueprint": { name: "Nezha Prime Chassis Blueprint", kind: "prime_part", vaulted: false },
