@@ -1,0 +1,19 @@
+.visor {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  min-width: 5.5em;
+  padding: 2px var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--visor-text);
+  background: var(--visor-bg);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-inset);
+  white-space: nowrap;
+}
+
+.visor[data-conditional="true"] {
+  color: var(--visor-dim);
+}

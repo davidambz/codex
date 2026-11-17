@@ -11,3 +11,4 @@ export { SYNONYMS } from "./search/synonyms.ts";
 export { expectedRuns, runsForConfidence } from "./odds.ts";
 export * from "./queries.ts";
 export type { Platform, Theme, DataStatus, SourceDetails } from "./platform.ts";
+export { resolveSupportedLocale } from "./locale.ts";
