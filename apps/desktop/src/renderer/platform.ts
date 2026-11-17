@@ -15,7 +15,7 @@ export function createDesktopPlatform(api: IaframeDesktopApi = window.iaframe): 
   return {
     kind: "desktop",
     appVersion: api.appVersion,
-    search: (query, limit) => api.search(query, limit),
+    search: (query, limit, kinds) => api.search(query, limit, kinds),
     getItem: (name) => api.getItem(name),
     getDropsDeep: (name) => api.getDropsDeep(name),
     getSource: (key) => api.getSource(key),

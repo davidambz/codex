@@ -21,7 +21,8 @@ export function createWebPlatform(): Platform {
   return {
     kind: "web",
     appVersion: "dev",
-    search: (query, limit = 10) => api("search", { q: query, limit: String(limit) }),
+    search: (query, limit = 10, kinds) =>
+      api("search", { q: query, limit: String(limit), ...(kinds?.length ? { kinds: kinds.join(",") } : {}) }),
     getItem: (name) => api("item", { name }),
     getDropsDeep: (name) => api("deep", { name }),
     getSource: (key) => api("source", { key }),

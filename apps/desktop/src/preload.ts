@@ -18,7 +18,7 @@ function subscribe<T>(channel: string, listener: (value: T) => void): () => void
 
 const api: IaframeDesktopApi = {
   appVersion: argValue("version") ?? "0.0.0",
-  search: (query, limit) => ipcRenderer.invoke(IPC.search, query, limit),
+  search: (query, limit, kinds) => ipcRenderer.invoke(IPC.search, query, limit, kinds ? [...kinds] : undefined),
   getItem: (name) => ipcRenderer.invoke(IPC.getItem, name),
   getDropsDeep: (name) => ipcRenderer.invoke(IPC.getDropsDeep, name),
   getSource: (key) => ipcRenderer.invoke(IPC.getSource, key),
