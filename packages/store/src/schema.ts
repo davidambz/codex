@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -52,14 +52,23 @@ CREATE TABLE relics (
   vaulted INTEGER NOT NULL
 );
 
--- Warframes from WFCD's item catalog; their parts are items named after them.
-CREATE TABLE warframes (
+-- Warframes, weapons and companions from WFCD's item catalog.
+CREATE TABLE equipment (
   item_id     INTEGER PRIMARY KEY REFERENCES items(id),
+  category    TEXT NOT NULL,
   prime       INTEGER NOT NULL,
   counterpart TEXT,
   wiki_url    TEXT,
   -- JSON array of plain-text paragraphs from the wiki.
   acquisition TEXT
+);
+
+-- Weapon and companion parts, by name (a Warframe's are always its four blueprints).
+CREATE TABLE parts (
+  owner_id INTEGER NOT NULL REFERENCES items(id),
+  part     TEXT NOT NULL,
+  position INTEGER NOT NULL,
+  PRIMARY KEY (owner_id, part)
 );
 
 -- Item names in other languages, only where they differ from English.

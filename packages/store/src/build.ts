@@ -3,7 +3,7 @@
 
 import { rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
-import type { DropData, WarframeEntry } from "@iaframe/core";
+import type { CatalogEntry, DropData } from "@iaframe/core";
 import type { ItemNames } from "./names.ts";
 import { SCHEMA, SCHEMA_VERSION } from "./schema.ts";
 
@@ -12,7 +12,7 @@ export function buildDatabase(
   path: string,
   data: DropData,
   meta: Record<string, string>,
-  warframes: WarframeEntry[] = [],
+  catalog: CatalogEntry[] = [],
   names: ItemNames = new Map(),
 ): void {
   rmSync(path, { force: true });
@@ -62,25 +62,35 @@ export function buildDatabase(
     const insertRelic = db.prepare("INSERT INTO relics (item_id, tier, code, vaulted) VALUES (?, ?, ?, ?)");
     for (const r of data.relics) insertRelic.run(idOf(itemIds, r.item), r.tier, r.code, r.vaulted ? 1 : 0);
 
-    const insertWarframe = db.prepare(
-      "INSERT INTO warframes (item_id, prime, counterpart, wiki_url, acquisition) VALUES (?, ?, ?, ?, ?)",
+    const insertEquipment = db.prepare(
+      "INSERT INTO equipment (item_id, category, prime, counterpart, wiki_url, acquisition) VALUES (?, ?, ?, ?, ?, ?)",
     );
-    const setKind = db.prepare("UPDATE items SET kind = 'warframe' WHERE id = ?");
-    for (const w of warframes) {
-      let id = itemIds.get(w.name);
+    const setKind = db.prepare("UPDATE items SET kind = ? WHERE id = ?");
+    const insertPart = db.prepare("INSERT INTO parts (owner_id, part, position) VALUES (?, ?, ?)");
+    const kindOf = db.prepare("SELECT kind FROM items WHERE id = ?");
+    for (const entry of catalog) {
+      let id = itemIds.get(entry.name);
       if (id === undefined) {
-        id = Number(insertItem.run(w.name, "warframe").lastInsertRowid);
-        itemIds.set(w.name, id);
+        id = Number(insertItem.run(entry.name, entry.category).lastInsertRowid);
+        itemIds.set(entry.name, id);
       } else {
-        setKind.run(id);
+        setKind.run(entry.category, id);
       }
-      insertWarframe.run(
+      insertEquipment.run(
         id,
-        w.prime ? 1 : 0,
-        w.counterpart ?? null,
-        w.wikiUrl ?? null,
-        w.acquisition?.length ? JSON.stringify(w.acquisition) : null,
+        entry.category,
+        entry.prime ? 1 : 0,
+        entry.counterpart ?? null,
+        entry.wikiUrl ?? null,
+        entry.acquisition?.length ? JSON.stringify(entry.acquisition) : null,
       );
+      entry.parts?.forEach((part, position) => {
+        insertPart.run(id, part, position);
+        // "War Blade" was a plain "other" until now; Prime parts keep their own kind.
+        const partId = itemIds.get(part);
+        const kind = partId === undefined ? undefined : (kindOf.get(partId) as { kind: string } | undefined)?.kind;
+        if (partId !== undefined && kind !== "prime_part") setKind.run("part", partId);
+      });
     }
 
     const insertName = db.prepare("INSERT INTO names (item_id, lang, name) VALUES (?, ?, ?)");
@@ -96,7 +106,7 @@ export function buildDatabase(
       ...meta,
       schema_version: String(SCHEMA_VERSION),
       items: String(itemIds.size),
-      warframes: String(warframes.length),
+      equipment: String(catalog.length),
       languages: [...names.keys()].sort().join(","),
       drops: String(data.drops.length),
       skipped: String(data.skipped),

@@ -8,6 +8,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  assignWeaponParts,
   buildSearchIndex,
   getDataInfo,
   getDrops,
@@ -18,6 +19,7 @@ import {
   listItems,
   parseDropData,
 } from "@iaframe/core";
+import type { CatalogEntry } from "@iaframe/core";
 import { buildDatabase } from "./build.ts";
 import { openStore, type Store } from "./sqlite.ts";
 import sample from "../../core/src/wfcd/fixtures/sample.json" with { type: "json" };
@@ -28,11 +30,16 @@ let store: Store;
 beforeAll(() => {
   dir = mkdtempSync(join(tmpdir(), "iaframe-queries-"));
   const path = join(dir, "iaframe.db");
-  buildDatabase(path, parseDropData(sample), { drops_hash: "abc", ingested_at: "2026-11-17T12:00:00.000Z" }, [
-    { name: "Gara", prime: false, acquisition: ["Gara's main blueprint is awarded by Saya's Vigil."] },
-    { name: "Khora", prime: false, counterpart: "Khora Prime", wikiUrl: "https://wiki.warframe.com/w/Khora" },
-    { name: "Khora Prime", prime: true, counterpart: "Khora" },
-  ]);
+  const data = parseDropData(sample);
+  const catalog: CatalogEntry[] = [
+    { name: "Gara", category: "warframe", prime: false, acquisition: ["Gara's main blueprint is awarded by Saya's Vigil."] },
+    { name: "Khora", category: "warframe", prime: false, counterpart: "Khora Prime", wikiUrl: "https://wiki.warframe.com/w/Khora" },
+    { name: "Khora Prime", category: "warframe", prime: true, counterpart: "Khora" },
+    { name: "Lex Prime", category: "secondary", prime: true },
+    { name: "War Prime", category: "melee", prime: true, acquisition: ["Crafted from Hunhow's Trinket."] },
+  ];
+  assignWeaponParts(catalog, data.items.map((item) => item.name));
+  buildDatabase(path, data, { drops_hash: "abc", ingested_at: "2026-11-17T12:00:00.000Z" }, catalog);
   store = openStore(path);
 });
 afterAll(() => {
@@ -55,26 +62,41 @@ describe("queries", () => {
   });
 
   it("sums up where each of a Warframe's blueprints comes from", () => {
-    const gara = getItem(store, "Gara")?.warframe;
+    const gara = getItem(store, "Gara")?.equipment;
     expect(gara).toMatchObject({ prime: false, acquisition: ["Gara's main blueprint is awarded by Saya's Vigil."] });
-    expect(gara?.parts.map((p) => [p.slot, p.status])).toEqual([
-      ["blueprint", "none"],
-      ["chassis", "drops"],
-      ["neuroptics", "none"],
-      ["systems", "none"],
+    expect(gara?.parts.map((p) => [p.label, p.status])).toEqual([
+      ["Blueprint", "none"],
+      ["Chassis", "drops"],
+      ["Neuroptics", "none"],
+      ["Systems", "none"],
     ]);
     expect(gara?.parts[1].bestChance).toBeGreaterThan(0);
 
-    const khoraPrime = getItem(store, "Khora Prime")?.warframe;
+    const khoraPrime = getItem(store, "Khora Prime")?.equipment;
     expect(khoraPrime).toMatchObject({ prime: true, counterpart: "Khora" });
     expect(khoraPrime?.parts[1]).toEqual({
       name: "Khora Prime Chassis Blueprint",
-      slot: "chassis",
+      label: "Chassis",
       status: "vaulted",
       relics: 1,
       openRelics: 0,
     });
-    expect(getItem(store, "Serration")?.warframe).toBeUndefined();
+    expect(getItem(store, "Serration")?.equipment).toBeUndefined();
+  });
+
+  it("lists a weapon's parts found in the drop tables", () => {
+    expect(getItem(store, "Lex Prime")).toMatchObject({
+      kind: "secondary",
+      equipment: { category: "secondary", prime: true, parts: [{ name: "Lex Prime Barrel", label: "Barrel" }] },
+    });
+    expect(getItem(store, "War Prime")?.equipment).toEqual({
+      category: "melee",
+      prime: true,
+      parts: [],
+      acquisition: ["Crafted from Hunhow's Trinket."],
+    });
+    const index = buildSearchIndex(listItems(store));
+    expect(index.search("war prime", 1, ["melee"])[0]).toMatchObject({ name: "War Prime", kind: "melee" });
   });
 
   it("describes a relic item", () => {

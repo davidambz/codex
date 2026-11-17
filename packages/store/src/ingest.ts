@@ -4,7 +4,7 @@
 // Keeps the local database in step with WFCD's drop data:
 //   1. fetch info.json (~100 bytes) and stop if its hash is the one we have;
 //   2. fetch all.json (~7 MB), parse and validate it;
-//   3. fetch the Warframe list and the wiki's acquisition text (optional:
+//   3. fetch the Warframe, weapon and companion catalog and the wiki's acquisition text (optional:
 //      when that fails, the last good list is kept and retried next time);
 //   4. fetch item names in the languages asked for (optional in the same way);
 //   5. build a fresh database next to the live one and rename it over it.
@@ -18,13 +18,14 @@ import {
   validateDropData,
   type ItemLanguage,
   type PreviousCounts,
-  type WarframeEntry,
+  assignWeaponParts,
+  type CatalogEntry,
 } from "@iaframe/core";
 import { buildDatabase } from "./build.ts";
-import { fetchWarframes } from "./catalog.ts";
+import { fetchCatalog } from "./catalog.ts";
 import { SCHEMA_VERSION } from "./schema.ts";
 import { fetchItemNames, type ItemNames } from "./names.ts";
-import { readItemNames, readMeta, readWarframes } from "./sqlite.ts";
+import { readCatalog, readItemNames, readMeta } from "./sqlite.ts";
 
 export const WFCD_INFO_URL = "https://drops.warframestat.us/data/info.json";
 export const WFCD_DATA_URL = "https://drops.warframestat.us/data/all.json";
@@ -52,8 +53,9 @@ export type IngestResult =
       items: number;
       drops: number;
       skipped: number;
-      warframes: number;
-      /** Why the Warframe list couldn't be refreshed (the previous one was kept). */
+      /** Warframes, weapons and companions in the catalog. */
+      equipment: number;
+      /** Why the catalog couldn't be refreshed (the previous one was kept). */
       catalogError?: string;
       /** Why item names couldn't be refreshed (the previous ones were kept). */
       namesError?: string;
@@ -61,7 +63,18 @@ export type IngestResult =
   | { status: "rejected"; hash: string; problems: string[] };
 
 export async function ingest(options: IngestOptions): Promise<IngestResult> {
-  const fetchJson = options.fetchJson ?? defaultFetchJson;
+  // The catalog and the names read some of the same files: fetch each once per run.
+  const fetched = new Map<string, Promise<unknown>>();
+  const fetchUncached = options.fetchJson ?? defaultFetchJson;
+  const fetchJson: FetchJson = (url) => {
+    let result = fetched.get(url);
+    if (!result) {
+      result = fetchUncached(url);
+      fetched.set(url, result);
+      result.catch(() => fetched.delete(url));
+    }
+    return result;
+  };
   const now = options.now ?? (() => new Date());
 
   const info = (await fetchJson(WFCD_INFO_URL)) as { hash?: unknown; modified?: unknown } | null;
@@ -86,14 +99,17 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
   const problems = validateDropData(data, previous);
   if (problems.length > 0) return { status: "rejected", hash, problems };
 
-  let warframes: WarframeEntry[];
+  const dropItems = data.items.map((item) => item.name);
+  let catalog: CatalogEntry[];
   let catalogAt = now().toISOString();
   let catalogError: string | undefined;
   try {
-    warframes = await fetchWarframes(fetchJson);
+    catalog = await fetchCatalog(fetchJson, dropItems);
   } catch (error) {
     catalogError = error instanceof Error ? error.message : String(error);
-    warframes = sameSchema ? readWarframes(options.dbPath) : [];
+    catalog = sameSchema ? readCatalog(options.dbPath) : [];
+    // Parts are matched against this run's drop tables, not the old ones.
+    assignWeaponParts(catalog, dropItems);
     catalogAt = "";
   }
 
@@ -101,7 +117,7 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
   let namesAt = now().toISOString();
   let namesError: string | undefined;
   try {
-    const items = [...data.items.map((item) => item.name), ...warframes.map((frame) => frame.name)];
+    const items = [...dropItems, ...catalog.map((entry) => entry.name)];
     names = await fetchItemNames(fetchJson, items, languages);
   } catch (error) {
     namesError = error instanceof Error ? error.message : String(error);
@@ -119,7 +135,7 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
       ingested_at: now().toISOString(),
       catalog_at: catalogAt,
       names_at: namesAt,
-    }, warframes, names);
+    }, catalog, names);
     options.beforeSwap?.();
     renameSync(tmpPath, options.dbPath);
   } finally {
@@ -131,7 +147,7 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
     items: data.items.length,
     drops: data.drops.length,
     skipped: data.skipped,
-    warframes: warframes.length,
+    equipment: catalog.length,
   };
   if (catalogError) result.catalogError = catalogError;
   if (namesError) result.namesError = namesError;

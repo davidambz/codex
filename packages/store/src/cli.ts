@@ -27,11 +27,11 @@ switch (result.status) {
     break;
   case "updated":
     console.log(
-      `Built ${dbPath} in ${seconds}s: ${result.items} items, ${result.drops} drops, ${result.warframes} Warframes` +
+      `Built ${dbPath} in ${seconds}s: ${result.items} items, ${result.drops} drops, ${result.equipment} Warframes, weapons and companions` +
         (result.skipped ? `, ${result.skipped} rows without a chance skipped` : ""),
     );
     if (result.namesError) console.warn(`Item names not refreshed (kept the previous ones): ${result.namesError}`);
-    if (result.catalogError) console.warn(`Warframe list not refreshed (kept the previous one): ${result.catalogError}`);
+    if (result.catalogError) console.warn(`Catalog not refreshed (kept the previous one): ${result.catalogError}`);
     break;
   case "rejected":
     console.error(`WFCD data ${result.hash} rejected, database left as it was:`);

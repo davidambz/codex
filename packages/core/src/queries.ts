@@ -8,7 +8,7 @@ import type { Db } from "./db.ts";
 import type { ItemKind, Refinement, RelicTier, Rotation, Source, SourceKind } from "./types.ts";
 import { REFINEMENTS } from "./types.ts";
 import type { SearchEntry } from "./search/index.ts";
-import { warframeParts } from "./catalog/warframes.ts";
+import { partLabel, warframeParts, type EquipmentCategory } from "./catalog/equipment.ts";
 import type { ItemLanguage } from "./catalog/names.ts";
 
 export interface RelicInfo {
@@ -27,8 +27,8 @@ export interface ItemDetails {
    * (undefined) for items that don't come from relics.
    */
   vaulted?: boolean;
-  /** When the item is a Warframe. */
-  warframe?: WarframeSheet;
+  /** When the item is a Warframe, weapon or companion. */
+  equipment?: EquipmentSheet;
 }
 
 /**
@@ -40,11 +40,11 @@ export interface ItemDetails {
  */
 export type PartStatus = "drops" | "relics" | "vaulted" | "none";
 
-export interface WarframePart {
-  /** "Nezha Prime Chassis Blueprint". */
+export interface EquipmentPart {
+  /** "Nezha Prime Chassis Blueprint", "Soma Prime Barrel". */
   name: string;
-  /** Which of the four it is. */
-  slot: "blueprint" | "chassis" | "neuroptics" | "systems";
+  /** Which piece it is, in English: "Blueprint" (the main one), "Chassis", "Barrel"... */
+  label: string;
   status: PartStatus;
   /** Best chance per attempt among its direct drops, for "drops". */
   bestChance?: number;
@@ -53,11 +53,14 @@ export interface WarframePart {
   openRelics?: number;
 }
 
-export interface WarframeSheet {
+/** A Warframe, weapon or companion: its parts and how to get it. */
+export interface EquipmentSheet {
+  category: EquipmentCategory;
   prime: boolean;
   /** "Nezha Prime" for "Nezha" and the other way round, when both exist. */
   counterpart?: string;
-  parts: WarframePart[];
+  /** Warframes always list their four blueprints; others, the parts the drop tables name. */
+  parts: EquipmentPart[];
   wikiUrl?: string;
   /** How to get it, from the Warframe Wiki (English, CC BY-SA). */
   acquisition?: string[];
@@ -203,30 +206,43 @@ export function getItem(db: Db, name: string): ItemDetails | undefined {
     name,
   );
   if (routes && routes.relics > 0) details.vaulted = routes.open === 0 && routes.direct === 0;
-  if (row.kind === "warframe") details.warframe = getWarframeSheet(db, row.name);
+  const equipment = getEquipmentSheet(db, row.name);
+  if (equipment) details.equipment = equipment;
   return details;
 }
 
-const PART_SLOTS = ["blueprint", "chassis", "neuroptics", "systems"] as const;
+const WARFRAME_LABELS = ["Blueprint", "Chassis", "Neuroptics", "Systems"];
 
-function getWarframeSheet(db: Db, name: string): WarframeSheet | undefined {
-  const row = db.get<{ prime: number; counterpart: string | null; wiki_url: string | null; acquisition: string | null }>(
-    `SELECT w.prime, w.counterpart, w.wiki_url, w.acquisition
-     FROM warframes w JOIN items i ON i.id = w.item_id WHERE i.name = ?`,
+function getEquipmentSheet(db: Db, name: string): EquipmentSheet | undefined {
+  const row = db.get<{
+    category: EquipmentCategory;
+    prime: number;
+    counterpart: string | null;
+    wiki_url: string | null;
+    acquisition: string | null;
+  }>(
+    `SELECT e.category, e.prime, e.counterpart, e.wiki_url, e.acquisition
+     FROM equipment e JOIN items i ON i.id = e.item_id WHERE i.name = ?`,
     name,
   );
   if (!row) return undefined;
-  const sheet: WarframeSheet = {
-    prime: row.prime === 1,
-    parts: warframeParts(name).map((part, i) => partOf(db, part, PART_SLOTS[i])),
-  };
+  const parts =
+    row.category === "warframe"
+      ? warframeParts(name).map((part, i) => partOf(db, part, WARFRAME_LABELS[i]))
+      : db
+          .all<{ part: string }>(
+            `SELECT p.part FROM parts p JOIN items i ON i.id = p.owner_id WHERE i.name = ? ORDER BY p.position`,
+            name,
+          )
+          .map(({ part }) => partOf(db, part, partLabel(name, part) ?? part));
+  const sheet: EquipmentSheet = { category: row.category, prime: row.prime === 1, parts };
   if (row.counterpart) sheet.counterpart = row.counterpart;
   if (row.wiki_url) sheet.wikiUrl = row.wiki_url;
   if (row.acquisition) sheet.acquisition = JSON.parse(row.acquisition) as string[];
   return sheet;
 }
 
-function partOf(db: Db, name: string, slot: WarframePart["slot"]): WarframePart {
+function partOf(db: Db, name: string, label: string): EquipmentPart {
   const r = db.get<{ relics: number; open: number; direct: number; best: number | null }>(
     `SELECT
        COUNT(DISTINCT CASE WHEN s.kind = 'relic' THEN s.id END) AS relics,
@@ -241,7 +257,7 @@ function partOf(db: Db, name: string, slot: WarframePart["slot"]): WarframePart 
      WHERE i.name = ?`,
     name,
   );
-  const part: WarframePart = { name, slot, status: "none" };
+  const part: EquipmentPart = { name, label, status: "none" };
   if (!r) return part;
   if (r.direct > 0) {
     part.status = "drops";
