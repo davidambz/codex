@@ -6,3 +6,7 @@ export { parseDropData, type RawDropData } from "./wfcd/parse.ts";
 export { kindFromName, parseRelicName, splitQuantity } from "./wfcd/names.ts";
 export { validateDropData, ANCHORS, type PreviousCounts } from "./wfcd/validate.ts";
 export type { Db, SqlValue } from "./db.ts";
+export { buildSearchIndex, tokenize, type SearchEntry, type SearchHit, type SearchIndex } from "./search/index.ts";
+export { SYNONYMS } from "./search/synonyms.ts";
+export { expectedRuns, runsForConfidence } from "./odds.ts";
+export * from "./queries.ts";
