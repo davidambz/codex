@@ -95,6 +95,6 @@
 }
 
 .reward[data-rarity="rare"] {
-  border-left-color: var(--color-accent);
+  border-left-color: #d9a93f;
   color: var(--color-text);
 }

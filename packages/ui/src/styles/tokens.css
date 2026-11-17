@@ -1,9 +1,9 @@
 /*
   Design tokens: the single source of truth for color, spacing, radius
   and type. Same "Instrument Panel" world and block structure as Umbra's
-  settings-ui and Relay, with IAFrame's own accent: Orokin gold, the
-  colour of Prime gear and Void relics, instead of Umbra's violet or
-  Relay's teal, over a slightly warmer steel.
+  settings-ui and Relay, with IAFrame's own colours: cyan and white
+  over a cool blue-black, the palette of the Warframe community tools
+  the owner likes.
 
   Theme resolution: the Platform adapter reports the OS theme and
   useSystemTheme sets data-theme="dark"/"light" on <html>. Until then, or
@@ -50,26 +50,26 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* ---- Dark (primary scene): blackened steel, one gold lamp. ---- */
+/* ---- Dark (primary scene): blue-black steel, one cyan lamp. ---- */
 :root {
-  --color-bg: #141210;
-  --color-surface: #1c1a17;
-  --color-surface-raised: #25221e;
-  --color-surface-sunken: #0d0c0a;
-  --color-border: #34302a;
-  --color-border-strong: #4b453c;
-  --color-bevel-light: rgba(255, 244, 222, 0.06);
+  --color-bg: #0d1115;
+  --color-surface: #131920;
+  --color-surface-raised: #1a222a;
+  --color-surface-sunken: #080b0e;
+  --color-border: #25303a;
+  --color-border-strong: #36444f;
+  --color-bevel-light: rgba(222, 244, 255, 0.06);
 
-  --color-text: #f2eee7;
-  --color-text-secondary: #aca496;
-  --color-text-tertiary: #7a7265;
+  --color-text: #f3f7fa;
+  --color-text-secondary: #a2b0bb;
+  --color-text-tertiary: #6c7b87;
 
-  --color-accent: #e6b450;
-  --color-accent-hover: #f0c66e;
-  --color-accent-active: #cc9a36;
-  --color-accent-contrast: #1f1503;
-  --color-accent-subtle: #2e2412;
-  --color-accent-subtle-border: #7a5d24;
+  --color-accent: #4cc3d6;
+  --color-accent-hover: #72d3e3;
+  --color-accent-active: #33a8bb;
+  --color-accent-contrast: #03161a;
+  --color-accent-subtle: #0f2830;
+  --color-accent-subtle-border: #25697a;
 
   --color-danger: #ff7b6e;
   --color-danger-subtle: #361814;
@@ -78,79 +78,79 @@
     0 10px 24px -10px rgba(0, 0, 0, 0.65);
   --shadow-raised: 0 1px 0 var(--color-bevel-light) inset, 0 4px 12px rgba(0, 0, 0, 0.45),
     0 20px 44px -14px rgba(0, 0, 0, 0.7);
-  --shadow-glow: 0 0 0 1px rgba(230, 180, 80, 0.4), 0 0 22px -2px rgba(230, 180, 80, 0.45);
+  --shadow-glow: 0 0 0 1px rgba(76, 195, 214, 0.4), 0 0 22px -2px rgba(76, 195, 214, 0.45);
   --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.55), inset 0 -1px 0 var(--color-bevel-light);
 
-  --visor-bg: #110d05;
-  --visor-text: #ffc95e;
-  --visor-dim: #8a6a2c;
+  --visor-bg: #05121a;
+  --visor-text: #6fe2f2;
+  --visor-dim: #2e7d8b;
 
-  --overlay-scrim: rgba(6, 5, 4, 0.6);
+  --overlay-scrim: rgba(4, 6, 8, 0.6);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    /* Daylight: brushed aluminum. Same gold hue, darkened so it clears
+    /* Daylight: brushed aluminum. Same cyan hue, darkened so it clears
        4.5:1 as text and 3:1 as a component edge on the light chassis. */
-    --color-bg: #e9e6e1;
-    --color-surface: #f5f3ef;
+    --color-bg: #e5eaee;
+    --color-surface: #f3f6f8;
     --color-surface-raised: #ffffff;
-    --color-surface-sunken: #dbd6ce;
-    --color-border: #cbc4b8;
-    --color-border-strong: #a69d8e;
+    --color-surface-sunken: #d4dce2;
+    --color-border: #c2ccd4;
+    --color-border-strong: #98a7b3;
     --color-bevel-light: rgba(255, 255, 255, 0.75);
 
-    --color-text: #1b1814;
-    --color-text-secondary: #4f483d;
-    --color-text-tertiary: #746b5d;
+    --color-text: #0f171d;
+    --color-text-secondary: #3d4b56;
+    --color-text-tertiary: #5e6d79;
 
-    --color-accent: #8a5a00;
-    --color-accent-hover: #774d00;
-    --color-accent-active: #643f00;
+    --color-accent: #006b7d;
+    --color-accent-hover: #005a69;
+    --color-accent-active: #004955;
     --color-accent-contrast: #ffffff;
-    --color-accent-subtle: #f4e7cc;
-    --color-accent-subtle-border: #c9a660;
+    --color-accent-subtle: #d6edf1;
+    --color-accent-subtle-border: #6aaebb;
 
     --color-danger: #b0302a;
     --color-danger-subtle: #fae3e0;
 
-    --shadow-card: 0 1px 0 var(--color-bevel-light) inset, 0 1px 2px rgba(40, 30, 15, 0.06),
-      0 8px 20px -10px rgba(40, 30, 15, 0.18);
-    --shadow-raised: 0 1px 0 var(--color-bevel-light) inset, 0 4px 12px rgba(40, 30, 15, 0.1),
-      0 20px 40px -16px rgba(40, 30, 15, 0.22);
-    --shadow-glow: 0 0 0 1px rgba(138, 90, 0, 0.3), 0 0 18px -3px rgba(138, 90, 0, 0.35);
-    --shadow-inset: inset 0 1px 3px rgba(40, 30, 15, 0.12), inset 0 -1px 0 var(--color-bevel-light);
+    --shadow-card: 0 1px 0 var(--color-bevel-light) inset, 0 1px 2px rgba(15, 30, 40, 0.06),
+      0 8px 20px -10px rgba(15, 30, 40, 0.18);
+    --shadow-raised: 0 1px 0 var(--color-bevel-light) inset, 0 4px 12px rgba(15, 30, 40, 0.1),
+      0 20px 40px -16px rgba(15, 30, 40, 0.22);
+    --shadow-glow: 0 0 0 1px rgba(0, 107, 125, 0.3), 0 0 18px -3px rgba(0, 107, 125, 0.35);
+    --shadow-inset: inset 0 1px 3px rgba(15, 30, 40, 0.12), inset 0 -1px 0 var(--color-bevel-light);
 
     /* Chance readouts stay a dark, lit display in both themes, the way an
        equipment readout doesn't turn white in daylight. */
-    --visor-bg: #17120a;
-    --visor-text: #ffc95e;
-    --visor-dim: #8a6a2c;
+    --visor-bg: #07131a;
+    --visor-text: #6fe2f2;
+    --visor-dim: #2e7d8b;
 
-    --overlay-scrim: rgba(27, 24, 20, 0.4);
+    --overlay-scrim: rgba(15, 23, 29, 0.4);
   }
 }
 
 /* An explicit theme from the platform always wins over the media query. */
 :root[data-theme="dark"] {
-  --color-bg: #141210;
-  --color-surface: #1c1a17;
-  --color-surface-raised: #25221e;
-  --color-surface-sunken: #0d0c0a;
-  --color-border: #34302a;
-  --color-border-strong: #4b453c;
-  --color-bevel-light: rgba(255, 244, 222, 0.06);
+  --color-bg: #0d1115;
+  --color-surface: #131920;
+  --color-surface-raised: #1a222a;
+  --color-surface-sunken: #080b0e;
+  --color-border: #25303a;
+  --color-border-strong: #36444f;
+  --color-bevel-light: rgba(222, 244, 255, 0.06);
 
-  --color-text: #f2eee7;
-  --color-text-secondary: #aca496;
-  --color-text-tertiary: #7a7265;
+  --color-text: #f3f7fa;
+  --color-text-secondary: #a2b0bb;
+  --color-text-tertiary: #6c7b87;
 
-  --color-accent: #e6b450;
-  --color-accent-hover: #f0c66e;
-  --color-accent-active: #cc9a36;
-  --color-accent-contrast: #1f1503;
-  --color-accent-subtle: #2e2412;
-  --color-accent-subtle-border: #7a5d24;
+  --color-accent: #4cc3d6;
+  --color-accent-hover: #72d3e3;
+  --color-accent-active: #33a8bb;
+  --color-accent-contrast: #03161a;
+  --color-accent-subtle: #0f2830;
+  --color-accent-subtle-border: #25697a;
 
   --color-danger: #ff7b6e;
   --color-danger-subtle: #361814;
@@ -159,51 +159,51 @@
     0 10px 24px -10px rgba(0, 0, 0, 0.65);
   --shadow-raised: 0 1px 0 var(--color-bevel-light) inset, 0 4px 12px rgba(0, 0, 0, 0.45),
     0 20px 44px -14px rgba(0, 0, 0, 0.7);
-  --shadow-glow: 0 0 0 1px rgba(230, 180, 80, 0.4), 0 0 22px -2px rgba(230, 180, 80, 0.45);
+  --shadow-glow: 0 0 0 1px rgba(76, 195, 214, 0.4), 0 0 22px -2px rgba(76, 195, 214, 0.45);
   --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.55), inset 0 -1px 0 var(--color-bevel-light);
 
-  --visor-bg: #110d05;
-  --visor-text: #ffc95e;
-  --visor-dim: #8a6a2c;
+  --visor-bg: #05121a;
+  --visor-text: #6fe2f2;
+  --visor-dim: #2e7d8b;
 
-  --overlay-scrim: rgba(6, 5, 4, 0.6);
+  --overlay-scrim: rgba(4, 6, 8, 0.6);
 }
 
 :root[data-theme="light"] {
-  --color-bg: #e9e6e1;
-  --color-surface: #f5f3ef;
+  --color-bg: #e5eaee;
+  --color-surface: #f3f6f8;
   --color-surface-raised: #ffffff;
-  --color-surface-sunken: #dbd6ce;
-  --color-border: #cbc4b8;
-  --color-border-strong: #a69d8e;
+  --color-surface-sunken: #d4dce2;
+  --color-border: #c2ccd4;
+  --color-border-strong: #98a7b3;
   --color-bevel-light: rgba(255, 255, 255, 0.75);
 
-  --color-text: #1b1814;
-  --color-text-secondary: #4f483d;
-  --color-text-tertiary: #746b5d;
+  --color-text: #0f171d;
+  --color-text-secondary: #3d4b56;
+  --color-text-tertiary: #5e6d79;
 
-  --color-accent: #8a5a00;
-  --color-accent-hover: #774d00;
-  --color-accent-active: #643f00;
+  --color-accent: #006b7d;
+  --color-accent-hover: #005a69;
+  --color-accent-active: #004955;
   --color-accent-contrast: #ffffff;
-  --color-accent-subtle: #f4e7cc;
-  --color-accent-subtle-border: #c9a660;
+  --color-accent-subtle: #d6edf1;
+  --color-accent-subtle-border: #6aaebb;
 
   --color-danger: #b0302a;
   --color-danger-subtle: #fae3e0;
 
-  --shadow-card: 0 1px 0 var(--color-bevel-light) inset, 0 1px 2px rgba(40, 30, 15, 0.06),
-    0 8px 20px -10px rgba(40, 30, 15, 0.18);
-  --shadow-raised: 0 1px 0 var(--color-bevel-light) inset, 0 4px 12px rgba(40, 30, 15, 0.1),
-    0 20px 40px -16px rgba(40, 30, 15, 0.22);
-  --shadow-glow: 0 0 0 1px rgba(138, 90, 0, 0.3), 0 0 18px -3px rgba(138, 90, 0, 0.35);
-  --shadow-inset: inset 0 1px 3px rgba(40, 30, 15, 0.12), inset 0 -1px 0 var(--color-bevel-light);
+  --shadow-card: 0 1px 0 var(--color-bevel-light) inset, 0 1px 2px rgba(15, 30, 40, 0.06),
+    0 8px 20px -10px rgba(15, 30, 40, 0.18);
+  --shadow-raised: 0 1px 0 var(--color-bevel-light) inset, 0 4px 12px rgba(15, 30, 40, 0.1),
+    0 20px 40px -16px rgba(15, 30, 40, 0.22);
+  --shadow-glow: 0 0 0 1px rgba(0, 107, 125, 0.3), 0 0 18px -3px rgba(0, 107, 125, 0.35);
+  --shadow-inset: inset 0 1px 3px rgba(15, 30, 40, 0.12), inset 0 -1px 0 var(--color-bevel-light);
 
   /* Chance readouts stay a dark, lit display in both themes, the way an
      equipment readout doesn't turn white in daylight. */
-  --visor-bg: #17120a;
-  --visor-text: #ffc95e;
-  --visor-dim: #8a6a2c;
+  --visor-bg: #07131a;
+  --visor-text: #6fe2f2;
+  --visor-dim: #2e7d8b;
 
-  --overlay-scrim: rgba(27, 24, 20, 0.4);
+  --overlay-scrim: rgba(15, 23, 29, 0.4);
 }
