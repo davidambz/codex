@@ -56,3 +56,38 @@
   opacity: 0.6;
   cursor: default;
 }
+
+.version {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.error {
+  color: var(--color-danger);
+  line-height: 1.6;
+}
+
+/* Checking is the quiet action; installing (.update) is the loud one. */
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

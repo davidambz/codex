@@ -47,6 +47,17 @@ export interface Strings {
     dataTitle: string;
     dataBody: string;
   };
+  updates: {
+    title: string;
+    currentVersion: (version: string) => string;
+    check: string;
+    checking: string;
+    upToDate: string;
+    available: (version: string) => string;
+    updateNow: string;
+    installing: (version: string) => string;
+    failed: string;
+  };
   app: {
     search: string;
     searchPlaceholder: string;

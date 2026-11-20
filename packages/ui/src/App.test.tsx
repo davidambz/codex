@@ -206,6 +206,35 @@ describe("App", () => {
     expect(screen.getByText("In English: Arcane Momentum")).toBeInTheDocument();
   });
 
+  it("shows the version, and offers updates only where the app can install them", async () => {
+    renderApp();
+    await userEvent.click(await screen.findByRole("button", { name: "Settings" }));
+    expect(screen.getByText("Codex 0.0.0")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Check for updates" })).not.toBeInTheDocument();
+  });
+
+  it("installs an available update from Settings", async () => {
+    const apply = vi.fn(async () => {});
+    const check = vi.fn(async () => {});
+    renderApp(
+      fakePlatform({
+        appVersion: "0.1.0",
+        updates: {
+          getStatus: async () => ({ state: "available", latestVersion: "0.2.0" }),
+          check,
+          apply,
+          onStatus: () => () => {},
+        },
+      }),
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Settings" }));
+    expect(screen.getByText("Codex 0.1.0")).toBeInTheDocument();
+    expect(await screen.findByText("Version 0.2.0 is available.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Update now" }));
+    expect(apply).toHaveBeenCalledOnce();
+    expect(check).not.toHaveBeenCalled();
+  });
+
   it("shows relic names translated where they appear", async () => {
     renderApp(fakePlatform({ settings: { itemLanguage: "pt", searchLanguages: [] } }));
     await open("alternox", /^Alternox/i);
