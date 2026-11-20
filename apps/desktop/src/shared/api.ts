@@ -13,6 +13,7 @@ import type {
   Settings,
   SourceDetails,
   Theme,
+  UpdateStatus,
 } from "@codex/core";
 
 export const IPC = {
@@ -31,6 +32,10 @@ export const IPC = {
   getItemNames: "data:item-names",
   listEquipment: "data:equipment",
   listRelics: "data:relics",
+  updateGetStatus: "update:get-status",
+  updateCheck: "update:check",
+  updateApply: "update:apply",
+  updateStatus: "update:status",
 } as const;
 
 /** Pictures are served under this scheme: codex-img://img/SomaPrime.png. */
@@ -39,6 +44,12 @@ export const IMAGE_SCHEME = "codex-img";
 /** What the preload exposes as window.codex. */
 export interface CodexDesktopApi {
   appVersion: string;
+  /** Installed through Inno Setup (not a dev run): self-update is possible. */
+  packaged: boolean;
+  updateGetStatus(): Promise<UpdateStatus>;
+  updateCheck(): Promise<void>;
+  updateApply(): Promise<void>;
+  onUpdateStatus(listener: (status: UpdateStatus) => void): () => void;
   search(query: string, limit?: number, kinds?: readonly ItemKind[]): Promise<SearchHit[]>;
   getItem(name: string): Promise<ItemDetails | undefined>;
   getDropsDeep(name: string): Promise<DeepDrops>;

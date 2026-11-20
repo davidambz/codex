@@ -15,6 +15,7 @@ import {
 } from "@codex/core";
 import { createDataService, createImageCache, type DataService } from "@codex/store";
 import { IMAGE_SCHEME, IPC } from "../shared/api";
+import { applyUpdate, checkForUpdate, getUpdateStatus, installOnQuit, scheduleUpdateChecks } from "./updater";
 
 protocol.registerSchemesAsPrivileged([{ scheme: IMAGE_SCHEME, privileges: { standard: true, secure: true } }]);
 
@@ -59,21 +60,26 @@ function broadcast(channel: string, value: unknown) {
   for (const window of BrowserWindow.getAllWindows()) window.webContents.send(channel, value);
 }
 
-/** The app was called IAFrame until 2026-11-20: keep the user's settings from that folder. */
-function carryOverSettings(settingsPath: string) {
-  const old = path.join(app.getPath("appData"), "IAFrame", "settings.json");
-  if (fs.existsSync(settingsPath) || !fs.existsSync(old)) return;
-  try {
-    fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-    fs.copyFileSync(old, settingsPath);
-  } catch {
-    // Defaults it is.
+/**
+ * The app was called IAFrame until 2026-11-20: keep the user's settings
+ * and picture cache from that folder. The database rebuilds on its own.
+ */
+function carryOverFromIAFrame() {
+  const oldDir = path.join(app.getPath("appData"), "IAFrame");
+  for (const name of ["settings.json", "images"]) {
+    const from = path.join(oldDir, name);
+    const to = path.join(app.getPath("userData"), name);
+    if (fs.existsSync(to) || !fs.existsSync(from)) continue;
+    try {
+      fs.cpSync(from, to, { recursive: true });
+    } catch {
+      // Defaults, or pictures fetched again, it is.
+    }
   }
 }
 
 function startData(): DataService {
   const settingsPath = path.join(app.getPath("userData"), "settings.json");
-  carryOverSettings(settingsPath);
   const service = createDataService({
     dbPath: path.join(app.getPath("userData"), "codex.db"),
     settingsPath,
@@ -124,6 +130,11 @@ function registerIpc(service: DataService) {
   ipcMain.handle(IPC.updateData, () => service.update(true));
   ipcMain.handle(IPC.listEquipment, () => service.listEquipment());
   ipcMain.handle(IPC.listRelics, () => service.listRelics());
+  ipcMain.handle(IPC.updateGetStatus, () => getUpdateStatus());
+  ipcMain.handle(IPC.updateCheck, async () => {
+    await checkForUpdate();
+  });
+  ipcMain.handle(IPC.updateApply, () => applyUpdate());
   ipcMain.handle(IPC.getTheme, () => currentTheme());
   ipcMain.handle(IPC.getLocale, () => app.getPreferredSystemLanguages()[0] ?? app.getLocale());
 
@@ -160,7 +171,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      additionalArguments: [`--codex-version=${app.getVersion()}`],
+      additionalArguments: [`--codex-version=${app.getVersion()}`, `--codex-packaged=${app.isPackaged ? 1 : 0}`],
     },
   });
   mainWindow = window;
@@ -239,11 +250,16 @@ function scheduleDevCapture(window: BrowserWindow, pngPath: string, script?: str
 
 void app.whenReady().then(() => {
   denyPermissions();
+  carryOverFromIAFrame();
   serveImages();
   data = startData();
   registerIpc(data);
   createWindow();
+  scheduleUpdateChecks();
 });
 
 app.on("window-all-closed", () => app.quit());
-app.on("will-quit", () => data?.close());
+app.on("will-quit", () => {
+  data?.close();
+  installOnQuit();
+});

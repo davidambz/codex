@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
-import type { DataStatus, Theme } from "@codex/core";
+import type { DataStatus, Theme, UpdateStatus } from "@codex/core";
 import { IPC, type CodexDesktopApi } from "./shared/api";
 
 function argValue(name: string): string | undefined {
@@ -18,6 +18,11 @@ function subscribe<T>(channel: string, listener: (value: T) => void): () => void
 
 const api: CodexDesktopApi = {
   appVersion: argValue("version") ?? "0.0.0",
+  packaged: argValue("packaged") === "1",
+  updateGetStatus: () => ipcRenderer.invoke(IPC.updateGetStatus),
+  updateCheck: () => ipcRenderer.invoke(IPC.updateCheck),
+  updateApply: () => ipcRenderer.invoke(IPC.updateApply),
+  onUpdateStatus: (listener) => subscribe<UpdateStatus>(IPC.updateStatus, listener),
   search: (query, limit, kinds) => ipcRenderer.invoke(IPC.search, query, limit, kinds ? [...kinds] : undefined),
   getItem: (name) => ipcRenderer.invoke(IPC.getItem, name),
   getDropsDeep: (name) => ipcRenderer.invoke(IPC.getDropsDeep, name),
