@@ -9,7 +9,8 @@ const CSP = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  // codex-img: is the picture cache main.ts serves (IMAGE_SCHEME in src/shared/api.ts).
+  "img-src 'self' data: codex-img:",
   "connect-src 'none'",
   "object-src 'none'",
   "base-uri 'none'",
