@@ -140,6 +140,8 @@ export const ptBR: Strings = {
   item: {
     craftingLabel: "Para fabricar",
     craftingHint: "O que a Fundição pede para montar esta peça a partir do blueprint.",
+    locationLabel: "Onde encontrar",
+    locationHint: "Pela descrição do próprio jogo, em inglês. O jogo não publica a chance por planeta; as chances exatas que existem estão em Drops.",
     vaulted: "Vaultado",
     obtainable: "Farmável",
     relicsLabel: "Relíquias",

@@ -254,6 +254,16 @@ describe("App", () => {
     expect(screen.queryByText(/No drop table lists this item/)).not.toBeInTheDocument();
   });
 
+  it("opens a resource on where the game says it's found", async () => {
+    renderApp();
+    await open("nezha", /^Nezha(?! Prime| Chassis)/);
+    await userEvent.click(await screen.findByRole("button", { name: "Orokin Cell" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Orokin Cell" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Where to find it" })).toBeInTheDocument();
+    expect(screen.getByText("Ceres, Saturn, and Deimos")).toBeInTheDocument();
+    expect(screen.queryByText(/No drop table lists this item/)).not.toBeInTheDocument();
+  });
+
   it("starts on the Foundry and remembers the section", async () => {
     localStorage.clear();
     renderApp();

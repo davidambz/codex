@@ -158,6 +158,14 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
         )}
       </header>
 
+      {item.location && (
+        <section className={styles.section}>
+          <h2 className="label">{t.item.locationLabel}</h2>
+          <p className={styles.location}>{item.location}</p>
+          <p className={styles.hint}>{t.item.locationHint}</p>
+        </section>
+      )}
+
       {!item.relic && (bet.direct || bet.relic) && (
         <BestBetPanel bet={bet} openItem={openItem} openSource={openSource} />
       )}
@@ -284,7 +292,7 @@ export function ItemView({ name, dataVersion, openItem, openSource }: ItemViewPr
         </section>
       )}
 
-      {!item.equipment && !item.crafting && deep.relics.length === 0 && deep.direct.length === 0 && (
+      {!item.equipment && !item.crafting && !item.location && deep.relics.length === 0 && deep.direct.length === 0 && (
         <p className={styles.note}>{t.item.noDrops}</p>
       )}
     </article>

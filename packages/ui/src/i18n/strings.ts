@@ -84,6 +84,9 @@ export interface Strings {
     /** Above a part's own recipe. */
     craftingLabel: string;
     craftingHint: string;
+    /** Above where the game says a resource is found. */
+    locationLabel: string;
+    locationHint: string;
     vaulted: string;
     obtainable: string;
     relicsLabel: string;

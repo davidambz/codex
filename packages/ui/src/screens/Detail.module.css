@@ -424,6 +424,14 @@
   line-height: 1.55;
 }
 
+/* A resource's planets, as the game words them: the answer, so set larger than the hint under it. */
+.location {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  max-width: 72ch;
+}
+
 .prose + .hint a {
   color: var(--color-accent);
 }

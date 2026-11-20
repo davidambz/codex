@@ -138,6 +138,8 @@ export const en: Strings = {
   item: {
     craftingLabel: "To build it",
     craftingHint: "What the Foundry asks to build this part from its blueprint.",
+    locationLabel: "Where to find it",
+    locationHint: "From the game's own description. The game publishes no chance per planet; the exact chances there are, are under Drops.",
     vaulted: "Vaulted",
     obtainable: "Farmable",
     relicsLabel: "Relics",

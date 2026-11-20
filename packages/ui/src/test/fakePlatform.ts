@@ -29,6 +29,7 @@ export const items: Record<string, ItemDetails> = {
   "Axi A21 Relic": { name: "Axi A21 Relic", kind: "relic", relic: { tier: "Axi", code: "A21", vaulted: false } },
   Serration: { name: "Serration", kind: "mod" },
   "Mystery Thing": { name: "Mystery Thing", kind: "other" },
+  "Orokin Cell": { name: "Orokin Cell", kind: "other", location: "Ceres, Saturn, and Deimos" },
   "Arcane Momentum": { name: "Arcane Momentum", kind: "arcane" },
   Nezha: {
     name: "Nezha",
