@@ -1,0 +1,27 @@
+# Only used to produce the unpacked app folder (release/win-unpacked).
+# The installer itself is Inno Setup (installer/codex.iss), same as Relay
+# and Umbra, so there's deliberately no nsis target here.
+appId: com.davidambz.codex
+productName: Codex
+copyright: Copyright (C) 2026 David Ambrozio
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist-electron/**
+  - dist-renderer/**
+  - package.json
+asar: true
+# Electron fuses, flipped in the packaged Codex.exe. Codex never needs
+# Node-mode or debugger switches, and only ever loads its own app.asar,
+# checked against the hash baked into the exe at build time.
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  onlyLoadAppFromAsar: true
+  enableEmbeddedAsarIntegrityValidation: true
+win:
+  target: dir
+  icon: build/icon.ico
+  signAndEditExecutable: true
