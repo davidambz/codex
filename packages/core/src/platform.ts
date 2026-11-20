@@ -51,9 +51,29 @@ export function settingsLanguages(settings: Settings): ItemLanguage[] {
   return [...new Set([settings.itemLanguage, ...settings.searchLanguages])].filter((l) => l !== "en");
 }
 
+export type UpdateStatus =
+  | { state: "idle" }
+  | { state: "checking" }
+  | { state: "up-to-date" }
+  | { state: "available"; latestVersion: string }
+  | { state: "downloading"; latestVersion: string }
+  | { state: "installing"; latestVersion: string }
+  | { state: "failed"; reason: string };
+
+/** Self-update, from GitHub Releases (installed desktop builds only). */
+export interface UpdatesApi {
+  getStatus(): Promise<UpdateStatus>;
+  check(): Promise<void>;
+  /** Downloads and runs the installer; the app restarts. */
+  apply(): Promise<void>;
+  onStatus(listener: (status: UpdateStatus) => void): () => void;
+}
+
 export interface Platform {
   kind: "desktop" | "web";
   appVersion: string;
+  /** Present only where the app can update itself: an installed desktop build. */
+  updates?: UpdatesApi;
   search(query: string, limit?: number, kinds?: readonly ItemKind[]): Promise<SearchHit[]>;
   getItem(name: string): Promise<ItemDetails | undefined>;
   getDropsDeep(name: string): Promise<DeepDrops>;

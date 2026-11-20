@@ -10,7 +10,8 @@ export { buildSearchIndex, tokenize, type SearchEntry, type SearchHit, type Sear
 export { SYNONYMS } from "./search/synonyms.ts";
 export { expectedRuns, runsForConfidence } from "./odds.ts";
 export * from "./queries.ts";
-export type { Platform, Theme, DataStatus, SourceDetails, Settings } from "./platform.ts";
+export type { Platform, Theme, DataStatus, SourceDetails, Settings, UpdateStatus, UpdatesApi } from "./platform.ts";
+export * from "./updates.ts";
 export { sanitizeSettings, settingsLanguages } from "./platform.ts";
 export { resolveSupportedLocale } from "./locale.ts";
 export {
