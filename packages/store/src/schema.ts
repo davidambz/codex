@@ -1,8 +1,8 @@
 // IAFrame — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/** Bumped whenever the tables change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 12;
+/** Bumped whenever the tables or what goes in them change; an older database is rebuilt, not migrated. */
+export const SCHEMA_VERSION = 13;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
