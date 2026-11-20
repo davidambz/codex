@@ -35,6 +35,7 @@ export {
   type Material,
   type PartRecipe,
 } from "./catalog/equipment.ts";
+export { parseResourceLocations, resourceLocation } from "./catalog/resources.ts";
 export { acquisitionNote, extractAcquisition, toPlainText } from "./wiki/wikitext.ts";
 export {
   bestBet,
