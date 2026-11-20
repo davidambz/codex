@@ -13,6 +13,7 @@ export const KIND_GROUPS = {
   mod: ["mod"],
   arcane: ["arcane"],
   relic: ["relic"],
+  resource: ["resource"],
   other: ["blueprint", "ayatan", "credits", "endo", "other"],
 } as const satisfies Record<string, readonly ItemKind[] | undefined>;
 
