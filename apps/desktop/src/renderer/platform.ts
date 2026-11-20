@@ -15,6 +15,16 @@ export function createDesktopPlatform(api: CodexDesktopApi = window.codex): Plat
   return {
     kind: "desktop",
     appVersion: api.appVersion,
+    ...(api.packaged
+      ? {
+          updates: {
+            getStatus: () => api.updateGetStatus(),
+            check: () => api.updateCheck(),
+            apply: () => api.updateApply(),
+            onStatus: (listener) => api.onUpdateStatus(listener),
+          },
+        }
+      : {}),
     search: (query, limit, kinds) => api.search(query, limit, kinds),
     getItem: (name) => api.getItem(name),
     getDropsDeep: (name) => api.getDropsDeep(name),

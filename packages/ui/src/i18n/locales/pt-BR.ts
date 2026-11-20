@@ -53,6 +53,17 @@ export const ptBR: Strings = {
     dataTitle: "Dados de drop",
     dataBody: "As tabelas de drop vêm do WFCD e são conferidas ao abrir o app e a cada 24 horas.",
   },
+  updates: {
+    title: "Atualizações do app",
+    currentVersion: (version) => `Codex ${version}`,
+    check: "Procurar atualizações",
+    checking: "Procurando…",
+    upToDate: "Você está na versão mais recente.",
+    available: (version) => `A versão ${version} está disponível.`,
+    updateNow: "Atualizar agora",
+    installing: (version) => `Instalando a ${version}. O Codex vai reiniciar.`,
+    failed: "Não foi possível procurar atualizações. Tente mais tarde.",
+  },
   app: {
     search: "Buscar itens",
     searchPlaceholder: "Item, relíquia, mod ou recurso: khora p chassi, serration, célula orokin",

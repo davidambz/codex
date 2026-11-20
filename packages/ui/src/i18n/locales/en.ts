@@ -51,6 +51,17 @@ export const en: Strings = {
     dataTitle: "Drop data",
     dataBody: "Drop tables come from WFCD and are checked when the app opens and every 24 hours.",
   },
+  updates: {
+    title: "App updates",
+    currentVersion: (version) => `Codex ${version}`,
+    check: "Check for updates",
+    checking: "Checking…",
+    upToDate: "You're on the latest version.",
+    available: (version) => `Version ${version} is available.`,
+    updateNow: "Update now",
+    installing: (version) => `Installing ${version}. Codex will restart.`,
+    failed: "Couldn't check for updates. Try again later.",
+  },
   app: {
     search: "Search items",
     searchPlaceholder: "Item, relic, mod or resource: khora p chassis, serration, orokin cell",
