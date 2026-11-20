@@ -1,8 +1,8 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Settings } from "@iaframe/core";
+import type { Settings } from "@codex/core";
 import { usePlatform } from "../platform/PlatformContext";
 import { ItemNamesContext, type ItemNames } from "./ItemNamesContext";
 

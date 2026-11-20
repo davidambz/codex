@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // How many attempts a chance takes. Computed here, never by a model.

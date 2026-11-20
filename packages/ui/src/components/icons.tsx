@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { SVGProps } from "react";
@@ -20,8 +20,8 @@ function base(props: IconProps) {
   };
 }
 
-/** IAFrame's mark: a relic's faceted diamond with a lit core. */
-export function IAFrameMark(props: IconProps) {
+/** Codex's mark: a relic's faceted diamond with a lit core. */
+export function CodexMark(props: IconProps) {
   return (
     <svg width={22} height={22} viewBox="0 0 64 64" aria-hidden {...props}>
       <rect width="64" height="64" rx="14" fill="var(--visor-bg)" />

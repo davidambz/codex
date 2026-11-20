@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type {
@@ -10,8 +10,8 @@ import type {
   RelicListEntry,
   Settings,
   SourceDetails,
-} from "@iaframe/core";
-import { firstSentence } from "@iaframe/core";
+} from "@codex/core";
+import { firstSentence } from "@codex/core";
 
 /** Names the fake knows in Portuguese, as the real data would have them. */
 export const names: Partial<Record<ItemLanguage, Record<string, string>>> = {

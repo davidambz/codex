@@ -1,8 +1,8 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useState } from "react";
-import { tokenize, type SourceItemRow } from "@iaframe/core";
+import { tokenize, type SourceItemRow } from "@codex/core";
 import { useI18n } from "../i18n/I18nContext";
 import { useItemNames } from "../names/ItemNamesContext";
 import { usePlatform } from "../platform/PlatformContext";

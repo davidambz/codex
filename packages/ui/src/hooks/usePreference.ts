@@ -1,9 +1,9 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useCallback, useState } from "react";
 
-const PREFIX = "iaframe:";
+const PREFIX = "codex:";
 
 function read<T>(key: string, fallback: T, valid: (value: unknown) => value is T): T {
   try {

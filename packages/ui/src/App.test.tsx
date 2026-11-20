@@ -1,9 +1,9 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { DataStatus, Platform } from "@iaframe/core";
+import type { DataStatus, Platform } from "@codex/core";
 import { App } from "./App";
 import { I18nProvider } from "./i18n/I18nProvider";
 import { PlatformContext } from "./platform/PlatformContext";
@@ -30,7 +30,7 @@ async function open(query: string, name: RegExp) {
 // Most tests are about the drop search; the sections have their own.
 beforeEach(() => {
   localStorage.clear();
-  localStorage.setItem("iaframe:page", JSON.stringify("search"));
+  localStorage.setItem("codex:page", JSON.stringify("search"));
 });
 
 describe("App", () => {
@@ -123,7 +123,7 @@ describe("App", () => {
     expect(screen.getByRole("columnheader", { name: /Chance/ })).toHaveAttribute("aria-sort", "ascending");
     await userEvent.click(screen.getByRole("button", { name: /^Source/ }));
     expect(names()).toEqual(["Hydron", "Void Shade"]);
-    expect(JSON.parse(localStorage.getItem("iaframe:dropSort")!)).toEqual({ key: "source", direction: "asc" });
+    expect(JSON.parse(localStorage.getItem("codex:dropSort")!)).toEqual({ key: "source", direction: "asc" });
   });
 
   it("filters the drop table by planet, rotation, text and hides events", async () => {
@@ -270,11 +270,11 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Foundry" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Foundry" })).toHaveAttribute("aria-current", "page");
     await userEvent.click(screen.getByRole("button", { name: "Relics" }));
-    expect(localStorage.getItem("iaframe:page")).toBe(JSON.stringify("relics"));
+    expect(localStorage.getItem("codex:page")).toBe(JSON.stringify("relics"));
   });
 
   it("shows equipment as cards with their parts, by category and availability", async () => {
-    localStorage.setItem("iaframe:page", JSON.stringify("foundry"));
+    localStorage.setItem("codex:page", JSON.stringify("foundry"));
     renderApp();
     expect(await screen.findByRole("button", { name: "Nezha Prime" })).toBeInTheDocument();
     expect(screen.getByText("4 items")).toBeInTheDocument();
@@ -312,7 +312,7 @@ describe("App", () => {
   });
 
   it("opens a card in the side panel and closes it", async () => {
-    localStorage.setItem("iaframe:page", JSON.stringify("foundry"));
+    localStorage.setItem("codex:page", JSON.stringify("foundry"));
     renderApp();
     await userEvent.click(await screen.findByRole("button", { name: "Nezha Prime" }));
     const panel = screen.getByRole("complementary", { name: "Details" });
@@ -329,7 +329,7 @@ describe("App", () => {
   });
 
   it("lists relics, farmable first by default, filtered by tier and reward", async () => {
-    localStorage.setItem("iaframe:page", JSON.stringify("relics"));
+    localStorage.setItem("codex:page", JSON.stringify("relics"));
     renderApp();
     expect(await screen.findByRole("button", { name: "Axi A21 Relic" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Meso A9 Relic" })).not.toBeInTheDocument();

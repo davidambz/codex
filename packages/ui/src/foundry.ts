@@ -1,8 +1,8 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { EquipmentCard, EquipmentCategory } from "@iaframe/core";
-import { tokenize } from "@iaframe/core";
+import type { EquipmentCard, EquipmentCategory } from "@codex/core";
+import { tokenize } from "@codex/core";
 
 /** The Foundry's tabs. */
 export const FOUNDRY_TABS = {

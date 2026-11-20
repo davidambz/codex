@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Warframes, weapons and companions, and how to get the ones that don't
@@ -17,7 +17,7 @@ import {
   parseEquipment,
   wikiPage,
   type CatalogEntry,
-} from "@iaframe/core";
+} from "@codex/core";
 import { fetchRecipes } from "./export.ts";
 import type { FetchJson } from "./ingest.ts";
 import { catalogFileUrl } from "./names.ts";

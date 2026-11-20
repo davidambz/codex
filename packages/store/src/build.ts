@@ -1,9 +1,9 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { rmSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
-import { equipmentPartLabel, warframeParts, type CatalogEntry, type DropData } from "@iaframe/core";
+import { equipmentPartLabel, warframeParts, type CatalogEntry, type DropData } from "@codex/core";
 import type { ItemNames } from "./names.ts";
 import { SCHEMA, SCHEMA_VERSION } from "./schema.ts";
 

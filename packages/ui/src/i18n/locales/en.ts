@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Strings } from "../strings";
@@ -88,7 +88,7 @@ export const en: Strings = {
     rejected: "New data looked wrong; kept the previous",
     update: "Check for new data",
     noDataTitle: "Getting the drop tables",
-    noDataBody: "IAFrame downloads Warframe's drop data once (about 7 MB) and works offline from then on.",
+    noDataBody: "Codex downloads Warframe's drop data once (about 7 MB) and works offline from then on.",
     noDataFailed: (error) => `The download failed: ${error}`,
     retry: "Try again",
     credit: "Data: WFCD drop data, from Digital Extremes' official drop tables; Warframe list from WFCD warframe-items; acquisition text from the Warframe Wiki (CC BY-SA).",

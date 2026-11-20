@@ -1,12 +1,12 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
-import type { DataStatus, Theme } from "@iaframe/core";
-import { IPC, type IaframeDesktopApi } from "./shared/api";
+import type { DataStatus, Theme } from "@codex/core";
+import { IPC, type CodexDesktopApi } from "./shared/api";
 
 function argValue(name: string): string | undefined {
-  const prefix = `--iaframe-${name}=`;
+  const prefix = `--codex-${name}=`;
   return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
 }
 
@@ -16,7 +16,7 @@ function subscribe<T>(channel: string, listener: (value: T) => void): () => void
   return () => ipcRenderer.removeListener(channel, handler);
 }
 
-const api: IaframeDesktopApi = {
+const api: CodexDesktopApi = {
   appVersion: argValue("version") ?? "0.0.0",
   search: (query, limit, kinds) => ipcRenderer.invoke(IPC.search, query, limit, kinds ? [...kinds] : undefined),
   getItem: (name) => ipcRenderer.invoke(IPC.getItem, name),
@@ -35,4 +35,4 @@ const api: IaframeDesktopApi = {
   listRelics: () => ipcRenderer.invoke(IPC.listRelics),
 };
 
-contextBridge.exposeInMainWorld("iaframe", api);
+contextBridge.exposeInMainWorld("codex", api);

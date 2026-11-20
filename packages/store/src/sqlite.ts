@@ -1,8 +1,8 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DatabaseSync } from "node:sqlite";
-import { EQUIPMENT_CATEGORIES, equipmentPartLabel, isItemLanguage, type CatalogEntry, type Db, type Material, type PartRecipe, type SqlValue } from "@iaframe/core";
+import { EQUIPMENT_CATEGORIES, equipmentPartLabel, isItemLanguage, type CatalogEntry, type Db, type Material, type PartRecipe, type SqlValue } from "@codex/core";
 import type { ItemNames } from "./names.ts";
 
 /** A read-only connection to a built database, as the queries see it. */

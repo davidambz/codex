@@ -18,7 +18,7 @@ const CSP = [
 
 function productionCsp(): Plugin {
   return {
-    name: "iaframe-production-csp",
+    name: "codex-production-csp",
     apply: "build",
     transformIndexHtml(html) {
       return html.replace(

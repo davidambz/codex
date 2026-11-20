@@ -1,7 +1,7 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { ItemKind, RelicRarity, RelicSortKey, SourceKind } from "@iaframe/core";
+import type { ItemKind, RelicRarity, RelicSortKey, SourceKind } from "@codex/core";
 import type { KindGroup, WeaponGroup } from "../kindGroups";
 import type { Availability, FoundryTab, PrimeFilter } from "../foundry";
 import type { Page } from "../navigation";

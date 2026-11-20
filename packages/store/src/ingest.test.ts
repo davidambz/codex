@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -22,8 +22,8 @@ let dir: string;
 let dbPath: string;
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "iaframe-store-"));
-  dbPath = join(dir, "nested", "iaframe.db");
+  dir = mkdtempSync(join(tmpdir(), "codex-store-"));
+  dbPath = join(dir, "nested", "codex.db");
 });
 afterEach(() => {
   rmSync(dir, { recursive: true, force: true });

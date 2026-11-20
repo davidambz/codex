@@ -110,7 +110,7 @@ select,
 }
 
 /* The indicator lamp: the one recurring "this is on" motif. A small hard
-   dot with a soft glow when lit; a dim dot when not. In IAFrame it lights
+   dot with a soft glow when lit; a dim dot when not. In Codex it lights
    for what can be farmed right now: an obtainable relic, a live data feed. */
 .lamp {
   display: inline-block;

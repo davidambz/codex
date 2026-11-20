@@ -1,7 +1,7 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { CATALOG_FILES, englishIds, englishImages, translateNames, type ItemLanguage } from "@iaframe/core";
+import { CATALOG_FILES, englishIds, englishImages, translateNames, type ItemLanguage } from "@codex/core";
 import type { FetchJson } from "./ingest.ts";
 
 const ITEMS_DATA = "https://raw.githubusercontent.com/WFCD/warframe-items/master/data/json";

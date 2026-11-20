@@ -1,8 +1,8 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { partImage, type EquipmentCard } from "@iaframe/core";
+import { partImage, type EquipmentCard } from "@codex/core";
 import { Chips } from "../components/Chips";
 import { FilterBar, FilterSelect, FilterText } from "../components/FilterControls";
 import { ItemImage } from "../components/ItemImage";

@@ -1,10 +1,10 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { DataStatus } from "@iaframe/core";
+import type { DataStatus } from "@codex/core";
 import { createDataService } from "./service.ts";
 import { WFCD_DATA_URL, WFCD_INFO_URL, type FetchJson } from "./ingest.ts";
 import { fakeCatalog } from "./test/catalog.ts";
@@ -13,8 +13,8 @@ import sample from "../../core/src/wfcd/fixtures/sample.json" with { type: "json
 let dir: string;
 let dbPath: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "iaframe-service-"));
-  dbPath = join(dir, "iaframe.db");
+  dir = mkdtempSync(join(tmpdir(), "codex-service-"));
+  dbPath = join(dir, "codex.db");
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

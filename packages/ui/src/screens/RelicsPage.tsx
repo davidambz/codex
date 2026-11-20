@@ -1,8 +1,8 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { RELIC_TIERS, tokenize, type RelicListEntry } from "@iaframe/core";
+import { RELIC_TIERS, tokenize, type RelicListEntry } from "@codex/core";
 import { Chips } from "../components/Chips";
 import { FilterBar, FilterSelect, FilterText } from "../components/FilterControls";
 import { ItemImage } from "../components/ItemImage";

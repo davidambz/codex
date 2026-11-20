@@ -1,5 +1,5 @@
 {
-  "name": "@iaframe/store",
+  "name": "@codex/store",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,6 +11,6 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@iaframe/core": "*"
+    "@codex/core": "*"
   }
 }

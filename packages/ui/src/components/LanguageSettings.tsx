@@ -1,7 +1,7 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { ITEM_LANGUAGES, LANGUAGE_NAMES, type ItemLanguage } from "@iaframe/core";
+import { ITEM_LANGUAGES, LANGUAGE_NAMES, type ItemLanguage } from "@codex/core";
 import { useI18n } from "../i18n/I18nContext";
 import { useItemNames } from "../names/ItemNamesContext";
 import styles from "./LanguageSettings.module.css";

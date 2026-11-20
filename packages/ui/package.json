@@ -1,5 +1,5 @@
 {
-  "name": "@iaframe/ui",
+  "name": "@codex/ui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,7 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@iaframe/core": "*",
+    "@codex/core": "*",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   }

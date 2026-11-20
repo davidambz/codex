@@ -1,15 +1,15 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { IMAGE_BASE_URL } from "@iaframe/core";
+import { IMAGE_BASE_URL } from "@codex/core";
 import { createImageCache } from "./images.ts";
 
 let dir: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "iaframe-images-"));
+  dir = mkdtempSync(join(tmpdir(), "codex-images-"));
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

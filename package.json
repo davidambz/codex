@@ -1,5 +1,5 @@
 {
-  "name": "iaframe",
+  "name": "codex",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -11,9 +11,9 @@
     "lint": "oxlint",
     "test": "vitest run",
     "build": "npm run build --workspaces --if-present",
-    "ingest": "npm run ingest -w @iaframe/store --",
-    "dev": "npm run dev -w @iaframe/desktop",
-    "dev:web": "npm run dev -w @iaframe/ui"
+    "ingest": "npm run ingest -w @codex/store --",
+    "dev": "npm run dev -w @codex/desktop",
+    "dev:web": "npm run dev -w @codex/ui"
   },
   "engines": {
     "node": ">=24"

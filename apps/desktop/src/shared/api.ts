@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type {
@@ -13,7 +13,7 @@ import type {
   Settings,
   SourceDetails,
   Theme,
-} from "@iaframe/core";
+} from "@codex/core";
 
 export const IPC = {
   search: "data:search",
@@ -33,11 +33,11 @@ export const IPC = {
   listRelics: "data:relics",
 } as const;
 
-/** Pictures are served under this scheme: iaframe-img://img/SomaPrime.png. */
-export const IMAGE_SCHEME = "iaframe-img";
+/** Pictures are served under this scheme: codex-img://img/SomaPrime.png. */
+export const IMAGE_SCHEME = "codex-img";
 
-/** What the preload exposes as window.iaframe. */
-export interface IaframeDesktopApi {
+/** What the preload exposes as window.codex. */
+export interface CodexDesktopApi {
   appVersion: string;
   search(query: string, limit?: number, kinds?: readonly ItemKind[]): Promise<SearchHit[]>;
   getItem(name: string): Promise<ItemDetails | undefined>;

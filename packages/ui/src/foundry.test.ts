@@ -1,7 +1,7 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { EquipmentCard } from "@iaframe/core";
+import type { EquipmentCard } from "@codex/core";
 import { cardAvailability } from "./foundry";
 
 const card = (overrides: Partial<EquipmentCard>): EquipmentCard => ({

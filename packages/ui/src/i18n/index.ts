@@ -1,7 +1,7 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { resolveSupportedLocale } from "@iaframe/core";
+import { resolveSupportedLocale } from "@codex/core";
 import type { Strings } from "./strings";
 import { en } from "./locales/en";
 import { ptBR } from "./locales/pt-BR";

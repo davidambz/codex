@@ -1,10 +1,10 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { DataStatus } from "@iaframe/core";
+import type { DataStatus } from "@codex/core";
 import { useI18n } from "../i18n/I18nContext";
 import { formatDate } from "../format";
-import { IAFrameMark, RefreshIcon } from "./icons";
+import { CodexMark, RefreshIcon } from "./icons";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
@@ -27,8 +27,8 @@ export function Header({ status, onUpdate }: HeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.nameplate}>
-        <IAFrameMark />
-        <span className={styles.wordmark}>IAFrame</span>
+        <CodexMark />
+        <span className={styles.wordmark}>Codex</span>
       </div>
       <div className={styles.feed}>
         <span className="lamp" data-lit={lit} />

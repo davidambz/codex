@@ -4,18 +4,18 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
 // `npm run dev:web`: the UI in a browser, backed by the real data service
-// on data/iaframe.db (built by `npm run ingest`, or on first request).
+// on data/codex.db (built by `npm run ingest`, or on first request).
 function dataApi(): Plugin {
   return {
-    name: "iaframe-data-api",
+    name: "codex-data-api",
     apply: "serve",
     async configureServer(server) {
-      const { createDataService, createImageCache } = await import("@iaframe/store");
-      const { ITEM_KINDS, isItemLanguage, itemLanguageForLocale } = await import("@iaframe/core");
+      const { createDataService, createImageCache } = await import("@codex/store");
+      const { ITEM_KINDS, isItemLanguage, itemLanguageForLocale } = await import("@codex/core");
       const kinds = (value: string) =>
         value ? ITEM_KINDS.filter((kind) => value.split(",").includes(kind)) : undefined;
       const data = createDataService({
-        dbPath: fileURLToPath(new URL("../../data/iaframe.db", import.meta.url)),
+        dbPath: fileURLToPath(new URL("../../data/codex.db", import.meta.url)),
         settingsPath: fileURLToPath(new URL("../../data/settings.json", import.meta.url)),
         defaultSettings: { itemLanguage: itemLanguageForLocale(Intl.DateTimeFormat().resolvedOptions().locale) },
       });

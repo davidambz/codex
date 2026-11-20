@@ -1,11 +1,11 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Browser adapter for `npm run dev:web`: the Vite dev server runs the
 // real data service (see vite.config.ts) and answers under /api, so the
 // UI can be worked on in a browser, at any width, with real data.
 
-import type { DataStatus, Platform, Theme } from "@iaframe/core";
+import type { DataStatus, Platform, Theme } from "@codex/core";
 
 async function api<T>(path: string, params: Record<string, string> = {}, method = "GET"): Promise<T> {
   const query = new URLSearchParams(params).toString();

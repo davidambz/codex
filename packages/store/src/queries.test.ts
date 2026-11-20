@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Runs core's queries against a real SQLite database built from the
@@ -21,8 +21,8 @@ import {
   listRelics,
   parseDropData,
   RELIC_TIERS,
-} from "@iaframe/core";
-import type { CatalogEntry } from "@iaframe/core";
+} from "@codex/core";
+import type { CatalogEntry } from "@codex/core";
 import { buildDatabase } from "./build.ts";
 import { openStore, type Store } from "./sqlite.ts";
 import sample from "../../core/src/wfcd/fixtures/sample.json" with { type: "json" };
@@ -31,8 +31,8 @@ let dir: string;
 let store: Store;
 
 beforeAll(() => {
-  dir = mkdtempSync(join(tmpdir(), "iaframe-queries-"));
-  const path = join(dir, "iaframe.db");
+  dir = mkdtempSync(join(tmpdir(), "codex-queries-"));
+  const path = join(dir, "codex.db");
   const data = parseDropData(sample);
   const catalog: CatalogEntry[] = [
     { name: "Gara", category: "warframe", prime: false, acquisition: ["Gara's main blueprint is awarded by Saya's Vigil."] },

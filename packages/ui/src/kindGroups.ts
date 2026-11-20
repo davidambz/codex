@@ -1,7 +1,7 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { ItemKind } from "@iaframe/core";
+import type { ItemKind } from "@codex/core";
 
 /** The search's type filter: a few groups instead of every item kind. */
 export const KIND_GROUPS = {

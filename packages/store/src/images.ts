@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Item pictures from warframe-items, downloaded the first time they're
@@ -6,7 +6,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { IMAGE_BASE_URL, SAFE_IMAGE } from "@iaframe/core";
+import { IMAGE_BASE_URL, SAFE_IMAGE } from "@codex/core";
 
 export type FetchBytes = (url: string) => Promise<Uint8Array>;
 
@@ -16,7 +16,7 @@ export interface ImageCache {
 }
 
 const defaultFetchBytes: FetchBytes = async (url) => {
-  const response = await fetch(url, { headers: { "User-Agent": "IAFrame (+https://github.com/davidambz/iaframe)" } });
+  const response = await fetch(url, { headers: { "User-Agent": "Codex (+https://github.com/davidambz/codex)" } });
   if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
   return new Uint8Array(await response.arrayBuffer());
 };

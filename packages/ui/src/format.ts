@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** "12.5%", "2.26%", "0.332%": more decimals the rarer it gets, never rounded to 0. */

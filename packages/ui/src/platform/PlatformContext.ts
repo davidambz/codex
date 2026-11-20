@@ -1,8 +1,8 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { createContext, useContext } from "react";
-import type { Platform } from "@iaframe/core";
+import type { Platform } from "@codex/core";
 
 export const PlatformContext = createContext<Platform | null>(null);
 

@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Keeps the local database in step with WFCD's drop data:
@@ -22,7 +22,7 @@ import {
   type PreviousCounts,
   assignWeaponParts,
   type CatalogEntry,
-} from "@iaframe/core";
+} from "@codex/core";
 import { buildDatabase } from "./build.ts";
 import { fetchCatalog, fetchCatalogVersion } from "./catalog.ts";
 import { fetchExportEntries, fetchResourceLocations, type FetchBytes } from "./export.ts";
@@ -32,7 +32,7 @@ import { readCatalog, readItemImages, readItemNames, readMeta, readResourceLocat
 
 export const WFCD_INFO_URL = "https://drops.warframestat.us/data/info.json";
 export const WFCD_DATA_URL = "https://drops.warframestat.us/data/all.json";
-const USER_AGENT = "IAFrame (+https://github.com/davidambz/iaframe)";
+const USER_AGENT = "Codex (+https://github.com/davidambz/codex)";
 
 export type FetchJson = (url: string) => Promise<unknown>;
 

@@ -1,7 +1,7 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { DataStatus } from "@iaframe/core";
+import type { DataStatus } from "@codex/core";
 import { useI18n } from "../i18n/I18nContext";
 import { Button } from "../components/Button";
 import styles from "./Home.module.css";

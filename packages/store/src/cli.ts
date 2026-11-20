@@ -1,18 +1,18 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // npm run ingest [-- --force] [-- --db path] [-- --lang pt,es]
-// Builds data/iaframe.db at the repo root from WFCD's latest drop data.
+// Builds data/codex.db at the repo root from WFCD's latest drop data.
 
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { isItemLanguage } from "@iaframe/core";
+import { isItemLanguage } from "@codex/core";
 import { ingest } from "./ingest.ts";
 
 const args = process.argv.slice(2);
 const dbFlag = args.indexOf("--db");
 const dbPath =
-  dbFlag >= 0 ? resolve(args[dbFlag + 1]) : fileURLToPath(new URL("../../../data/iaframe.db", import.meta.url));
+  dbFlag >= 0 ? resolve(args[dbFlag + 1]) : fileURLToPath(new URL("../../../data/codex.db", import.meta.url));
 
 const langFlag = args.indexOf("--lang");
 const languages = langFlag >= 0 ? (args[langFlag + 1] ?? "").split(",").filter(isItemLanguage) : [];

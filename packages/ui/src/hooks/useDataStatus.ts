@@ -1,8 +1,8 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useCallback, useEffect, useState } from "react";
-import type { DataStatus } from "@iaframe/core";
+import type { DataStatus } from "@codex/core";
 import { usePlatform } from "../platform/PlatformContext";
 
 /** The data feed's state, kept live, and a way to ask for fresh data. */

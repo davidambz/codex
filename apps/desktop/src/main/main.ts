@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import fs from "node:fs";
@@ -12,13 +12,13 @@ import {
   type ItemKind,
   type Settings,
   type Theme,
-} from "@iaframe/core";
-import { createDataService, createImageCache, type DataService } from "@iaframe/store";
+} from "@codex/core";
+import { createDataService, createImageCache, type DataService } from "@codex/store";
 import { IMAGE_SCHEME, IPC } from "../shared/api";
 
 protocol.registerSchemesAsPrivileged([{ scheme: IMAGE_SCHEME, privileges: { standard: true, secure: true } }]);
 
-/** Serves iaframe-img://img/<name> from the picture cache in userData. */
+/** Serves codex-img://img/<name> from the picture cache in userData. */
 function serveImages() {
   const images = createImageCache(path.join(app.getPath("userData"), "images"));
   protocol.handle(IMAGE_SCHEME, async (request) => {
@@ -59,10 +59,24 @@ function broadcast(channel: string, value: unknown) {
   for (const window of BrowserWindow.getAllWindows()) window.webContents.send(channel, value);
 }
 
+/** The app was called IAFrame until 2026-11-20: keep the user's settings from that folder. */
+function carryOverSettings(settingsPath: string) {
+  const old = path.join(app.getPath("appData"), "IAFrame", "settings.json");
+  if (fs.existsSync(settingsPath) || !fs.existsSync(old)) return;
+  try {
+    fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+    fs.copyFileSync(old, settingsPath);
+  } catch {
+    // Defaults it is.
+  }
+}
+
 function startData(): DataService {
+  const settingsPath = path.join(app.getPath("userData"), "settings.json");
+  carryOverSettings(settingsPath);
   const service = createDataService({
-    dbPath: path.join(app.getPath("userData"), "iaframe.db"),
-    settingsPath: path.join(app.getPath("userData"), "settings.json"),
+    dbPath: path.join(app.getPath("userData"), "codex.db"),
+    settingsPath,
     // Names in the system's language until the user picks one.
     defaultSettings: { itemLanguage: itemLanguageForLocale(app.getPreferredSystemLanguages()[0] ?? app.getLocale()) },
     onStatus: (status: DataStatus) => broadcast(IPC.dataStatus, status),
@@ -138,7 +152,7 @@ function createWindow() {
     minWidth: 400,
     minHeight: 500,
     show: false,
-    title: "IAFrame",
+    title: "Codex",
     backgroundColor: backgroundFor(currentTheme()),
     autoHideMenuBar: true,
     webPreferences: {
@@ -146,7 +160,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      additionalArguments: [`--iaframe-version=${app.getVersion()}`],
+      additionalArguments: [`--codex-version=${app.getVersion()}`],
     },
   });
   mainWindow = window;
@@ -177,18 +191,18 @@ function createWindow() {
     void window.loadFile(path.join(__dirname, "../dist-renderer/index.html"));
   }
 
-  if (!app.isPackaged && process.env.IAFRAME_CAPTURE_PNG) {
-    scheduleDevCapture(window, process.env.IAFRAME_CAPTURE_PNG, process.env.IAFRAME_DEV_SCRIPT);
+  if (!app.isPackaged && process.env.CODEX_CAPTURE_PNG) {
+    scheduleDevCapture(window, process.env.CODEX_CAPTURE_PNG, process.env.CODEX_DEV_SCRIPT);
   }
 }
 
 /**
- * Dev-only: IAFRAME_DEV_DISPLAY=secondary opens the window on a
+ * Dev-only: CODEX_DEV_DISPLAY=secondary opens the window on a
  * non-primary monitor (or =<index>), so automated runs stay off the
  * screen someone is using.
  */
 function devWindowPlacement(): { x?: number; y?: number } {
-  const wanted = app.isPackaged ? undefined : process.env.IAFRAME_DEV_DISPLAY;
+  const wanted = app.isPackaged ? undefined : process.env.CODEX_DEV_DISPLAY;
   if (!wanted) return {};
   const displays = screen.getAllDisplays();
   const primaryId = screen.getPrimaryDisplay().id;

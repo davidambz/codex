@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // The game's Public Export, which Digital Extremes publishes for
@@ -8,7 +8,7 @@
 // catalog only has the recipe of the finished item), and the resources,
 // for where the game says each one is found.
 
-import { parseResourceLocations } from "@iaframe/core";
+import { parseResourceLocations } from "@codex/core";
 import { decodeLzma } from "./lzma.ts";
 import type { FetchJson } from "./ingest.ts";
 

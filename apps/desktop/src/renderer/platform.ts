@@ -1,17 +1,17 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { Platform } from "@iaframe/core";
-import { IMAGE_SCHEME, type IaframeDesktopApi } from "../shared/api";
+import type { Platform } from "@codex/core";
+import { IMAGE_SCHEME, type CodexDesktopApi } from "../shared/api";
 
 declare global {
   interface Window {
-    iaframe: IaframeDesktopApi;
+    codex: CodexDesktopApi;
   }
 }
 
-/** Adapts the preload bridge (window.iaframe) to the shared Platform port. */
-export function createDesktopPlatform(api: IaframeDesktopApi = window.iaframe): Platform {
+/** Adapts the preload bridge (window.codex) to the shared Platform port. */
+export function createDesktopPlatform(api: CodexDesktopApi = window.codex): Platform {
   return {
     kind: "desktop",
     appVersion: api.appVersion,

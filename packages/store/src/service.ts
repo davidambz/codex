@@ -1,4 +1,4 @@
-// IAFrame — Copyright (C) 2026 David Ambrozio
+// Codex — Copyright (C) 2026 David Ambrozio
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Everything the app does with its data, minus Electron: owns the open
@@ -30,7 +30,7 @@ import {
   type SearchHit,
   type SearchIndex,
   type SourceDetails,
-} from "@iaframe/core";
+} from "@codex/core";
 import { ingest, type FetchJson } from "./ingest.ts";
 import { SCHEMA_VERSION } from "./schema.ts";
 import { openStore, readMeta, type Store } from "./sqlite.ts";

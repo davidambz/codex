@@ -1,6 +1,6 @@
 {
-  "name": "@iaframe/desktop",
-  "productName": "IAFrame",
+  "name": "@codex/desktop",
+  "productName": "Codex",
   "description": "Offline Warframe drop finder",
   "author": "David Ambrozio",
   "license": "GPL-3.0-or-later",
@@ -14,9 +14,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "@iaframe/core": "*",
-    "@iaframe/store": "*",
-    "@iaframe/ui": "*",
+    "@codex/core": "*",
+    "@codex/store": "*",
+    "@codex/ui": "*",
     "electron": "45.3.2",
     "electron-builder": "^26.18.0",
     "esbuild": "^0.28.2"
