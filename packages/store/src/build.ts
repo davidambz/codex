@@ -15,6 +15,7 @@ export function buildDatabase(
   catalog: CatalogEntry[] = [],
   names: ItemNames = new Map(),
   images: ReadonlyMap<string, string> = new Map(),
+  locations: ReadonlyMap<string, string> = new Map(),
 ): void {
   rmSync(path, { force: true });
   const db = new DatabaseSync(path);
@@ -124,6 +125,13 @@ export function buildDatabase(
         addMaterials(id, recipe.materials);
         if (recipe.credits !== undefined) insertPartCredits.run(id, recipe.credits);
       }
+    }
+
+    // Only for resources already here (a drop or a recipe names them), not every one the game has.
+    const insertLocation = db.prepare("INSERT INTO resource_locations (item_id, location) VALUES (?, ?)");
+    for (const [name, location] of locations) {
+      const id = itemIds.get(name);
+      if (id !== undefined) insertLocation.run(id, location);
     }
 
     const setImage = db.prepare("UPDATE items SET image_name = ? WHERE id = ?");

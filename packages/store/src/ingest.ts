@@ -5,8 +5,8 @@
 //   1. fetch info.json (~100 bytes), the catalog's last commit and the Public Export index
 //      (~500 bytes), and stop if none changed;
 //   2. fetch all.json (~7 MB), parse and validate it;
-//   3. fetch the Warframe, weapon and companion catalog, the game's part recipes and the
-//      wiki's acquisition text (optional: when that fails, the last good list is kept and
+//   3. fetch the Warframe, weapon and companion catalog, the game's part recipes and
+//      resource locations, and the wiki's acquisition text (optional: when that fails, the last good list is kept and
 //      retried next time);
 //   4. fetch item names in the languages asked for (optional in the same way);
 //   5. build a fresh database next to the live one and rename it over it.
@@ -25,10 +25,10 @@ import {
 } from "@iaframe/core";
 import { buildDatabase } from "./build.ts";
 import { fetchCatalog, fetchCatalogVersion } from "./catalog.ts";
-import { fetchRecipesEntry, type FetchBytes } from "./export.ts";
+import { fetchExportEntries, fetchResourceLocations, type FetchBytes } from "./export.ts";
 import { SCHEMA_VERSION } from "./schema.ts";
 import { fetchItemImages, fetchItemNames, type ItemNames } from "./names.ts";
-import { readCatalog, readItemImages, readItemNames, readMeta } from "./sqlite.ts";
+import { readCatalog, readItemImages, readItemNames, readMeta, readResourceLocations } from "./sqlite.ts";
 
 export const WFCD_INFO_URL = "https://drops.warframestat.us/data/info.json";
 export const WFCD_DATA_URL = "https://drops.warframestat.us/data/all.json";
@@ -109,15 +109,16 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
     Boolean(meta?.catalog_at) &&
     (languages.length === 0 || Boolean(meta?.names_at)) &&
     languages.every((language) => stored.has(language));
-  // The catalog and the recipes change without the drop tables (new items, Prime Access):
-  // a newer version of either is reason enough to rebuild. Unreachable ones don't count.
-  const [catalogVersion, recipesEntry] = await Promise.all([
+  // The catalog and the Public Export change without the drop tables (new items, Prime
+  // Access): a newer version of either is reason enough to rebuild. Unreachable ones don't count.
+  const [catalogVersion, exportEntries] = await Promise.all([
     fetchCatalogVersion(fetchJson).catch(() => undefined),
-    fetchRecipesEntry(fetchBytes).catch(() => undefined),
+    fetchExportEntries(fetchBytes).catch(() => undefined),
   ]);
   const newer =
     (catalogVersion !== undefined && catalogVersion !== meta?.catalog_version) ||
-    (recipesEntry !== undefined && recipesEntry !== meta?.recipes_entry);
+    (exportEntries !== undefined &&
+      (exportEntries.recipes !== meta?.recipes_entry || exportEntries.resources !== meta?.resources_entry));
   if (!options.force && sameSchema && complete && meta?.drops_hash === hash && !newer) return { status: "up-to-date", hash };
 
   const data = parseDropData(await fetchJson(WFCD_DATA_URL));
@@ -129,15 +130,21 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
   const dropItems = data.items.map((item) => item.name);
   let catalog: CatalogEntry[];
   let images: Map<string, string>;
+  let locations: Map<string, string>;
   let catalogAt = now().toISOString();
   let catalogError: string | undefined;
   try {
-    if (!recipesEntry) throw new Error("The game's Public Export is unreachable");
-    [catalog, images] = await Promise.all([fetchCatalog(fetchJson, dropItems, recipesEntry), fetchItemImages(fetchJson)]);
+    if (!exportEntries) throw new Error("The game's Public Export is unreachable");
+    [catalog, images, locations] = await Promise.all([
+      fetchCatalog(fetchJson, dropItems, exportEntries.recipes),
+      fetchItemImages(fetchJson),
+      fetchResourceLocations(fetchJson, exportEntries.resources),
+    ]);
   } catch (error) {
     catalogError = error instanceof Error ? error.message : String(error);
     catalog = sameSchema ? readCatalog(options.dbPath) : [];
     images = sameSchema ? readItemImages(options.dbPath) : new Map();
+    locations = sameSchema ? readResourceLocations(options.dbPath) : new Map();
     // Parts are matched against this run's drop tables, not the old ones.
     assignWeaponParts(catalog, dropItems);
     catalogAt = "";
@@ -174,9 +181,10 @@ export async function ingest(options: IngestOptions): Promise<IngestResult> {
       catalog_at: catalogAt,
       // Kept only for a fresh catalog, so a fallback one is retried next time.
       catalog_version: catalogAt ? (catalogVersion ?? "") : "",
-      recipes_entry: catalogAt ? (recipesEntry ?? "") : "",
+      recipes_entry: catalogAt ? (exportEntries?.recipes ?? "") : "",
+      resources_entry: catalogAt ? (exportEntries?.resources ?? "") : "",
       names_at: namesAt,
-    }, catalog, names, images);
+    }, catalog, names, images, locations);
     options.beforeSwap?.();
     renameSync(tmpPath, options.dbPath);
   } finally {

@@ -146,6 +146,22 @@ export function readItemImages(path: string): Map<string, string> {
   }
 }
 
+/** The resource locations stored in the database at `path`, to carry over when they can't be fetched. */
+export function readResourceLocations(path: string): Map<string, string> {
+  let db: DatabaseSync | undefined;
+  try {
+    db = new DatabaseSync(path, { readOnly: true });
+    const rows = db
+      .prepare("SELECT i.name, l.location FROM resource_locations l JOIN items i ON i.id = l.item_id")
+      .all() as { name: string; location: string }[];
+    return new Map(rows.map((r) => [r.name, r.location]));
+  } catch {
+    return new Map();
+  } finally {
+    db?.close();
+  }
+}
+
 /** The translated names stored in the database at `path`, to carry over when they can't be fetched. */
 export function readItemNames(path: string): ItemNames {
   const names: ItemNames = new Map();

@@ -3,10 +3,12 @@
 
 // The game's Public Export, which Digital Extremes publishes for
 // community tools: an LZMA-packed index naming each export file with
-// its content hash, then the files themselves under Manifest/. Only the
-// recipes are read, for what each part's blueprint costs; WFCD's item
-// catalog only has the recipe of the finished item.
+// its content hash, then the files themselves under Manifest/. Two are
+// read: the recipes, for what each part's blueprint costs (WFCD's item
+// catalog only has the recipe of the finished item), and the resources,
+// for where the game says each one is found.
 
+import { parseResourceLocations } from "@iaframe/core";
 import { decodeLzma } from "./lzma.ts";
 import type { FetchJson } from "./ingest.ts";
 
@@ -27,14 +29,27 @@ export function parseExportIndex(text: string): Map<string, string> {
   return entries;
 }
 
-/** The recipes entry of the current index: its name carries the content hash, so it doubles as a version. */
-export async function fetchRecipesEntry(fetchBytes: FetchBytes): Promise<string> {
+/** The current index's entries for the files read. Each name carries the content hash, so it doubles as a version. */
+export interface ExportEntries {
+  recipes: string;
+  resources: string;
+}
+
+export async function fetchExportEntries(fetchBytes: FetchBytes): Promise<ExportEntries> {
   const index = parseExportIndex(new TextDecoder().decode(decodeLzma(await fetchBytes(EXPORT_INDEX_URL))));
-  const entry = index.get("ExportRecipes_en.json");
-  if (!entry) throw new Error("Public Export index has no ExportRecipes_en.json");
-  return entry;
+  const entry = (file: string) => {
+    const found = index.get(file);
+    if (!found) throw new Error(`Public Export index has no ${file}`);
+    return found;
+  };
+  return { recipes: entry("ExportRecipes_en.json"), resources: entry("ExportResources_en.json") };
 }
 
 export async function fetchRecipes(fetchJson: FetchJson, entry: string): Promise<unknown> {
   return fetchJson(exportFileUrl(entry));
+}
+
+/** Resource name -> where the game says it's found. */
+export async function fetchResourceLocations(fetchJson: FetchJson, entry: string): Promise<Map<string, string>> {
+  return parseResourceLocations(await fetchJson(exportFileUrl(entry)));
 }

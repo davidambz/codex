@@ -107,6 +107,26 @@ export const EXPORT_RECIPES = {
   ],
 };
 
+export const RESOURCES_ENTRY = "ExportResources_en.json!00_AIngbzxhVpxhDwXhkSq6bA";
+
+/**
+ * A slice of ExportResources: Orokin Cell (in a recipe) and Morphics (in
+ * the drop tables) say where they're found, Forma doesn't, and Voidplume Crest
+ * is nowhere in the data.
+ */
+export const EXPORT_RESOURCES = {
+  ExportResources: [
+    {
+      uniqueName: "/Lotus/Types/Items/MiscItems/OrokinCell",
+      name: "Orokin Cell",
+      description: "Ancient energy cell from the Orokin era.\r\n\r\nLocation: Ceres, Saturn, and Deimos",
+    },
+    { uniqueName: "/Lotus/Types/Items/MiscItems/Forma", name: "Forma", description: "Reshapes polarity." },
+    { uniqueName: "/Lotus/Types/Items/MiscItems/Morphics", name: "Morphics", description: "Location: Mars" },
+    { uniqueName: "/Lotus/Types/Items/MiscItems/Voidplume", name: "Voidplume Crest", description: "Location: Zariman" },
+  ],
+};
+
 /** The catalog's commit, which tests change to fake a new catalog. */
 export const catalogVersion = { sha: "c1" };
 
@@ -116,6 +136,7 @@ export function fakeCatalog(url: string): unknown {
   if (url === CATALOG_COMMITS_URL) return [{ sha: catalogVersion.sha }];
   if (url === EXPORT_INDEX_URL) return EXPORT_INDEX;
   if (url === exportFileUrl(RECIPES_ENTRY)) return EXPORT_RECIPES;
+  if (url === exportFileUrl(RESOURCES_ENTRY)) return EXPORT_RESOURCES;
   for (const [file, items] of Object.entries(CATALOG)) if (url === catalogFileUrl(file)) return items;
   for (const [language, table] of Object.entries(I18N)) if (url === i18nUrl(language as "pt")) return table;
   if (url.startsWith(catalogFileUrl("").replace(/\.json$/, ""))) return [];

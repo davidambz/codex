@@ -46,6 +46,7 @@ beforeAll(() => {
       materials: [
         { name: "Neurodes", count: 2 },
         { name: "Orokin Cell", count: 1 },
+        { name: "Detonite Ampule", count: 1 },
       ],
       credits: 25000,
       partRecipes: { Chassis: { materials: [{ name: "Neurodes", count: 4 }], credits: 15000 } },
@@ -54,7 +55,11 @@ beforeAll(() => {
     { name: "War Prime", category: "melee", prime: true, acquisition: ["Crafted from Hunhow's Trinket."] },
   ];
   assignWeaponParts(catalog, data.items.map((item) => item.name));
-  buildDatabase(path, data, { drops_hash: "abc", ingested_at: "2026-11-17T12:00:00.000Z" }, catalog);
+  const locations = new Map([
+    ["Orokin Cell", "Ceres, Saturn, and Deimos"],
+    ["Not In The Data", "Nowhere"],
+  ]);
+  buildDatabase(path, data, { drops_hash: "abc", ingested_at: "2026-11-17T12:00:00.000Z" }, catalog, undefined, undefined, locations);
   store = openStore(path);
 });
 afterAll(() => {
@@ -117,14 +122,22 @@ describe("queries", () => {
   });
 
   it("lists the resources and credits a recipe consumes", () => {
-    // Orokin Cell isn't in these drop tables: the database learns about it from the recipe.
+    // Orokin Cell and Detonite Ampule aren't in these drop tables: the database learns about them from the
+    // recipe. Orokin Cell still gets a page, for where the game says it's found.
     expect(getItem(store, "Khora Prime")?.equipment).toMatchObject({
       materials: [
         { name: "Neurodes", count: 2, linked: true },
-        { name: "Orokin Cell", count: 1, linked: false },
+        { name: "Orokin Cell", count: 1, linked: true },
+        { name: "Detonite Ampule", count: 1, linked: false },
       ],
       credits: 25000,
     });
+  });
+
+  it("tells where the game says a resource is found", () => {
+    expect(getItem(store, "Orokin Cell")).toMatchObject({ name: "Orokin Cell", location: "Ceres, Saturn, and Deimos" });
+    expect(getItem(store, "Neurodes")?.location).toBeUndefined();
+    expect(getItem(store, "Not In The Data")).toBeUndefined();
   });
 
   it("tells what a part's own blueprint takes", () => {

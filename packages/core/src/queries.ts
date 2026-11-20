@@ -32,6 +32,8 @@ export interface ItemDetails {
   equipment?: EquipmentSheet;
   /** When the item is a part with a blueprint of its own: what building it takes. */
   crafting?: Crafting;
+  /** For resources: where the game says it's found ("Ceres, Saturn, and Deimos"). */
+  location?: string;
 }
 
 /** What building something in the Foundry takes, besides its parts. */
@@ -71,7 +73,7 @@ export interface RecipeMaterial {
   name: string;
   count: number;
   imageName?: string;
-  /** Whether it has a page of its own: a drop table has it, or it's equipment ("Bolto"). */
+  /** Whether it has a page of its own: a drop table has it, the game says where it's found, or it's equipment ("Bolto"). */
   linked: boolean;
 }
 
@@ -233,6 +235,11 @@ export function getItem(db: Db, name: string): ItemDetails | undefined {
     name,
   );
   if (routes && routes.relics > 0) details.vaulted = routes.open === 0 && routes.direct === 0;
+  const location = db.get<{ location: string }>(
+    "SELECT l.location FROM resource_locations l JOIN items i ON i.id = l.item_id WHERE i.name = ?",
+    row.name,
+  );
+  if (location) details.location = location.location;
   const equipment = getEquipmentSheet(db, row.name);
   if (equipment) details.equipment = equipment;
   else {
@@ -486,6 +493,7 @@ function materialsOf(db: Db, owner: string): RecipeMaterial[] {
     .all<{ name: string; count: number; image_name: string | null; linked: number }>(
       `SELECT m_item.name, m.count, m_item.image_name,
               EXISTS (SELECT 1 FROM drops d WHERE d.item_id = m_item.id)
+                OR EXISTS (SELECT 1 FROM resource_locations l WHERE l.item_id = m_item.id)
                 OR EXISTS (SELECT 1 FROM equipment e WHERE e.item_id = m_item.id) AS linked
        FROM materials m
        JOIN items o ON o.id = m.owner_id

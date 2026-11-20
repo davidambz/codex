@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Bumped whenever the tables or what goes in them change; an older database is rebuilt, not migrated. */
-export const SCHEMA_VERSION = 13;
+export const SCHEMA_VERSION = 14;
 
 // The database is rebuilt from scratch on every ingest, so there are no
 // migrations: a new schema version just forces the next ingest.
@@ -92,6 +92,12 @@ CREATE TABLE materials (
 CREATE TABLE part_credits (
   item_id INTEGER PRIMARY KEY REFERENCES items(id),
   credits INTEGER NOT NULL
+);
+
+-- Where the game says a resource is found, from its in-game description.
+CREATE TABLE resource_locations (
+  item_id  INTEGER PRIMARY KEY REFERENCES items(id),
+  location TEXT NOT NULL
 );
 
 -- Item names in other languages, only where they differ from English.

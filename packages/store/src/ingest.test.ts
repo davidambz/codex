@@ -5,7 +5,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ingest, WFCD_DATA_URL, WFCD_INFO_URL, type FetchJson } from "./ingest.ts";
-import { openStore, readCatalog, readItemImages, readItemNames, readMeta } from "./sqlite.ts";
+import { openStore, readCatalog, readItemImages, readItemNames, readMeta, readResourceLocations } from "./sqlite.ts";
 import { SCHEMA_VERSION } from "./schema.ts";
 
 // A Warframe's parts are always its four blueprints; these tests are about the rest.
@@ -97,6 +97,7 @@ describe("ingest", () => {
     expect(readMeta(dbPath)).toMatchObject({
       catalog_version: "c1",
       recipes_entry: "ExportRecipes_en.json!00_oac+LCAtIyqDxZF8Qe1ZZA",
+      resources_entry: "ExportResources_en.json!00_AIngbzxhVpxhDwXhkSq6bA",
     });
     catalogVersion.sha = "c2";
     expect((await ingest({ dbPath, fetchJson: source.fetchJson, now })).status).toBe("updated");
@@ -202,6 +203,16 @@ describe("ingest", () => {
     );
   });
 
+  it("stores where the game says a resource is found, for resources the data has", async () => {
+    await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
+    expect(readResourceLocations(dbPath)).toEqual(
+      new Map([
+        ["Morphics", "Mars"],
+        ["Orokin Cell", "Ceres, Saturn, and Deimos"],
+      ]),
+    );
+  });
+
   it("stores weapons and companions, with parts from the drop tables and wiki text when they don't come from relics", async () => {
     await ingest({ dbPath, fetchJson: wfcd("h1").fetchJson, now });
     expect(readCatalog(dbPath).filter((e) => e.category !== "warframe")).toEqual([
@@ -239,6 +250,7 @@ describe("ingest", () => {
     expect(readWarframes(dbPath).map((w) => w.name)).toEqual(["Excalibur Umbra", "Khora", "Khora Prime", "Nezha"]);
     // Recipes, the parts' too, come back from the database.
     expect(readWarframes(dbPath).find((w) => w.name === "Khora Prime")?.partRecipes?.Chassis?.credits).toBe(15000);
+    expect(readResourceLocations(dbPath).get("Orokin Cell")).toBe("Ceres, Saturn, and Deimos");
 
     // Same drop hash, but the catalog is retried until it comes through.
     expect((await ingest({ dbPath, fetchJson: down.fetchJson, now })).status).toBe("updated");
