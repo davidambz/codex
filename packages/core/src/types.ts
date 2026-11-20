@@ -20,6 +20,8 @@ export const ITEM_KINDS = [
   "mod",
   "arcane",
   "ayatan",
+  /** Something recipes consume, or the game says where to find (Orokin Cell, Oxium). */
+  "resource",
   "credits",
   "endo",
   "other",

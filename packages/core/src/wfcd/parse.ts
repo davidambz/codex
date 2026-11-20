@@ -84,6 +84,7 @@ const AVATAR_TABLES = ["resourceByAvatar", "sigilByAvatar", "additionalItemByAva
 /** Item kinds a table can vouch for, stronger than a guess from the name. */
 const KIND_RANK: Record<ItemKind, number> = {
   other: 0,
+  resource: 1,
   blueprint: 1,
   mod: 2,
   arcane: 2,

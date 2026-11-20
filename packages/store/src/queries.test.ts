@@ -135,7 +135,10 @@ describe("queries", () => {
   });
 
   it("tells where the game says a resource is found", () => {
-    expect(getItem(store, "Orokin Cell")).toMatchObject({ name: "Orokin Cell", location: "Ceres, Saturn, and Deimos" });
+    expect(getItem(store, "Orokin Cell")).toMatchObject({ name: "Orokin Cell", kind: "resource", location: "Ceres, Saturn, and Deimos" });
+    // In a recipe, so a resource too, even with no location.
+    expect(getItem(store, "Detonite Ampule")?.kind).toBe("resource");
+    expect(getItem(store, "Serration")?.kind).toBe("mod");
     expect(getItem(store, "Neurodes")?.location).toBeUndefined();
     expect(getItem(store, "Not In The Data")).toBeUndefined();
   });

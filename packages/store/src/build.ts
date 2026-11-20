@@ -134,6 +134,11 @@ export function buildDatabase(
       if (id !== undefined) insertLocation.run(id, location);
     }
 
+    // A thing a recipe consumes, or the game says where to find, is a resource,
+    // unless something more specific already claimed it (a weapon Akbolto takes).
+    db.exec(`UPDATE items SET kind = 'resource' WHERE kind = 'other' AND (
+      id IN (SELECT item_id FROM materials) OR id IN (SELECT item_id FROM resource_locations))`);
+
     const setImage = db.prepare("UPDATE items SET image_name = ? WHERE id = ?");
     for (const entry of catalog) {
       const id = itemIds.get(entry.name);
