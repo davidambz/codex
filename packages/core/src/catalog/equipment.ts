@@ -238,8 +238,9 @@ interface ExportRecipe {
 
 /**
  * Gives each piece its own blueprint's cost, from the game's Public
- * Export (ExportRecipes): the recipe whose result is the piece. Prime
- * weapon parts are found ready-made and have none.
+ * Export (ExportRecipes): the recipe whose result is the piece, and so
+ * on for the pieces that recipe calls for. Prime weapon parts are found
+ * ready-made and have none.
  */
 export function applyPartRecipes(entries: readonly CatalogEntry[], exportRecipes: unknown, names: ReadonlyMap<string, string>): void {
   const list = (exportRecipes as { ExportRecipes?: unknown } | null)?.ExportRecipes;
@@ -250,13 +251,23 @@ export function applyPartRecipes(entries: readonly CatalogEntry[], exportRecipes
   }
   for (const entry of entries) {
     const recipes: Record<string, PartRecipe> = {};
-    for (const [piece, id] of Object.entries(entry.pieceIds ?? {})) {
+    // A piece can be built from pieces of its own: Equinox's Day Aspect from the Day Chassis...
+    const queue = Object.entries(entry.pieceIds ?? {});
+    const seen = new Set(queue.map(([piece]) => piece));
+    for (let next = queue.shift(); next; next = queue.shift()) {
+      const [piece, id] = next;
       const recipe = byResult.get(id);
       if (!recipe) continue;
       const components = (Array.isArray(recipe.ingredients) ? recipe.ingredients : []).map((i) => ({
         uniqueName: i?.ItemType,
         itemCount: i?.ItemCount,
       }));
+      for (const { uniqueName } of components) {
+        const sub = typeof uniqueName === "string" ? recipePiece(uniqueName) : undefined;
+        if (!sub || sub === "Blueprint" || seen.has(sub)) continue;
+        seen.add(sub);
+        queue.push([sub, uniqueName as string]);
+      }
       const part: PartRecipe = { materials: recipeMaterials(components, names) };
       if (typeof recipe.buildPrice === "number" && recipe.buildPrice > 0) part.credits = recipe.buildPrice;
       if (part.materials.length > 0 || part.credits !== undefined) recipes[piece] = part;
@@ -356,6 +367,9 @@ const COMPACT_WORDS = [...PART_WORDS]
   .map((word) => [word.replace(/ /g, ""), word] as const)
   .sort((a, b) => b[0].length - a[0].length);
 
+/** Equinox's halves by their internal names: Animus is Day, Anima is Night. */
+const EQUINOX_ASPECTS = { Anima: "Night", Animus: "Day" } as const;
+
 /**
  * Which piece a recipe component is, from its internal name, since the
  * catalog leaves component names out: ".../WeaponParts/SomaPrimeBarrel"
@@ -363,10 +377,17 @@ const COMPACT_WORDS = [...PART_WORDS]
  * blueprints and parts count, not resources ("/MiscItems/OrokinCell")
  * nor weapons a recipe consumes. Dojo research keeps its blueprints with
  * the weapons (".../ClanTech/Energy/ChainLightningRifleBlueprint").
+ * Equinox's are named after Anima and Animus: ".../AnimusChassisComponent"
+ * -> "Day Chassis", ".../AnimaComponent" -> "Night Aspect".
  */
 export function recipePiece(uniqueName: string): string | undefined {
   if (!uniqueName.includes("/Recipes/")) return /^\/Lotus\/Weapons\/.*Blueprint$/.test(uniqueName) ? "Blueprint" : undefined;
   let rest = uniqueName.slice(uniqueName.lastIndexOf("/") + 1).replace(/Component$/, "");
+  const aspect = /^(Anima|Animus)(Helmet|Chassis|Systems)?$/.exec(rest);
+  if (aspect && uniqueName.includes("/WarframeRecipes/")) {
+    const piece = aspect[2] === "Helmet" ? "Neuroptics" : (aspect[2] ?? "Aspect");
+    return `${EQUINOX_ASPECTS[aspect[1] as keyof typeof EQUINOX_ASPECTS]} ${piece}`;
+  }
   const blueprint = rest.endsWith("Blueprint");
   if (blueprint) rest = rest.slice(0, -"Blueprint".length);
   if (rest.endsWith("Helmet")) return "Neuroptics";

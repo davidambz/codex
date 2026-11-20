@@ -128,6 +128,50 @@ describe("parseEquipment", () => {
     expect(() => applyPartRecipes([nezha], {}, names)).toThrow(/ExportRecipes/);
   });
 
+  it("follows Equinox's Aspects down to their own pieces", () => {
+    const [equinox] = parseEquipment("warframe", [
+      {
+        name: "Equinox",
+        productCategory: "Suits",
+        components: [
+          { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/AnimaAnimusBlueprint", itemCount: 1 },
+          { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/AnimusComponent", itemCount: 1 },
+          { uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/AnimaComponent", itemCount: 1 },
+        ],
+      },
+    ]);
+    const resources = new Map([
+      ["/Lotus/Types/Items/MiscItems/OrokinCell", "Orokin Cell"],
+      ["/Lotus/Types/Items/MiscItems/Gallium", "Gallium"],
+    ]);
+    applyPartRecipes(
+      [equinox],
+      {
+        ExportRecipes: [
+          {
+            resultType: "/Lotus/Types/Recipes/WarframeRecipes/AnimusComponent",
+            buildPrice: 25000,
+            ingredients: [
+              { ItemType: "/Lotus/Types/Recipes/WarframeRecipes/AnimusChassisComponent", ItemCount: 1 },
+              { ItemType: "/Lotus/Types/Items/MiscItems/OrokinCell", ItemCount: 1 },
+            ],
+          },
+          {
+            resultType: "/Lotus/Types/Recipes/WarframeRecipes/AnimusChassisComponent",
+            buildPrice: 15000,
+            ingredients: [{ ItemType: "/Lotus/Types/Items/MiscItems/Gallium", ItemCount: 1 }],
+          },
+        ],
+      },
+      resources,
+    );
+    expect(equinox.recipe).toEqual(["Blueprint", "Day Aspect", "Night Aspect"]);
+    expect(equinox.partRecipes).toEqual({
+      "Day Aspect": { materials: [{ name: "Orokin Cell", count: 1 }], credits: 25000 },
+      "Day Chassis": { materials: [{ name: "Gallium", count: 1 }], credits: 15000 },
+    });
+  });
+
   it("rejects anything that isn't a list", () => {
     expect(() => parseEquipment("warframe", {})).toThrow(/array/);
   });
@@ -228,6 +272,9 @@ describe("recipe pieces", () => {
     expect(recipePiece("/Lotus/Types/Game/SentinelPowersuits/PrimeHeliosCarapace")).toBeUndefined();
     expect(recipePiece("/Lotus/Types/Recipes/Helmets/PrimeHeliosCerebrum")).toBe("Cerebrum");
     expect(recipePiece("/Lotus/Types/Recipes/WarframeRecipes/NezhaHelmetComponent")).toBe("Neuroptics");
+    expect(recipePiece("/Lotus/Types/Recipes/WarframeRecipes/AnimusComponent")).toBe("Day Aspect");
+    expect(recipePiece("/Lotus/Types/Recipes/WarframeRecipes/AnimaHelmetComponent")).toBe("Night Neuroptics");
+    expect(recipePiece("/Lotus/Types/Recipes/WarframeRecipes/AnimaAnimusBlueprint")).toBe("Blueprint");
     expect(recipePiece("/Lotus/Types/Items/MiscItems/OrokinCell")).toBeUndefined();
     expect(recipePiece("/Lotus/Weapons/ClanTech/Energy/ChainLightningRifleBlueprint")).toBe("Blueprint");
     expect(recipePiece("/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipOne")).toBeUndefined();
